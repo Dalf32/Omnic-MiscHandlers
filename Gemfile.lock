@@ -1,0 +1,17 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    chronic_duration (0.10.6)
+      numerizer (~> 0.1.1)
+    json (1.8.3)
+    numerizer (0.1.1)
+
+PLATFORMS
+  x86-mingw32
+
+DEPENDENCIES
+  chronic_duration (>= 0.10.6)
+  json (>= 1.8)
+
+BUNDLED WITH
+   1.13.7
