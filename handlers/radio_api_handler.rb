@@ -2,10 +2,6 @@
 #
 # Author::	Kyle Mullins
 
-require 'open-uri'
-require 'json'
-require 'chronic_duration'
-
 require_relative 'radio/radio_api_client'
 require_relative 'radio/radio_track'
 
@@ -16,6 +12,7 @@ class RadioApiHandler < CommandHandler
   command :history, :show_recent_history, description: 'Shows the tracks that have played in the last hour', limit: { delay: 10, action: :on_limit }
   command :restart, :restart_now_playing_thread, required_permissions: [:administrator],
       description: 'Restarts the thread that updates the Now Playing thread.', limit: { delay: 60, action: :on_limit }
+  command :skip, :skip_track
 
   event :ready, :start_now_playing_thread
 
@@ -25,6 +22,12 @@ class RadioApiHandler < CommandHandler
 
   def redis_name
     :radio_api
+  end
+
+  def skip_track(event)
+    response_hash = api_client.skip_track(event.author.distinct)
+
+    "Skips: #{response_hash[:current_skips]} / #{response_hash[:current_listeners]}"
   end
 
   def radio_link(_event)
@@ -119,7 +122,7 @@ class RadioApiHandler < CommandHandler
   private
 
   def api_client
-    @api_client ||= RadioApiClient.new(config.base_url, config, log)
+    @api_client ||= RadioApiClient.new(**config, log: log)
   end
 
   def update_now_playing

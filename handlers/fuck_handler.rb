@@ -24,7 +24,7 @@ class FuckYouHandler < CommandHandler
 
   def make_api_request(api_endpoint)
     request_url = config.base_url + api_endpoint
-    log.debug('Making API request: ' + request_url)
+    log.debug('Making API GET request: ' + request_url)
 
     open(request_url, 'accept' => 'text/plain').readlines.join
   end
