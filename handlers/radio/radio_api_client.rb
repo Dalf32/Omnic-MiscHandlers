@@ -78,12 +78,13 @@ class RadioApiClient
 
     @log.debug("Making API POST request: #{uri.to_s}\n#{request.body}")
     response = https.request(request)
+    response_body = symbolize_keys(JSON.parse(response.body))
 
     if http_success?(response)
-      symbolize_keys(JSON.parse(response.body))
+      response_body
     else
       @log.error("Received error code #{response.code}: #{response.message}\n#{response.body}")
-      {}
+      { http_code: response.code, http_message: response.message, response_body: response_body }
     end
   end
 

@@ -12,7 +12,7 @@ class RadioApiHandler < CommandHandler
   command :history, :show_recent_history, description: 'Shows the tracks that have played in the last hour', limit: { delay: 10, action: :on_limit }
   command :restart, :restart_now_playing_thread, required_permissions: [:administrator],
       description: 'Restarts the thread that updates the Now Playing thread.', limit: { delay: 60, action: :on_limit }
-  command :skip, :skip_track
+  command :skip, :skip_track, description: 'Votes to skip the track currently playing on WLTM radio.', limit: { delay: 5, action: :on_limit}
 
   event :ready, :start_now_playing_thread
 
@@ -22,12 +22,6 @@ class RadioApiHandler < CommandHandler
 
   def redis_name
     :radio_api
-  end
-
-  def skip_track(event)
-    response_hash = api_client.skip_track(event.author.distinct)
-
-    "Skips: #{response_hash[:current_skips]} / #{response_hash[:current_listeners]}"
   end
 
   def radio_link(_event)
@@ -70,6 +64,28 @@ class RadioApiHandler < CommandHandler
       end
 
       nil
+    end
+  end
+
+  def skip_track(event)
+    response_hash = api_client.skip_track(event.author.distinct)
+
+    if is_error_response?(response_hash)
+      return 'You cannot vote to skip the current track more than once.' if /user cannot vote to skip/ === response_hash.dig(:response_body, :error)
+
+      'An error occurred, please contact an admin.'
+    elsif is_track_skipped?(response_hash)
+      Thread.new do
+        sleep(5)
+        track = api_client.get_now_playing
+        bot.game = track.artist || '-' unless track.nil?
+      end
+
+      'The current track will be skipped shortly.'
+    elsif response_hash[:current_listeners] == '0'
+      'You cannot skip tracks when no one is listening!'
+    else
+      "Not enough skip votes yet. #{response_hash[:current_skips]} Skips / #{response_hash[:current_listeners]} Listeners"
     end
   end
 
@@ -143,6 +159,14 @@ class RadioApiHandler < CommandHandler
     end
   rescue StandardError => e
     log.error(e)
+  end
+
+  def is_track_skipped?(skip_response)
+    skip_response[:current_skip_percentage] >= skip_response[:skip_percentage_threshold]
+  end
+
+  def is_error_response?(request_response)
+    !request_response[:http_code].nil? && !request_response[:http_code].start_with?('2')
   end
 
   def likes_store
