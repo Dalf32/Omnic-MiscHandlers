@@ -12,8 +12,9 @@ class FuckYouHandler < CommandHandler
     :fuck_api
   end
 
-  def say_random_fuck_you(event, name)
+  def say_random_fuck_you(event, *name_words)
     from = event.user.nickname.nil? ? event.user.username : event.user.nickname
+    name = name_words.join(' ')
     escaped_from = CGI.escape(from)
     escaped_name = CGI.escape(name)
     endpoint = config.fuck_you_endpoints.sample % { name: escaped_name, from: escaped_from }
