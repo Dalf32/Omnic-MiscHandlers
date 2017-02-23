@@ -13,7 +13,7 @@ require_relative '../../util/hash_util'
 class RadioApiClient
   include HashUtil
 
-  def initialize(public_key:, private_key:, base_url:, icecast:, mpd:, share:, history_current:, history_by_date:, skip:, log:)
+  def initialize(public_key:, private_key:, base_url:, icecast:, mpd:, share:, history_current:, history_by_date:, skip:, log:, **_other_args)
     @public_key = public_key
     @private_key = private_key
     @base_url = base_url

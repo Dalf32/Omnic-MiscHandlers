@@ -37,10 +37,23 @@ class RadioTrack
 
   def pretty_print
     format_str = "  Artist: #{@artist}\n   Title: #{@title}"
-    format_str +=  " (#{format_track_time(@seconds_elapsed)} / #{format_track_time(@seconds_total)})" unless @seconds_elapsed.nil? || @seconds_total.nil?
+    format_str +=  ' ' + duration_str
     format_str += "\n   Album: #{@album}\nUploader: #{@uploader}"
     format_str += "\n  Played: #{format_time_of_day(played_time)}" unless @played_time.nil?
     format_str
+  end
+
+  def fill_embed(embed)
+    embed.add_field(name: 'Artist', value: @artist, inline: true)
+    embed.add_field(name: 'Title', value: "#{@title} #{duration_str}", inline: true)
+    embed.add_field(name: 'Album', value: @album)
+    embed.footer = { text: "Uploader: #{@uploader}" }
+  end
+
+  def duration_str
+    return '' if @seconds_elapsed.nil? || @seconds_total.nil?
+
+    "(#{format_track_time(@seconds_elapsed)} / #{format_track_time(@seconds_total)})"
   end
 
   def to_json

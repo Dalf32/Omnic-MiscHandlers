@@ -24,15 +24,25 @@ class RadioApiHandler < CommandHandler
     :radio_api
   end
 
-  def radio_link(_event)
-    config.base_url
+  def radio_link(event)
+    event.channel.send_embed(' ') do |embed|
+      embed.title = config.radio_name
+      embed.description = config.base_url
+      embed.url = config.base_url
+      embed.image = { url: config.splash_image }
+      embed.color = random_color
+    end
   end
 
-  def show_now_playing(_event, *args)
-    return rewind_now_playing(_event, *args) unless args.empty?
+  def show_now_playing(event, *args)
+    return rewind_now_playing(event, *args) unless args.empty?
 
     track = api_client.get_now_playing
-    "***Now Playing***\n```#{track.pretty_print}```"
+
+    event.channel.send_embed(' ') do |embed|
+      fill_track_embed(embed)
+      track.fill_embed(embed)
+    end
   end
 
   def rewind_now_playing(_event, rewind_str)
@@ -201,7 +211,20 @@ class RadioApiHandler < CommandHandler
     hist_list.map(&:pretty_print).join("\n\n--------------------\n\n")
   end
 
+  def fill_track_embed(embed)
+    embed.title = config.radio_name
+    embed.url = config.base_url
+    embed.description = '***Now Playing***'
+    embed.thumbnail = { url: config.splash_image }
+    embed.timestamp = Time.now
+    embed.color = random_color
+  end
+
   def last_hour
     (Time.now - (60 * 60)).to_i
+  end
+
+  def random_color
+    '0x%06x' % (rand * 0xffffff)
   end
 end
