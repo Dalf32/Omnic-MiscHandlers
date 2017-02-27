@@ -6,13 +6,19 @@ require_relative 'radio/radio_api_client'
 require_relative 'radio/radio_track'
 
 class RadioApiHandler < CommandHandler
-  command :radio, :radio_link, description: 'Posts a link to the WLTM radio website.'
-  command :playing, :show_now_playing, min_args: 0, max_args: 1, description: 'Displays information about the currently playing track on WLTM radio.', limit: { delay: 10, action: :on_limit }
-  command :listeners, :show_current_listeners, description: 'Shows the number of people listening to WLTM radio.', limit: { delay: 10, action: :on_limit }
-  command :history, :show_recent_history, description: 'Shows the tracks that have played in the last hour', limit: { delay: 10, action: :on_limit }
-  command :restart, :restart_now_playing_thread, required_permissions: [:administrator],
+  feature :radio, default_enabled: true
+
+  command :radio, :radio_link, feature: :radio, description: 'Posts a link to the WLTM radio website.'
+  command :playing, :show_now_playing, min_args: 0, max_args: 1, feature: :radio,
+      description: 'Displays information about the currently playing track on WLTM radio.', limit: { delay: 10, action: :on_limit }
+  command :listeners, :show_current_listeners, feature: :radio, limit: { delay: 10, action: :on_limit },
+      description: 'Shows the number of people listening to WLTM radio.'
+  command :history, :show_recent_history, feature: :radio, limit: { delay: 10, action: :on_limit },
+      description: 'Shows the tracks that have played in the last hour'
+  command :restart, :restart_now_playing_thread, required_permissions: [:administrator], feature: :radio,
       description: 'Restarts the thread that updates the Now Playing thread.', limit: { delay: 60, action: :on_limit }
-  command :skip, :skip_track, description: 'Votes to skip the track currently playing on WLTM radio.', limit: { delay: 5, action: :on_limit}
+  command :skip, :skip_track, feature: :radio, limit: { delay: 5, action: :on_limit},
+      description: 'Votes to skip the track currently playing on WLTM radio.'
 
   event :ready, :start_now_playing_thread
 
