@@ -5,33 +5,39 @@
 require 'redd'
 
 class RedditSearchHandler < CommandHandler
-  command :reddit, :search_reddit
+  feature :reddit, default_enabled: false
+
+  command :reddit, :search_reddit, description: 'Searches Reddit for the given string and returns a random result.',
+          min_args: 1, feature: :reddit, limit: { limit: 20, time_span: 60 }
 
   def config_name
     :reddit
   end
 
-  def search_reddit(_event, *criteria)
-    start_time = Time.now.to_i
-    subs_split = subs.each_slice(config.subs_per_request).to_a
+  def search_reddit(event, *criteria)
+    subs_split = subs.shuffle.each_slice(config.subs_per_request).to_a
 
-    reddit = Redd.it(:userless, config.client_id, config.client_secret)
+    chosen_result = subs_split.each do |sub_list|
+      begin
+        results = reddit.search(criteria.join(' '), sub_list.join('+'), sort: :relevance, limit: config.results_per_request)
+        results = results.select{ |e| !e.thumbnail.nil? && e.thumbnail != 'self' } if config.media_only
 
-    results = []
-
-    subs_split.shuffle.each do |sub_list|
-      puts sub_list.join('+')
-
-      results += reddit.search(criteria.join(' '), sub_list.join('+'), sort: :relevance, limit: 5)
-      puts results.count
-      break unless results.empty?
+        break results.sample unless results.empty?
+        log.debug('Request returned no results.')
+      rescue Redd::Error::ServiceUnavailable => unavail_err
+        log.error("Reddit error: #{unavail_err.message}")
+        return 'HTTP 503 returned from Reddit API'
+      end
     end
 
-    chosen_result = results.sample
-    puts chosen_result
+    preamble = "#{event.author.display_name} searched for \"#{criteria.join(' ')}\"."
+    return "#{preamble} No results were found." unless chosen_result.is_a?(Redd::Objects::Submission)
 
-    puts "#{Time.now.to_i - start_time}"
-    "Criteria: #{criteria.join(' ')}, Sub: #{chosen_result.subreddit}, #{chosen_result.url}"
+    "#{preamble} Here's a result from /r/#{chosen_result.subreddit} with the title ***#{chosen_result.title}***\n#{chosen_result.url}"
+  end
+
+  def reddit
+    @reddit ||= Redd.it(:userless, config.client_id, config.client_secret)
   end
 
   private
