@@ -8,7 +8,7 @@ class RedditSearchHandler < CommandHandler
   feature :reddit, default_enabled: false
 
   command :reddit, :search_reddit, description: 'Searches Reddit for the given string and returns a random result.',
-          min_args: 1, feature: :reddit, limit: { limit: 20, time_span: 60 }
+      min_args: 1, feature: :reddit, limit: { limit: 20, time_span: 60 }
 
   def config_name
     :reddit
@@ -19,25 +19,25 @@ class RedditSearchHandler < CommandHandler
 
     chosen_result = subs_split.each do |sub_list|
       begin
-        results = reddit.search(criteria.join(' '), sub_list.join('+'), sort: :relevance, limit: config.results_per_request)
+        results = reddit.subreddit(sub_list.join('+')).search(criteria.join(' '), sort: :relevance, limit: config.results_per_request)
         results = results.select{ |e| !e.thumbnail.nil? && e.thumbnail != 'self' } if config.media_only
 
         break results.sample unless results.empty?
         log.debug('Request returned no results.')
-      rescue Redd::Error::ServiceUnavailable => unavail_err
-        log.error("Reddit error: #{unavail_err.message}")
-        return 'HTTP 503 returned from Reddit API'
+      rescue Redd::ServerError => server_err
+        log.error("Reddit error: #{server_err.response.body}")
+        return "HTTP #{server_err.response.code} returned from Reddit API"
       end
     end
 
     preamble = "#{event.author.display_name} searched for \"#{criteria.join(' ')}\"."
-    return "#{preamble} No results were found." unless chosen_result.is_a?(Redd::Objects::Submission)
+    return "#{preamble} No results were found." unless chosen_result.is_a?(Redd::Models::Submission)
 
-    "#{preamble} Here's a result from /r/#{chosen_result.subreddit} with the title ***#{chosen_result.title}***\n#{chosen_result.url}"
+    "#{preamble} Here's a result from /r/#{chosen_result.subreddit.to_h[:display_name]} with the title ***#{chosen_result.title}***\n#{chosen_result.url}"
   end
 
   def reddit
-    @reddit ||= Redd.it(:userless, config.client_id, config.client_secret)
+    @reddit ||= Redd.it(client_id: config.client_id, secret: config.client_secret)
   end
 
   private
