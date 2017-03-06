@@ -9,6 +9,7 @@ class Team
   def initialize(name)
     @name = name
     @members = []
+    @description = ''
     @score = 0
   end
 
@@ -22,10 +23,28 @@ class Team
   end
 
   def to_redis(redis)
-    #TODO: save to redis/update redis entry
+    team_redis = Team.redis_for_team(redis, @name)
+
+    redis.sadd('teams', @name)
+    team_redis.set('description', @description)
+    team_redis.set('score', @score)
+    team_redis.del('members')
+    team_redis.sadd('members', *@members) unless @members.empty?
   end
 
   def self.from_redis(redis, name)
-    #TODO: create from redis entry
+    team_redis = redis_for_team(redis, name)
+
+    Team.new(name).tap{ |team|
+      team_redis.smembers('members').each{ |member_id| team.add_member(member_id) }
+      team.description = team_redis.get('description')
+      team.score = team_redis.get('score')
+    }
+  end
+
+  private
+
+  def self.redis_for_team(redis, name)
+    Redis::Namespace.new("team:#{name}", redis: redis)
   end
 end
