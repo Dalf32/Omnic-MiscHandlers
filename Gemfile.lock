@@ -5,6 +5,7 @@ GEM
       public_suffix (~> 2.0, >= 2.0.2)
     chronic_duration (0.10.6)
       numerizer (~> 0.1.1)
+    concurrent-ruby (1.0.5)
     domain_name (0.5.20161129)
       unf (>= 0.0.5, < 1.0.0)
     http (2.2.1)
@@ -31,6 +32,7 @@ PLATFORMS
 
 DEPENDENCIES
   chronic_duration (>= 0.10.6)
+  concurrent-ruby (~> 1.0)
   json (>= 1.8)
   redd (= 0.8.1)
 
