@@ -29,14 +29,15 @@ class RedditSearchHandler < CommandHandler
           results = results.select{ |e| !e.thumbnail.nil? && e.thumbnail != 'self' } if config.media_only
 
           if results.empty?
-            # log.debug('Request returned no results.')
+            Concurrent.log(:debug, 'Request returned no results.')
             nil
           else
             found_results_latch.count_down
             results.sample
           end
         rescue HTTP::TimeoutError => timeout
-          # log.error("Reddit error: #{timeout.response.body}")
+          Concurrent.log(:error, "Reddit error: #{timeout.response.body}")
+          nil
         ensure
           request_complete_latch.count_down
         end
@@ -65,6 +66,14 @@ class RedditSearchHandler < CommandHandler
 
     result = completed_future.value
     "#{preamble} Here's a result from /r/#{result.subreddit.to_h[:display_name]} with the title ***#{result.title}***\n#{result.url}"
+  end
+
+  def initialize(*_args)
+    super
+
+    Concurrent.global_logger = lambda { |level, message, *_args|
+      log.add(Logging.level_num(level), message)
+    }
   end
 
   private
