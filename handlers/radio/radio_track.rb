@@ -8,7 +8,7 @@ require 'chronic_duration'
 require_relative '../../util/hash_util'
 
 class RadioTrack
-  attr_reader :artist, :album, :title, :uploader, :seconds_elapsed, :seconds_remaining, :seconds_total, :download_link, :id
+  attr_reader :artist, :album, :title, :uploader, :seconds_elapsed, :seconds_remaining, :seconds_total, :download_link, :album_art_path, :id
 
   include HashUtil
 
@@ -19,14 +19,15 @@ class RadioTrack
     @uploader = uploader
 
     #Optional for now, but soon we'll require this
-    @id = other_info.dig(:id)
+    @id = other_info[:id]
 
     #Optional info
-    @seconds_elapsed = other_info.dig(:time_stats, :seconds_elapsed)
-    @seconds_remaining = other_info.dig(:time_stats, :seconds_remaining)
-    @seconds_total = other_info.dig(:time_stats, :seconds_total) or other_info.dig(:length)
-    @played_time = other_info.dig(:played_time)
-    @download_link = other_info.dig(:download_link)
+    @seconds_elapsed = other_info[:seconds_elapsed]
+    @seconds_remaining = other_info[:seconds_remaining]
+    @seconds_total = other_info[:seconds_total] or other_info[:length]
+    @played_time = other_info[:played_time]
+    @download_link = other_info[:download_link]
+    @album_art_path = other_info.dig(:art, :art_link)
   end
 
   def played_time

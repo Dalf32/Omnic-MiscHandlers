@@ -13,14 +13,13 @@ require_relative '../../util/hash_util'
 class RadioApiClient
   include HashUtil
 
-  def initialize(public_key:, private_key:, base_url:, icecast:, mpd:, share:, history_current:, history_by_date:, skip:, log:, **_other_args)
+  def initialize(public_key:, private_key:, base_url:, icecast:, share:, history_current:, history_by_date:, skip:, log:, **_other_args)
     @public_key = public_key
     @private_key = private_key
     @base_url = base_url
     @log = log
 
     @icecast_endpoint = icecast
-    @mpd_endpoint = mpd
     @share_endpoint = share
     @history_current_endpoint = history_current
     @history_by_date_endpoint = history_by_date
@@ -28,10 +27,13 @@ class RadioApiClient
   end
 
   def get_now_playing
-    track_hash = make_api_request(@mpd_endpoint)[:current_track]
-    return nil if track_hash.nil?
+    current_hist_hash = make_api_request(@history_current_endpoint)
+    return nil if current_hist_hash.nil? || current_hist_hash.empty?
 
-    RadioTrack.new(**track_hash, uploader: track_hash[:who])
+    _, current_track, _, time_stats = current_hist_hash.to_a.flatten
+    time_stats = {} if time_stats.nil?
+
+    RadioTrack.new(**current_track[:track],  **time_stats, played_time: current_track[:played_time])
   end
 
   def get_history(**args)

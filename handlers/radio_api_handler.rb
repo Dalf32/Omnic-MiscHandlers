@@ -47,6 +47,8 @@ class RadioApiHandler < CommandHandler
 
     event.channel.send_embed(' ') do |embed|
       fill_track_embed(embed)
+      embed.description = "***[Now Playing](#{track.download_link.gsub(')', '%29')})***"
+      embed.thumbnail = { url: config.base_url + track.album_art_path } unless track.album_art_path.nil?
       track.fill_embed(embed)
     end
   end
@@ -220,7 +222,6 @@ class RadioApiHandler < CommandHandler
   def fill_track_embed(embed)
     embed.title = config.radio_name
     embed.url = config.base_url
-    embed.description = '***Now Playing***'
     embed.thumbnail = { url: config.splash_image }
     embed.timestamp = Time.now
     embed.color = random_color
