@@ -39,7 +39,7 @@ class WeatherHandler < CommandHandler
   def remove_location(_event, name)
     return "#{name} is not registered!" unless get_locations.include?(name)
 
-    server_redis.hmset("location:#{name}", :latitude, latitude, :longitude, longitude)
+    server_redis.del("location:#{name}")
 
     "Location #{name} was removed."
   end
