@@ -13,7 +13,8 @@ require_relative '../../util/hash_util'
 class RadioApiClient
   include HashUtil
 
-  def initialize(public_key:, private_key:, base_url:, icecast:, share:, history_current:, history_by_date:, skip:, log:, **_other_args)
+  def initialize(public_key:, private_key:, base_url:, icecast:, share:, history_current:, history_by_date:, skip:,
+                 file_request:, folder_request:, log:, **_other_args)
     @public_key = public_key
     @private_key = private_key
     @base_url = base_url
@@ -24,6 +25,8 @@ class RadioApiClient
     @history_current_endpoint = history_current
     @history_by_date_endpoint = history_by_date
     @skip_endpoint = skip
+    @file_request_endpoint = file_request
+    @folder_request_endpoint = folder_request
   end
 
   def get_now_playing
@@ -51,13 +54,28 @@ class RadioApiClient
 
   def skip_track(user_distinct)
     json_request = JSON.generate({ on_behalf_of: user_distinct })
-    hmac_message = "#{json_request}#{json_request.length}#{@private_key}"
-    auth = "#{@public_key}:#{Digest::SHA256.hexdigest(hmac_message)}"
+    auth = gen_hmac_auth(json_request)
 
     make_api_post_request(@skip_endpoint, json_request, headers: { authorization: auth })
   end
 
+  def request_file(user_distinct, search_terms)
+    enqueue_request(user_distinct, search_terms, @file_request_endpoint)
+  end
+
+  def request_folder(user_distinct, search_terms)
+    enqueue_request(user_distinct, search_terms, @folder_request_endpoint)
+  end
+
   private
+
+  def enqueue_request(user_distinct, search_terms, endpoint)
+    json_request = JSON.generate({ on_behalf_of: user_distinct })
+    auth = gen_hmac_auth(json_request)
+    uri = endpoint + '/' + URI.encode(search_terms)
+
+    make_api_post_request(uri, json_request, headers: { authorization: auth })
+  end
 
   def make_api_request(api_endpoint, **args)
     arguments = (args.empty? ? '' : '?') + URI.encode_www_form(args)
@@ -82,12 +100,16 @@ class RadioApiClient
     response = https.request(request)
     response_body = symbolize_keys(JSON.parse(response.body))
 
-    if http_success?(response)
-      response_body
-    else
+    unless http_success?(response)
       @log.error("Received error code #{response.code}: #{response.message}\n#{response.body}")
-      { http_code: response.code, http_message: response.message, response_body: response_body }
     end
+
+    { http_code: response.code, http_message: response.message, response_body: response_body }
+  end
+
+  def gen_hmac_auth(json_body)
+    hmac_message = "#{json_body}#{json_body.length}#{@private_key}"
+    "#{@public_key}:#{Digest::SHA256.hexdigest(hmac_message)}"
   end
 
   def build_http_request(path, body, headers)

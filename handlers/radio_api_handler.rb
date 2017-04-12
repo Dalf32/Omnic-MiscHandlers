@@ -4,6 +4,8 @@
 
 require_relative 'radio/radio_api_client'
 require_relative 'radio/radio_track'
+require_relative 'radio/api_skip_response'
+require_relative 'radio/api_enqueue_response'
 
 class RadioApiHandler < CommandHandler
   feature :radio, default_enabled: true
@@ -19,6 +21,10 @@ class RadioApiHandler < CommandHandler
       description: 'Restarts the thread that updates the Now Playing thread.', limit: { delay: 60, action: :on_limit }
   command :skip, :skip_track, feature: :radio, limit: { delay: 5, action: :on_limit},
       description: 'Votes to skip the track currently playing on WLTM radio.'
+  command :queuetrack, :enqueue_track, min_args: 1, feature: :radio, limit: { delay: 10, action: :on_limit },
+      description: 'Enqueues a single track to be played on WLTM radio or returns a list of all the files matching your criteria.'
+  command :queuealbum, :enqueue_album, min_args: 1, feature: :radio, limit: { delay: 10, action: :on_limit },
+          description: 'Enqueues an entire album to be played on WLTM radio or returns a list of all the folders matching your criteria.'
 
   event :ready, :start_now_playing_thread
 
@@ -87,12 +93,13 @@ class RadioApiHandler < CommandHandler
 
   def skip_track(event)
     response_hash = api_client.skip_track(event.author.distinct)
+    skip_response = ApiSkipResponse.new(response_hash)
 
-    if is_error_response?(response_hash)
-      return 'You cannot vote to skip the current track more than once.' if /user cannot vote to skip/ === response_hash.dig(:response_body, :error)
+    if skip_response.error?
+      return 'You cannot vote to skip the current track more than once.' if /user cannot vote to skip/ === skip_response.error_msg
 
       'An error occurred, please contact an admin.'
-    elsif is_track_skipped?(response_hash)
+    elsif skip_response.was_track_skipped?
       Thread.new do
         sleep(5)
         track = api_client.get_now_playing
@@ -100,10 +107,42 @@ class RadioApiHandler < CommandHandler
       end
 
       'The current track will be skipped shortly.'
-    elsif response_hash[:current_listeners] == '0'
+    elsif skip_response.current_listeners == 0
       'You cannot skip tracks when no one is listening!'
     else
-      "Not enough skip votes yet. #{response_hash[:current_skips]} Skips / #{response_hash[:current_listeners]} Listeners"
+      "Not enough skip votes yet. #{skip_response.current_skips} Skips / #{skip_response.current_listeners} Listeners"
+    end
+  end
+
+  def enqueue_track(event, *search_terms)
+    query = search_terms.join(' ')
+    response_hash = api_client.request_file(event.author.distinct, query)
+    enqueue_response = ApiEnqueueResponse.new(response_hash)
+
+    if enqueue_response.multiple_matches?
+      "There were multiple matches for your query:\n- #{enqueue_response.suggestions.join("\n- ")}"
+    elsif enqueue_response.no_matches?
+      'No matches were found for your query.'
+    elsif enqueue_response.error?
+      'The server encountered an unexpected error.'
+    else
+      "The requested Track was queued and will play in approximately #{enqueue_response.seconds_remaining} seconds."
+    end
+  end
+
+  def enqueue_album(event, *search_terms)
+    query = search_terms.join(' ')
+    response_hash = api_client.request_folder(event.author.distinct, query)
+    enqueue_response = ApiEnqueueResponse.new(response_hash)
+
+    if enqueue_response.multiple_matches?
+      "There were multiple matches for your query:\n- #{enqueue_response.suggestions.join("\n- ")}"
+    elsif enqueue_response.no_matches?
+      'No matches were found for your query.'
+    elsif enqueue_response.error?
+      'The server encountered an unexpected error.'
+    else
+      "The requested Album (#{enqueue_response.tracks_enqueued} tracks) was queued and will play in approximately #{enqueue_response.seconds_remaining} seconds."
     end
   end
 
@@ -177,14 +216,6 @@ class RadioApiHandler < CommandHandler
     end
   rescue StandardError => e
     log.error(e)
-  end
-
-  def is_track_skipped?(skip_response)
-    skip_response[:current_skip_percentage] >= skip_response[:skip_percentage_threshold]
-  end
-
-  def is_error_response?(request_response)
-    !request_response[:http_code].nil? && !request_response[:http_code].start_with?('2')
   end
 
   def likes_store
