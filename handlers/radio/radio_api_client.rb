@@ -72,7 +72,7 @@ class RadioApiClient
   def enqueue_request(user_distinct, search_terms, endpoint)
     json_request = JSON.generate({ on_behalf_of: user_distinct })
     auth = gen_hmac_auth(json_request)
-    uri = endpoint + '/' + URI.encode(search_terms)
+    uri = endpoint + '/' + URI.escape(search_terms, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
 
     make_api_post_request(uri, json_request, headers: { authorization: auth })
   end
