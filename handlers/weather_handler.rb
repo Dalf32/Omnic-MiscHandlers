@@ -10,7 +10,7 @@ class WeatherHandler < CommandHandler
   command :locations, :locations, feature: :weather, description: 'Lists all registered weather locations.'
   command :addlocation, :add_location, feature: :weather, description: 'Registers a new weather location with the given latitude and longitude.'
   command :dellocation, :remove_location, feature: :weather, description: 'Removes the registered weather location of the given name.'
-  command :weather, :show_weather, min_args: 0, max_args: 1, feature: :weather, limit: { delay: 120, action: :on_limit},
+  command :weather, :show_weather, min_args: 0, feature: :weather, limit: { delay: 120, action: :on_limit},
       description: 'Shows weather data for the given location or for all registered locations if none was specified.'
 
   def config_name
@@ -44,15 +44,18 @@ class WeatherHandler < CommandHandler
     "Location #{name} was removed."
   end
 
-  def show_weather(event, *location)
-    return show_all_weather(event) if location.empty?
+  def show_weather(event, *locations)
+    return show_all_weather(event) if locations.empty?
 
     registered_locs = get_locations
-    location = location.first
 
-    return "#{location} is not a registered location." unless registered_locs.include?(location)
+    unless (registered_locs & locations) == locations
+      return (locations - registered_locs).map{ |loc| "#{loc} is not a registered location." }.join("\n")
+    end
 
-    send_weather_embed(event.channel, location)
+    locations.each do |location|
+      send_weather_embed(event.channel, location)
+    end
 
     nil
   end
