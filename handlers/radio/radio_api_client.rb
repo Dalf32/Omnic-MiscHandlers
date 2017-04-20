@@ -36,7 +36,8 @@ class RadioApiClient
     _, current_track, _, time_stats = current_hist_hash.to_a.flatten
     time_stats = {} if time_stats.nil?
 
-    RadioTrack.new(**current_track[:track],  **time_stats, played_time: current_track[:played_time])
+    RadioTrack.new(**current_track[:track],  **time_stats, **current_track.select{ |k, _v|
+      [:played_time, :on_behalf_of, :bot_queued].include?(k) })
   end
 
   def get_history(**args)

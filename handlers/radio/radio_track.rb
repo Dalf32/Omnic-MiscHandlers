@@ -8,7 +8,8 @@ require 'chronic_duration'
 require_relative '../../util/hash_util'
 
 class RadioTrack
-  attr_reader :artist, :album, :title, :uploader, :seconds_elapsed, :seconds_remaining, :seconds_total, :download_link, :album_art_path, :id
+  attr_reader :artist, :album, :title, :uploader, :seconds_elapsed, :seconds_remaining, :seconds_total,
+              :download_link, :album_art_path, :id, :on_behalf_of
 
   include HashUtil
 
@@ -28,12 +29,18 @@ class RadioTrack
     @played_time = other_info[:played_time]
     @download_link = other_info[:download_link]
     @album_art_path = other_info.dig(:art, :art_link)
+    @on_behalf_of = other_info[:on_behalf_of]
+    @bot_queued = other_info[:bot_queued]
   end
 
   def played_time
     unless @played_time.nil?
       Time.parse(@played_time)
     end
+  end
+
+  def bot_queued?
+    @bot_queued
   end
 
   def pretty_print
@@ -47,7 +54,8 @@ class RadioTrack
   def fill_embed(embed)
     embed.add_field(name: 'Artist', value: @artist, inline: true)
     embed.add_field(name: 'Title', value: "#{@title} #{duration_str}", inline: true)
-    embed.add_field(name: 'Album', value: @album)
+    embed.add_field(name: 'Album', value: @album, inline: true)
+    embed.add_field(name: 'Queued by', value: @on_behalf_of, inline: true) unless bot_queued?
     embed.footer = { text: "Uploader: #{@uploader}" }
   end
 
