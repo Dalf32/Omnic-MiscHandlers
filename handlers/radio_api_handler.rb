@@ -2,6 +2,8 @@
 #
 # Author::	Kyle Mullins
 
+require 'chronic_duration'
+
 require_relative 'radio/radio_api_client'
 require_relative 'radio/radio_track'
 require_relative 'radio/api_skip_response'
@@ -126,7 +128,7 @@ class RadioApiHandler < CommandHandler
     elsif enqueue_response.error?
       'The server encountered an unexpected error.'
     else
-      "The requested Track was queued and will play in approximately #{enqueue_response.seconds_remaining} seconds."
+      "The requested Track was queued and will play in approximately #{ChronicDuration.output(enqueue_response.seconds_remaining, keep_zero: true)}."
     end
   end
 
@@ -142,7 +144,7 @@ class RadioApiHandler < CommandHandler
     elsif enqueue_response.error?
       'The server encountered an unexpected error.'
     else
-      "The requested Album (#{enqueue_response.tracks_enqueued} tracks) was queued and will play in approximately #{enqueue_response.seconds_remaining} seconds."
+      "The requested Album (#{enqueue_response.tracks_enqueued} tracks) was queued and will play in approximately #{ChronicDuration.output(enqueue_response.seconds_remaining, keep_zero: true)}."
     end
   end
 
