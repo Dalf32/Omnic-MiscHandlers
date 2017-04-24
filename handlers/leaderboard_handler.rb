@@ -20,12 +20,12 @@ class LeaderboardHandler < CommandHandler
       description: 'Displays info about the named team.'
   command :addteam, :add_team, min_args: 2, max_args: 2, pm_enabled: false, feature: :leaderboard,
       description: 'Adds a team with the given name to the leaderboard.'
-  #TODO: command :delteam
-  #TODO: command :listmembers
+  command :delteam, :delete_team, min_args: 2, max_args: 2, pm_enabled: false, feature: :leaderboard,
+      description: 'Deletes the team with the given name.'
   command :jointeam, :join_team, min_args: 2, max_args: 2, pm_enabled: false, feature: :leaderboard,
       description: 'Joins you to the named team.'
-  command :incrscore, :increment_team_score, min_args: 2, max_args: 3, pm_enabled: false, feature: :leaderboard,
-      description: "Increments the named Team's score by the given amount or 1."
+  command :editteam, :edit_team, min_args: 5, pm_enabled: false, feature: :leaderboard,
+      description: 'Edits the score or description of the given team.'
 
   def redis_name
     :leaderboard
@@ -43,7 +43,7 @@ class LeaderboardHandler < CommandHandler
 
     leaderboard = board_name.empty? ? leaderboards.first : get_leaderboard(board_name.first)
 
-    return "There is no Leaderboard with the name #{board_name.first}." if leaderboard.nil?
+    return board_not_found(board_name.first) if leaderboard.nil?
 
     "***Leaderboard***\n#{leaderboard.name}```#{leaderboard.pretty_print}```"
   end
@@ -59,45 +59,49 @@ class LeaderboardHandler < CommandHandler
   end
 
   def delete_leaderboard(_event, board_name)
-    #TODO: delete leaderboard
+    leaderboard = get_leaderboard(board_name)
+    return board_not_found(board_name) if leaderboard.nil?
+
+    leaderboard.delete(server_redis)
+    "Leaderboard '#{board_name}' has been deleted"
   end
 
   def team_info(_event, board_name, team_name)
-    leaderboard = get_leaderboard(board_name)
+    leaderboard, team = get_board_and_team(board_name, team_name)
 
-    return "There is no Leaderboard with the name #{board_name}." if leaderboard.nil?
-
-    team = leaderboard.get_team(team_name)
-
-    return "There is no Team #{team_name} in Leaderboard #{leaderboard.name}." if team.nil?
+    return board_not_found(board_name) if leaderboard.nil?
+    return team_not_found(leaderboard.name, team_name) if team.nil?
 
     "***Team #{team.name}***\n\tAbout: #{team.description}\n\tMembers: #{team.members.join(', ')}"
   end
 
   def add_team(_event, board_name, team_name)
     leaderboard = get_leaderboard(board_name)
+    return board_not_found(board_name) if leaderboard.nil?
 
-    return "There is no Leaderboard with the name #{board_name}." if leaderboard.nil?
+    team = leaderboard.add_team(Team.new(team_name))
+    return "There is already a Team #{team_name} in Leaderboard #{leaderboard.name}!" if team.nil?
 
-    team = leaderboard.get_team(team_name)
-
-    return "There is already a Team #{team_name} in Leaderboard #{leaderboard.name}!" unless team.nil?
-
-    team = Team.new(team_name)
-    leaderboard.add_team(team)
     leaderboard.to_redis(server_redis)
-
     "Team '#{team_name}' has been added to Leaderboard #{leaderboard.name}"
   end
 
-  def join_team(event, board_name, team_name)
+  def delete_team(_event, board_name, team_name)
     leaderboard = get_leaderboard(board_name)
+    return board_not_found(board_name) if leaderboard.nil?
 
-    return "There is no Leaderboard with the name #{board_name}." if leaderboard.nil?
+    team = leaderboard.remove_team(team_name)
+    return team_not_found(leaderboard.name, team_name) if team.nil?
 
-    team = leaderboard.get_team(team_name)
+    leaderboard.to_redis(server_redis)
+    "Team '#{team_name}' has been removed from Leaderboard #{leaderboard.name}"
+  end
 
-    return "There is no Team #{team_name}." if team.nil?
+  def join_team(event, board_name, team_name)
+    leaderboard, team = get_board_and_team(board_name, team_name)
+
+    return board_not_found(board_name) if leaderboard.nil?
+    return team_not_found(leaderboard.name, team_name) if team.nil?
 
     leaderboard.teams.each{ |t| t.remove_member(event.author.id) }
     team.add_member(event.author.id)
@@ -106,27 +110,43 @@ class LeaderboardHandler < CommandHandler
     "#{event.author.display_name} has joined Team #{team.name}!"
   end
 
-  def increment_team_score(_event, board_name, team_name, *amount)
-    leaderboard = get_leaderboard(board_name)
+  def edit_team(_event, board_name, team_name, *params)
+    leaderboard, team = get_board_and_team(board_name, team_name)
 
-    return "There is no Leaderboard with the name #{board_name}." if leaderboard.nil?
+    return board_not_found(board_name) if leaderboard.nil?
+    return team_not_found(leaderboard.name, team_name) if team.nil?
 
-    team = leaderboard.get_team(team_name)
+    prop_str, op_str, *value_ary = params
 
-    return "There is no Team #{team_name}." if team.nil?
+    case prop_str.downcase
+      when 'score'
+        property = 'score'
 
-    incr_amount = 1
-
-    begin
-      incr_amount = Integer(amount.first) unless amount.empty?
-    rescue ArgumentError
-      return 'If provided, second parameter must be an integer.'
+        begin
+          value = Float(value_ary.first)
+        rescue ArgumentError
+          return 'When modifying Score, the last parameter must be a number'
+        end
+      when 'descr'
+        property = 'description'
+        value = "\"#{value_ary.join(' ')}\""
+      else
+        return 'Third parameter must be one of Score or Descr'
     end
 
-    team.score += incr_amount
+    case op_str
+      when '='
+        operator = '='
+      when '+'
+        operator = '+='
+      else
+        return "Fourth parameter must be one of '=' or '+'"
+    end
+
+    eval("team.#{property} #{operator} #{value}")
     leaderboard.to_redis(server_redis)
 
-    "Team #{team.name}'s score has been incremented by #{incr_amount}"
+    "Team #{team.name} has been modified successfully."
   end
 
   private
@@ -137,5 +157,21 @@ class LeaderboardHandler < CommandHandler
 
   def get_leaderboard(board_name)
     leaderboards.find{ |board| board.name.downcase == board_name.downcase }
+  end
+
+  def get_board_and_team(board_name, team_name)
+    board = get_leaderboard(board_name)
+    team = nil
+    team = board.get_team(team_name) unless board.nil?
+
+    [board, team]
+  end
+
+  def board_not_found(board_name)
+    "There is no Leaderboard with the name #{board_name}."
+  end
+
+  def team_not_found(board_name, team_name)
+    "There is no Team #{team_name} in Leaderboard #{board_name}."
   end
 end
