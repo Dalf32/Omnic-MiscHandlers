@@ -27,6 +27,9 @@ class RadioApiHandler < CommandHandler
       description: 'Enqueues a single track to be played on WLTM radio or returns a list of all the files matching your criteria.'
   command :queuealbum, :enqueue_album, min_args: 1, feature: :radio, limit: { delay: 10, action: :on_limit },
           description: 'Enqueues an entire album to be played on WLTM radio or returns a list of all the folders matching your criteria.'
+  command :like, :like_track, min_args: 0, max_args: 1, feature: :radio, description: 'Adds the track currently playing on WLTM radio to your likes.'
+  command :likes, :show_likes, max_args: 0, feature: :radio, description: "Lists the tracks you've liked from WLTM radio."
+  command :clrlikes, :clear_likes, max_args: 0, feature: :radio, description: 'Clears all of your liked Tracks.'
 
   event :ready, :start_now_playing_thread
 
@@ -148,19 +151,42 @@ class RadioApiHandler < CommandHandler
     end
   end
 
-  def like_track(_event)
+  def like_track(_event, *dislike)
     track = api_client.get_now_playing
 
-    tracks_store.hsetnx(track.id, track.to_json)
-    likes_store.sadd(track.id)
+    global_redis.hsetnx('tracks', track.id, track.to_json)
 
-    'Track added to your likes!'
+    dislike_params = %w(dislike unlike -)
+
+    if user_redis.sismember('likes', track.id)
+      if dislike.empty?
+        'Track is already in your likes!'
+      elsif dislike_params.include?(dislike.first.downcase)
+        user_redis.srem('likes', track.id)
+
+        'Track removed from your likes.'
+      else
+        "Parameter must be one of #{dislike_params.join(', ')} if provided."
+      end
+    else
+      user_redis.sadd('likes', track.id)
+
+      'Track added to your likes!'
+    end
   end
 
-  def get_likes(_event)
-    tracks_store.hmget(*likes_store.smembers).map do |track_json|
-      RadioTrack.from_json(track_json).pretty_print
-    end.join("\n\n--------------------\n\n")
+  def show_likes(_event)
+    return 'No Tracks liked yet!' unless user_redis.exists('likes')
+
+    likes = global_redis.hmget('tracks', *user_redis.smembers('likes'))
+
+    "***Liked Tracks***\n\t" + likes.map do |track_json|
+      RadioTrack.from_json(track_json).min_print
+    end.join("\n\t")
+  end
+
+  def clear_likes(_event)
+    user_redis.del('likes')
   end
 
   def start_now_playing_thread(_event)
@@ -218,14 +244,6 @@ class RadioApiHandler < CommandHandler
     end
   rescue StandardError => e
     log.error(e)
-  end
-
-  def likes_store
-    Redis::Namespace.new('likes', redis: user_redis)
-  end
-
-  def tracks_store
-    Redis::Namespace.new('tracks', redis: global_redis)
   end
 
   MIN_SLEEP_DURATION = 10 unless defined? MIN_SLEEP_DURATION

@@ -11,7 +11,7 @@ class RadioTrack
   attr_reader :artist, :album, :title, :uploader, :seconds_elapsed, :seconds_remaining, :seconds_total,
               :download_link, :album_art_path, :id, :on_behalf_of
 
-  include HashUtil
+  extend HashUtil
 
   def initialize(artist:, album:, title:, uploader:, **other_info)
     @artist = artist
@@ -49,6 +49,10 @@ class RadioTrack
     format_str += "\n   Album: #{@album}\nUploader: #{@uploader}"
     format_str += "\n  Played: #{format_time_of_day(played_time)}" unless @played_time.nil?
     format_str
+  end
+
+  def min_print
+    "#{artist} - #{title}"
   end
 
   def fill_embed(embed)
