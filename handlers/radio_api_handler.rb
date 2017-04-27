@@ -3,6 +3,7 @@
 # Author::	Kyle Mullins
 
 require 'chronic_duration'
+require 'redis-objects'
 
 require_relative 'radio/radio_api_client'
 require_relative 'radio/radio_track'
@@ -154,39 +155,54 @@ class RadioApiHandler < CommandHandler
   def like_track(_event, *dislike)
     track = api_client.get_now_playing
 
-    global_redis.hsetnx('tracks', track.id, track.to_json)
-
     dislike_params = %w(dislike unlike -)
 
-    if user_redis.sismember('likes', track.id)
+    if likes_store.include?(track.id)
       if dislike.empty?
         'Track is already in your likes!'
       elsif dislike_params.include?(dislike.first.downcase)
-        user_redis.srem('likes', track.id)
+        likes_store.delete(track.id)
 
         'Track removed from your likes.'
       else
         "Parameter must be one of #{dislike_params.join(', ')} if provided."
       end
     else
-      user_redis.sadd('likes', track.id)
+      tracks_store[track.id] = track.to_json
+      likes_store.add(track.id)
 
       'Track added to your likes!'
     end
   end
 
   def show_likes(_event)
-    return 'No Tracks liked yet!' unless user_redis.exists('likes')
+    return 'No Tracks liked yet.' if likes_store.empty?
 
-    likes = global_redis.hmget('tracks', *user_redis.smembers('likes'))
+    likes = likes_store.members
+    liked_tracks = tracks_store.bulk_values(*likes)
 
-    "***Liked Tracks***\n\t" + likes.map do |track_json|
+    "***Liked Tracks***\n\t" + liked_tracks.map do |track_json|
       RadioTrack.from_json(track_json).min_print
     end.join("\n\t")
   end
 
-  def clear_likes(_event)
-    user_redis.del('likes')
+  def clear_likes(event)
+    event.message.reply("This will delete all of your likes (#{likes_store.count}), are you sure (Y/n)?")
+
+    event.message.await(event.message.id, {start_with: /(n|no|y|yes)/i}) do |await_event|
+      next false unless %w(n no y yes).include?(await_event.message.text.downcase)
+
+      if %w(n no).include?(await_event.message.text.downcase)
+        await_event.message.reply('Ok')
+        next
+      end
+
+      likes_store.clear
+
+      await_event.message.reply('All your likes have been deleted!')
+    end
+
+    nil
   end
 
   def start_now_playing_thread(_event)
@@ -224,6 +240,16 @@ class RadioApiHandler < CommandHandler
 
   def api_client
     @api_client ||= RadioApiClient.new(**config, log: log)
+  end
+
+  def likes_store
+    Redis::Objects.redis = user_redis
+    @likes_store ||= Redis::Set.new('likes')
+  end
+
+  def tracks_store
+    Redis::Objects.redis = global_redis
+    @tracks_store ||= Redis::HashKey.new('tracks')
   end
 
   def update_now_playing
