@@ -9,12 +9,16 @@ class ApiEnqueueResponse < HttpResponse
     body[:seconds_remaining]
   end
 
-  def tracks_enqueued
+  def num_tracks_enqueued
     body[:tracks_enqueued]
   end
 
   def suggestions
     body[:did_you_mean]
+  end
+
+  def tracks
+    body[:tracks].map { |track| RadioTrack.new(**track) }
   end
 
   def error_msg

@@ -13,14 +13,12 @@ class RadioTrack
 
   extend HashUtil
 
-  def initialize(artist:, album:, title:, uploader:, **other_info)
+  def initialize(id:, artist:, album:, title:, uploader:, **other_info)
+    @id = id
     @artist = artist
     @album = album
     @title = title
     @uploader = uploader
-
-    #Optional for now, but soon we'll require this
-    @id = other_info[:id]
 
     #Optional info
     @seconds_elapsed = other_info[:seconds_elapsed]
