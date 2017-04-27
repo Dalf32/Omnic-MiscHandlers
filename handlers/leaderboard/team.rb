@@ -16,12 +16,12 @@ class Team
   end
 
   def score_str
-    #We want to strip off the decimal point if the score is a whole number
+    # We want to strip off the decimal point if the score is a whole number
     BigDecimal(@score.to_s).frac.zero? ? @score.to_i.to_s : @score.round(2).to_s
   end
 
   def add_member(member_id)
-    @members<<member_id
+    @members << member_id
     @members.uniq!
   end
 
@@ -46,14 +46,14 @@ class Team
   def self.from_redis(redis, name)
     team_redis = redis_for_team(redis, name)
 
-    Team.new(name).tap{ |team|
-      team_redis.smembers('members').each{ |member_id| team.add_member(member_id) }
+    Team.new(name).tap do |team|
+      team_redis.smembers('members').each { |member_id| team.add_member(member_id) }
       team.description = team_redis.get('description')
       team.score = team_redis.get('score').to_f
-    }
+    end
   end
 
-  private
+  # Private Class Methods
 
   def self.redis_for_team(redis, name)
     Redis::Namespace.new("team:#{name}", redis: redis)
@@ -67,4 +67,6 @@ class Team
     team_redis.del('description')
     redis.srem('teams', team_name)
   end
+
+  private_class_method :redis_for_team, :delete
 end

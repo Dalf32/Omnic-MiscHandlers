@@ -28,8 +28,8 @@ class RadioApiClient
     _, current_track, _, time_stats = current_hist_hash.to_a.flatten
     time_stats = {} if time_stats.nil?
 
-    RadioTrack.new(**current_track[:track],  **time_stats, **current_track.select{ |k, _v|
-      [:played_time, :on_behalf_of, :bot_queued].include?(k) })
+    RadioTrack.new(**current_track[:track], **time_stats, **current_track.select { |k, _v|
+      %i[played_time on_behalf_of bot_queued].include?(k) })
   end
 
   def get_history(**args)
@@ -46,7 +46,7 @@ class RadioApiClient
   end
 
   def skip_track(user_distinct)
-    json_request = JSON.generate({ on_behalf_of: user_distinct })
+    json_request = JSON.generate(on_behalf_of: user_distinct)
     auth = gen_hmac_auth(json_request)
 
     make_api_post_request(@endpoints[:skip], json_request, headers: { authorization: auth })
@@ -63,7 +63,7 @@ class RadioApiClient
   private
 
   def enqueue_request(user_distinct, search_terms, endpoint)
-    json_request = JSON.generate({ on_behalf_of: user_distinct })
+    json_request = JSON.generate(on_behalf_of: user_distinct)
     auth = gen_hmac_auth(json_request)
     uri = endpoint + '/' + URI.escape(search_terms, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
 
@@ -89,7 +89,7 @@ class RadioApiClient
 
     request = build_http_request(uri.path, body, headers)
 
-    @log.debug("Making API POST request: #{uri.to_s}\n#{request.body}")
+    @log.debug("Making API POST request: #{uri}\n#{request.body}")
     response = https.request(request)
 
     unless http_success?(response)
@@ -107,11 +107,11 @@ class RadioApiClient
   end
 
   def build_http_request(path, body, headers)
-    Net::HTTP::Post.new(path).tap { |request|
+    Net::HTTP::Post.new(path).tap do |request|
       request.body = body
       request.content_type = 'application/json'
-      headers.each{ |key, value| request[key] = value }
-    }
+      headers.each { |key, value| request[key] = value }
+    end
   end
 
   def http_success?(response)

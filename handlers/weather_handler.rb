@@ -50,7 +50,7 @@ class WeatherHandler < CommandHandler
     registered_locs = get_locations
 
     unless (registered_locs & locations) == locations
-      return (locations - registered_locs).map{ |loc| "#{loc} is not a registered location." }.join("\n")
+      return (locations - registered_locs).map { |loc| "#{loc} is not a registered location." }.join("\n")
     end
 
     locations.each do |location|
@@ -102,7 +102,7 @@ class WeatherHandler < CommandHandler
 
   def get_locations
     loc_prefix = 'location:'
-    server_redis.keys(loc_prefix + '*').map{ |loc_key| loc_key.gsub(loc_prefix, '') }
+    server_redis.keys(loc_prefix + '*').map { |loc_key| loc_key.gsub(loc_prefix, '') }
   end
 
   def get_coordinates(location)
@@ -112,7 +112,7 @@ class WeatherHandler < CommandHandler
 
   def fill_weather_embed(weather, embed)
     current = weather.currently
-    today = weather.daily.data.find{ |d| Time.at(d.time).day == Time.now.day }
+    today = weather.daily.data.find { |d| Time.at(d.time).day == Time.now.day }
 
     embed.url = "https://darksky.net/forecast/#{weather.latitude},#{weather.longitude}"
 
@@ -149,7 +149,7 @@ class WeatherHandler < CommandHandler
   end
 
   def cardinal_direction(bearing)
-    directions = %w(NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW NNW N)
+    directions = %w[NNE NE ENE E ESE SE SSE S SSW SW WSW W WNW NW NNW N]
     increment = 22.5
     cur_bearing = 11.25
 

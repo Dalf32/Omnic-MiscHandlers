@@ -34,7 +34,7 @@ class LeaderboardHandler < CommandHandler
   def list_leaderboards(_event)
     return 'There are no Leaderboards yet!' if leaderboards.empty?
 
-    "Available Leaderboards: #{leaderboards.map{ |board| board.name }.join(', ')}"
+    "Available Leaderboards: #{leaderboards.map(&:name).join(', ')}"
   end
 
   def show_leaderboard(_event, *board_name)
@@ -103,7 +103,7 @@ class LeaderboardHandler < CommandHandler
     return board_not_found(board_name) if leaderboard.nil?
     return team_not_found(leaderboard.name, team_name) if team.nil?
 
-    leaderboard.teams.each{ |t| t.remove_member(event.author.id) }
+    leaderboard.teams.each { |t| t.remove_member(event.author.id) }
     team.add_member(event.author.id)
     leaderboard.to_redis(server_redis)
 
@@ -119,19 +119,19 @@ class LeaderboardHandler < CommandHandler
     prop_str, op_str, *value_ary = params
 
     case prop_str.downcase
-      when 'score'
-        property = 'score'
+    when 'score'
+      property = 'score'
 
-        begin
-          value = Float(value_ary.first)
-        rescue ArgumentError
-          return 'When modifying Score, the last parameter must be a number'
-        end
-      when 'descr'
-        property = 'description'
-        value = "\"#{value_ary.join(' ')}\""
-      else
-        return 'Third parameter must be one of Score or Descr'
+      begin
+        value = Float(value_ary.first)
+      rescue ArgumentError
+        return 'When modifying Score, the last parameter must be a number'
+      end
+    when 'descr'
+      property = 'description'
+      value = "\"#{value_ary.join(' ')}\"" # TODO: split this string at " so the string can't be terminated and other code executed
+    else
+      return 'Third parameter must be one of Score or Descr'
     end
 
     case op_str
@@ -152,11 +152,11 @@ class LeaderboardHandler < CommandHandler
   private
 
   def leaderboards
-    @leaderboards ||= server_redis.smembers('boards').map{ |board_name| Board.from_redis(server_redis, board_name) }
+    @leaderboards ||= server_redis.smembers('boards').map { |board_name| Board.from_redis(server_redis, board_name) }
   end
 
   def get_leaderboard(board_name)
-    leaderboards.find{ |board| board.name.downcase == board_name.downcase }
+    leaderboards.find { |board| board.name.casecmp(board_name) }
   end
 
   def get_board_and_team(board_name, team_name)

@@ -25,8 +25,9 @@ class RedditSearchHandler < CommandHandler
     futures = subs_split.map { |sub_list|
       Concurrent::Future.execute(pool: thread_pool) do
         begin
-          results = reddit.subreddit(sub_list.join('+')).search(criteria.join(' '), sort: :relevance, limit: config.results_per_request)
-          results = results.select{ |e| !e.thumbnail.nil? && e.thumbnail != 'self' } if config.media_only
+          results = reddit.subreddit(sub_list.join('+'))
+                          .search(criteria.join(' '), sort: :relevance, limit: config.results_per_request)
+          results = results.select { |e| !e.thumbnail.nil? && e.thumbnail != 'self' } if config.media_only
 
           if results.empty?
             Concurrent.log(:debug, 'Request returned no results.')
@@ -46,20 +47,20 @@ class RedditSearchHandler < CommandHandler
 
     event.channel.start_typing
 
-    [found_results_latch, request_complete_latch].each{ |latch|
+    [found_results_latch, request_complete_latch].each do |latch|
       Concurrent::Future.execute do
         latch.wait
         search_complete_latch.count_down
       end
-    }
+    end
 
     search_complete_latch.wait
     thread_pool.shutdown
 
     found_results_latch.count_down
-    (0..request_complete_latch.count).each{ request_complete_latch.count_down }
+    (0..request_complete_latch.count).each { request_complete_latch.count_down }
 
-    completed_future = futures.find{ |future| future.fulfilled? && !future.value.nil? }
+    completed_future = futures.find { |future| future.fulfilled? && !future.value.nil? }
 
     preamble = "#{event.author.display_name} searched for \"#{criteria.join(' ')}\"."
     return "#{preamble} No results were found." if completed_future.nil?
@@ -71,7 +72,7 @@ class RedditSearchHandler < CommandHandler
   def initialize(*_args)
     super
 
-    Concurrent.global_logger = lambda { |level, message, *_args|
+    Concurrent.global_logger = lambda { |level, message, *_log_args|
       log.add(Logging.level_num(level), message)
     }
   end
@@ -83,7 +84,7 @@ class RedditSearchHandler < CommandHandler
   end
 
   def subs
-    @@subs ||= open(config.subreddit_list_file).readlines.map{ |s| s.gsub('/r/', '').chomp }
+    @@subs ||= open(config.subreddit_list_file).readlines.map { |s| s.gsub('/r/', '').chomp }
   end
 
   def thread_pool

@@ -20,10 +20,10 @@ class RadioTrack
     @title = title
     @uploader = uploader
 
-    #Optional info
+    # Optional info
     @seconds_elapsed = other_info[:seconds_elapsed]
     @seconds_remaining = other_info[:seconds_remaining]
-    @seconds_total = other_info[:seconds_total] or other_info[:length]
+    @seconds_total = other_info[:seconds_total] || other_info[:length]
     @played_time = other_info[:played_time]
     @download_link = other_info[:download_link]
     @album_art_path = other_info.dig(:art, :art_link)
@@ -32,9 +32,7 @@ class RadioTrack
   end
 
   def played_time
-    unless @played_time.nil?
-      Time.parse(@played_time)
-    end
+    Time.parse(@played_time) unless @played_time.nil?
   end
 
   def bot_queued?
@@ -43,7 +41,7 @@ class RadioTrack
 
   def pretty_print
     format_str = "  Artist: #{@artist}\n   Title: #{@title}"
-    format_str +=  ' ' + duration_str
+    format_str += ' ' + duration_str
     format_str += "\n   Album: #{@album}\nUploader: #{@uploader}"
     format_str += "\n  Played: #{format_time_of_day(played_time)}" unless @played_time.nil?
     format_str

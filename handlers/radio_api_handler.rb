@@ -74,9 +74,9 @@ class RadioApiHandler < CommandHandler
 
     history_list = api_client.get_history(start: last_hour, desc: true, page: 0, pagesize: rewind_steps + 1)
 
-    unless history_list.nil?
-      "**The last #{rewind_steps} tracks played**\n```#{format_track_info_for_history(history_list[1..-1])}```"
-    end
+    return nil if history_list.nil?
+
+    "**The last #{rewind_steps} tracks played**\n```#{format_track_info_for_history(history_list[1..-1])}```"
   end
 
   def show_current_listeners(_event)
@@ -87,14 +87,14 @@ class RadioApiHandler < CommandHandler
   def show_recent_history(event)
     history_list = api_client.get_history(start: last_hour)
 
-    unless history_list.nil?
-      formatted_output = format_track_info_for_history(history_list)
-      formatted_output.scan(/.{1,1900}/m).each_with_index do |split_msg, n|
-        event.message.reply("#{n == 0 ? "**Tracks played in the last hour**\n" : ''}```#{split_msg}```")
-      end
+    return nil if history_list.nil?
 
-      nil
+    formatted_output = format_track_info_for_history(history_list)
+    formatted_output.scan(/.{1,1900}/m).each_with_index do |split_msg, n|
+      event.message.reply("#{n.zero? ? "**Tracks played in the last hour**\n" : ''}```#{split_msg}```")
     end
+
+    nil
   end
 
   def skip_track(event)
@@ -113,7 +113,7 @@ class RadioApiHandler < CommandHandler
       end
 
       'The current track will be skipped shortly.'
-    elsif skip_response.current_listeners == 0
+    elsif skip_response.current_listeners.zero?
       'You cannot skip tracks when no one is listening!'
     else
       "Not enough skip votes yet. #{skip_response.current_skips} Skips / #{skip_response.current_listeners} Listeners"
@@ -155,7 +155,7 @@ class RadioApiHandler < CommandHandler
   def like_track(_event, *dislike)
     track = api_client.get_now_playing
 
-    dislike_params = %w(dislike unlike -)
+    dislike_params = %w[dislike unlike -]
 
     if likes_store.include?(track.id)
       if dislike.empty?
@@ -189,17 +189,17 @@ class RadioApiHandler < CommandHandler
   def clear_likes(event)
     event.message.reply("This will delete all of your likes (#{likes_store.count}), are you sure (Y/n)?")
 
-    event.message.await(event.message.id, {start_with: /(n|no|y|yes)/i}) do |await_event|
-      next false unless %w(n no y yes).include?(await_event.message.text.downcase)
+    event.message.await(event.message.id, start_with: /(n|no|y|yes)/i) do |await_event|
+      next false unless %w[n no y yes].include?(await_event.message.text.downcase)
 
-      if %w(n no).include?(await_event.message.text.downcase)
+      if %w[n no].include?(await_event.message.text.downcase)
         await_event.message.reply('Ok')
         next
       end
 
       likes_store.clear
 
-      await_event.message.reply('All your likes have been deleted!')
+      await_event.message.reply('All your likes have been deleted.')
     end
 
     nil
@@ -253,7 +253,7 @@ class RadioApiHandler < CommandHandler
   end
 
   def update_now_playing
-    while true
+    loop do
       if bot.connected?
         track = api_client.get_now_playing
 
@@ -268,8 +268,8 @@ class RadioApiHandler < CommandHandler
 
       log.debug('Waking up.')
     end
-  rescue StandardError => e
-    log.error(e)
+  rescue StandardError => err
+    log.error(err)
   end
 
   MIN_SLEEP_DURATION = 10 unless defined? MIN_SLEEP_DURATION

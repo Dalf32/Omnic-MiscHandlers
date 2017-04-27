@@ -6,12 +6,12 @@ module HashUtil
   def symbolize_keys(hash)
     return symbolize_keys_ary(hash) unless hash.is_a?(Hash)
 
-    hash.inject({}){ |h, (k, v)| h[k.to_sym] = symbolize_keys(v); h }
+    hash.each_with_object({}) { |(k, v), h| h[k.to_sym] = symbolize_keys(v) }
   end
 
   def symbolize_keys_ary(array)
     return array unless array.is_a?(Array)
 
-    array.map{ |e| symbolize_keys(e) }
+    array.map { |e| symbolize_keys(e) }
   end
 end
