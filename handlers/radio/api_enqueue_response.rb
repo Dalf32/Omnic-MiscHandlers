@@ -32,4 +32,8 @@ class ApiEnqueueResponse < HttpResponse
   def no_matches?
     status_code == 404
   end
+
+  def track_removed?
+    status_code == 410
+  end
 end

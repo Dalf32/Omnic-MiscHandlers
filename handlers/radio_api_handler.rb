@@ -9,6 +9,7 @@ require_relative 'radio/radio_api_client'
 require_relative 'radio/radio_track'
 require_relative 'radio/api_skip_response'
 require_relative 'radio/api_enqueue_response'
+require_relative 'radio/track_cache'
 
 class RadioApiHandler < CommandHandler
   feature :radio, default_enabled: true
@@ -27,7 +28,9 @@ class RadioApiHandler < CommandHandler
   command :queuetrack, :enqueue_track, min_args: 1, feature: :radio, limit: { delay: 10, action: :on_limit },
       description: 'Enqueues a single track to be played on WLTM radio or returns a list of all the files matching your criteria.'
   command :queuealbum, :enqueue_album, min_args: 1, feature: :radio, limit: { delay: 10, action: :on_limit },
-          description: 'Enqueues an entire album to be played on WLTM radio or returns a list of all the folders matching your criteria.'
+      description: 'Enqueues an entire album to be played on WLTM radio or returns a list of all the folders matching your criteria.'
+  command :queuelike, :enqueue_like, min_args: 0, max_args: 0, feature: :radio, limi: { delay: 10, action: :on_limit },
+      description: 'Enqueues a track from your likes to be played on WLTM radio.'
   command :like, :like_track, min_args: 0, max_args: 1, feature: :radio, description: 'Adds the track currently playing on WLTM radio to your likes.'
   command :likes, :show_likes, max_args: 0, feature: :radio, description: "Lists the tracks you've liked from WLTM radio."
   command :clrlikes, :clear_likes, max_args: 0, feature: :radio, description: 'Clears all of your liked Tracks.'
@@ -152,42 +155,77 @@ class RadioApiHandler < CommandHandler
     end
   end
 
+  def enqueue_like(event)
+    return 'No Tracks liked yet.' if track_cache.likes_empty?
+
+    tracks = track_cache.liked_tracks
+
+    n = 1
+    event.message.reply("***Enter the number of the Track to enqueue or 'cancel'***\n\t" + tracks.map do |track|
+      "#{n}. #{track.min_print}"
+    end.join("\n\t"))
+
+    event.message.await(event.message.id, start_with: /(\d|cancel)/i) do |await_event|
+      if await_event.message.text.downcase == 'cancel'
+        await_event.message.reply('Ok, no track queued.')
+        next
+      end
+
+      track_num = await_event.message.text.to_i
+
+      if track_num < 1 || track_num > tracks.count
+        await_event.message.reply('The selected track must be one of the above listed numbers.')
+        next
+      end
+
+      track_id = tracks[track_num - 1].id
+      response_hash = api_client.request_by_id(await_event.author.distinct, track_id)
+      enqueue_response = ApiEnqueueResponse.new(response_hash)
+
+      if enqueue_response.track_removed?
+        track_cache.remove_track(track_id)
+        response_msg = 'Unfortunately, the requested track has been removed from the server.'
+      elsif enqueue_response.error?
+        response_msg = 'The server encountered an unexpected error.'
+      else
+        response_msg = "#{enqueue_response.tracks.first.min_print} was queued and will play in approximately #{ChronicDuration.output(enqueue_response.seconds_remaining, keep_zero: true)}."
+      end
+
+      await_event.message.reply(response_msg)
+    end
+
+    nil
+  end
+
   def like_track(_event, *dislike)
     track = api_client.get_now_playing
-
     dislike_params = %w[dislike unlike -]
 
-    if likes_store.include?(track.id)
+    if track_cache.liked?(track.id)
       if dislike.empty?
         'Track is already in your likes!'
       elsif dislike_params.include?(dislike.first.downcase)
-        likes_store.delete(track.id)
+        track_cache.remove_from_likes(track.id)
 
         'Track removed from your likes.'
       else
         "Parameter must be one of #{dislike_params.join(', ')} if provided."
       end
     else
-      tracks_store[track.id] = track.to_json
-      likes_store.add(track.id)
+      track_cache.add_to_likes(track)
 
       'Track added to your likes!'
     end
   end
 
   def show_likes(_event)
-    return 'No Tracks liked yet.' if likes_store.empty?
+    return 'No Tracks liked yet.' if track_cache.likes_empty?
 
-    likes = likes_store.members
-    liked_tracks = tracks_store.bulk_values(*likes)
-
-    "***Liked Tracks***\n\t" + liked_tracks.map do |track_json|
-      RadioTrack.from_json(track_json).min_print
-    end.join("\n\t")
+    "***Liked Tracks***\n\t" + track_cache.liked_tracks.map(&:min_print).join("\n\t")
   end
 
   def clear_likes(event)
-    event.message.reply("This will delete all of your likes (#{likes_store.count}), are you sure (Y/n)?")
+    event.message.reply("This will delete all of your likes (#{track_cache.likes_count}), are you sure (Y/n)?")
 
     event.message.await(event.message.id, start_with: /(n|no|y|yes)/i) do |await_event|
       next false unless %w[n no y yes].include?(await_event.message.text.downcase)
@@ -197,7 +235,7 @@ class RadioApiHandler < CommandHandler
         next
       end
 
-      likes_store.clear
+      track_cache.clear_likes
 
       await_event.message.reply('All your likes have been deleted.')
     end
@@ -242,14 +280,8 @@ class RadioApiHandler < CommandHandler
     @api_client ||= RadioApiClient.new(**config, log: log)
   end
 
-  def likes_store
-    Redis::Objects.redis = user_redis
-    @likes_store ||= Redis::Set.new('likes')
-  end
-
-  def tracks_store
-    Redis::Objects.redis = global_redis
-    @tracks_store ||= Redis::HashKey.new('tracks')
+  def track_cache
+    @track_cache ||= TrackCache.new(global_redis, user_redis)
   end
 
   def update_now_playing

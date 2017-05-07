@@ -60,6 +60,10 @@ class RadioApiClient
     enqueue_request(user_distinct, search_terms, @endpoints[:folder_request])
   end
 
+  def request_by_id(user_distinct, track_id)
+    enqueue_request(user_distinct, track_id.to_s, @endpoints[:id_request])
+  end
+
   private
 
   def enqueue_request(user_distinct, search_terms, endpoint)
