@@ -7,6 +7,7 @@ require_relative 'api_current_track_response'
 require_relative 'api_history_response'
 require_relative 'api_icecast_status_response'
 require_relative 'api_enqueue_response'
+require_relative 'api_skip_response'
 
 class RadioApiClient < ApiClient
   def initialize(log:, public_key:, private_key:, base_url:, endpoints:)

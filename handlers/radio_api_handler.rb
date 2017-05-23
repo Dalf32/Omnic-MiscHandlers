@@ -55,7 +55,11 @@ class RadioApiHandler < CommandHandler
   def show_now_playing(event, *args)
     return rewind_now_playing(event, *args) unless args.empty?
 
-    track = api_client.get_now_playing.track
+    current_track_response = api_client.get_now_playing
+
+    return 'An unexpected error occurred.' if current_track_response.error?
+
+    track = current_track_response.track
 
     event.channel.send_embed(' ') do |embed|
       fill_track_embed(embed)
@@ -72,22 +76,30 @@ class RadioApiHandler < CommandHandler
     rewind_steps = rewind_steps[0].length
     rewind_steps = [rewind_steps, MAX_REWIND_STEPS].min
 
-    history_list = api_client.get_history(start: last_hour, desc: true, page: 0, pagesize: rewind_steps + 1).tracks
+    history_response = api_client.get_history(start: last_hour, desc: true, page: 0, pagesize: rewind_steps + 1)
 
-    return nil if history_list.nil?
+    return 'An unexpected error occurred.' if history_response.error?
+
+    history_list = history_response.tracks
 
     "**The last #{rewind_steps} tracks played**\n```#{format_track_info_for_history(history_list[1..-1])}```"
   end
 
   def show_current_listeners(_event)
-    current_listeners = api_client.get_current_listeners.num_listeners
+    icecast_status_response = api_client.get_current_listeners
+
+    return 'An unexpected error occurred.' if icecast_status_response.error?
+
+    current_listeners = icecast_status_response.num_listeners
     "#{current_listeners} current listener#{current_listeners == 1 ? '' : 's'}#{current_listeners.zero? ? ' :slight_frown:' : ''}"
   end
 
   def show_recent_history(event)
-    history_list = api_client.get_history(start: last_hour).tracks
+    history_response = api_client.get_history(start: last_hour)
 
-    return nil if history_list.nil?
+    return 'An unexpected error occurred.' if history_response.error?
+
+    history_list = history_response.tracks
 
     formatted_output = format_track_info_for_history(history_list)
     formatted_output.scan(/.{1,1900}/m).each_with_index do |split_msg, n|
@@ -191,7 +203,11 @@ class RadioApiHandler < CommandHandler
   end
 
   def like_track(_event, *dislike)
-    track = api_client.get_now_playing.track
+    current_track_response = api_client.get_now_playing
+
+    return 'An unexpected error occurred.' if current_track_response.error?
+
+    track = current_track_response.track
     dislike_params = %w[dislike unlike -]
 
     if track_cache.liked?(track.id)
@@ -281,9 +297,10 @@ class RadioApiHandler < CommandHandler
   def update_now_playing
     loop do
       if bot.connected?
-        track = api_client.get_now_playing.track
+        current_track_response = api_client.get_now_playing
 
-        unless track.nil?
+        unless current_track_response.error?
+          track = current_track_response.track
           bot.game = track.artist || '-'
           sleep_until_next_track(track.seconds_remaining)
         end
