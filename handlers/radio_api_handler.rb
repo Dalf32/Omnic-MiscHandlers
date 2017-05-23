@@ -6,9 +6,6 @@ require 'chronic_duration'
 require 'redis-objects'
 
 require_relative 'radio/radio_api_client'
-require_relative 'radio/radio_track'
-require_relative 'radio/api_skip_response'
-require_relative 'radio/api_enqueue_response'
 require_relative 'radio/track_cache'
 
 class RadioApiHandler < CommandHandler
@@ -58,7 +55,7 @@ class RadioApiHandler < CommandHandler
   def show_now_playing(event, *args)
     return rewind_now_playing(event, *args) unless args.empty?
 
-    track = api_client.get_now_playing
+    track = api_client.get_now_playing.track
 
     event.channel.send_embed(' ') do |embed|
       fill_track_embed(embed)
@@ -75,7 +72,7 @@ class RadioApiHandler < CommandHandler
     rewind_steps = rewind_steps[0].length
     rewind_steps = [rewind_steps, MAX_REWIND_STEPS].min
 
-    history_list = api_client.get_history(start: last_hour, desc: true, page: 0, pagesize: rewind_steps + 1)
+    history_list = api_client.get_history(start: last_hour, desc: true, page: 0, pagesize: rewind_steps + 1).tracks
 
     return nil if history_list.nil?
 
@@ -83,12 +80,12 @@ class RadioApiHandler < CommandHandler
   end
 
   def show_current_listeners(_event)
-    current_listeners = api_client.get_current_listeners
+    current_listeners = api_client.get_current_listeners.num_listeners
     "#{current_listeners} current listener#{current_listeners == 1 ? '' : 's'}#{current_listeners.zero? ? ' :slight_frown:' : ''}"
   end
 
   def show_recent_history(event)
-    history_list = api_client.get_history(start: last_hour)
+    history_list = api_client.get_history(start: last_hour).tracks
 
     return nil if history_list.nil?
 
@@ -101,8 +98,7 @@ class RadioApiHandler < CommandHandler
   end
 
   def skip_track(event)
-    response_hash = api_client.skip_track(event.author.distinct)
-    skip_response = ApiSkipResponse.new(response_hash)
+    skip_response = api_client.skip_track(event.author.distinct)
 
     if skip_response.error?
       return 'You cannot vote to skip the current track more than once.' if /user cannot vote to skip/ === skip_response.error_msg
@@ -111,7 +107,7 @@ class RadioApiHandler < CommandHandler
     elsif skip_response.was_track_skipped?
       Thread.new do
         sleep(5)
-        track = api_client.get_now_playing
+        track = api_client.get_now_playing.track
         bot.game = track.artist || '-' unless track.nil?
       end
 
@@ -125,8 +121,7 @@ class RadioApiHandler < CommandHandler
 
   def enqueue_track(event, *search_terms)
     query = search_terms.join(' ')
-    response_hash = api_client.request_file(event.author.distinct, query)
-    enqueue_response = ApiEnqueueResponse.new(response_hash)
+    enqueue_response = api_client.request_file(event.author.distinct, query)
 
     if enqueue_response.multiple_matches?
       "There were multiple matches for your query:\n- #{enqueue_response.suggestions.join("\n- ")}"
@@ -141,8 +136,7 @@ class RadioApiHandler < CommandHandler
 
   def enqueue_album(event, *search_terms)
     query = search_terms.join(' ')
-    response_hash = api_client.request_folder(event.author.distinct, query)
-    enqueue_response = ApiEnqueueResponse.new(response_hash)
+    enqueue_response = api_client.request_folder(event.author.distinct, query)
 
     if enqueue_response.multiple_matches?
       "There were multiple matches for your query:\n- #{enqueue_response.suggestions.join("\n- ")}"
@@ -179,8 +173,7 @@ class RadioApiHandler < CommandHandler
       end
 
       track_id = tracks[track_num - 1].id
-      response_hash = api_client.request_by_id(await_event.author.distinct, track_id)
-      enqueue_response = ApiEnqueueResponse.new(response_hash)
+      enqueue_response = api_client.request_by_id(await_event.author.distinct, track_id)
 
       if enqueue_response.track_removed?
         track_cache.remove_track(track_id)
@@ -198,7 +191,7 @@ class RadioApiHandler < CommandHandler
   end
 
   def like_track(_event, *dislike)
-    track = api_client.get_now_playing
+    track = api_client.get_now_playing.track
     dislike_params = %w[dislike unlike -]
 
     if track_cache.liked?(track.id)
@@ -277,7 +270,8 @@ class RadioApiHandler < CommandHandler
   private
 
   def api_client
-    @api_client ||= RadioApiClient.new(**config, log: log)
+    @api_client ||= RadioApiClient.new(log: log, public_key: config.public_key, private_key: config.private_key,
+                                       base_url: config.base_url, endpoints: config.endpoints)
   end
 
   def track_cache
@@ -287,7 +281,7 @@ class RadioApiHandler < CommandHandler
   def update_now_playing
     loop do
       if bot.connected?
-        track = api_client.get_now_playing
+        track = api_client.get_now_playing.track
 
         unless track.nil?
           bot.game = track.artist || '-'

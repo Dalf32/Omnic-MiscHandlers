@@ -2,7 +2,7 @@
 #
 # Author::	Kyle Mullins
 
-require_relative 'http_response'
+require_relative '../../api/http_response'
 
 class ApiSkipResponse < HttpResponse
   def error_msg
