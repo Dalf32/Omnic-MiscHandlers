@@ -4,6 +4,7 @@
 
 require 'redd'
 require 'concurrent'
+require 'net/http'
 
 class RedditSearchHandler < CommandHandler
   feature :reddit, default_enabled: false
@@ -27,7 +28,8 @@ class RedditSearchHandler < CommandHandler
         begin
           results = reddit.subreddit(sub_list.join('+'))
                           .search(criteria.join(' '), sort: :relevance, limit: config.results_per_request)
-          results = results.select { |e| !e.thumbnail.nil? && e.thumbnail != 'self' } if config.media_only
+          results = results.select { |r| !r.thumbnail.nil? && r.thumbnail != 'self' } if config.media_only
+          results = results.select { |r| url_target_exists?(r.url) }
 
           if results.empty?
             Concurrent.log(:debug, 'Request returned no results.')
@@ -95,6 +97,14 @@ class RedditSearchHandler < CommandHandler
     Redd.it(client_id: config.client_id, secret: config.client_secret).tap do |reddit|
       reddit.client.max_retries = 1
     end
+  end
+
+  def url_target_exists?(url)
+    request_uri = URI(url)
+    http = Net::HTTP.new(request_uri.host, request_uri.port)
+    response = http.head(request_uri.request_uri)
+
+    response.code.start_with?('2')
   end
 end
 
