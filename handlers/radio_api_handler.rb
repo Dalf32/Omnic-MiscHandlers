@@ -331,7 +331,7 @@ class RadioApiHandler < CommandHandler
       time_remaining + 2
     end
 
-    log.debug("Sleeping for #{sleep_duration}s")
+    log.debug("Sleeping Now Playing thread for #{sleep_duration}s")
     sleep(sleep_duration)
   end
 
