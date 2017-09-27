@@ -9,8 +9,9 @@ require 'net/http'
 class RedditSearchHandler < CommandHandler
   feature :reddit, default_enabled: false
 
-  command :reddit, :search_reddit, description: 'Searches Reddit for the given string and returns a random result.',
-      min_args: 1, feature: :reddit, limit: { limit: 20, time_span: 60 }
+  command :reddit, :search_reddit, min_args: 1, feature: :reddit,
+      limit: { limit: 20, time_span: 60 }, usage: 'reddit <criteria>',
+      description: 'Searches Reddit for the given string and returns a random result.'
 
   def config_name
     :reddit

@@ -7,10 +7,19 @@ require 'forecast_io'
 class WeatherHandler < CommandHandler
   feature :weather, default_enabled: true
 
-  command :locations, :locations, feature: :weather, description: 'Lists all registered weather locations.'
-  command :addlocation, :add_location, feature: :weather, description: 'Registers a new weather location with the given latitude and longitude.'
-  command :dellocation, :remove_location, feature: :weather, description: 'Removes the registered weather location of the given name.'
-  command :weather, :show_weather, min_args: 0, feature: :weather, limit: { delay: 120, action: :on_limit},
+  command :locations, :locations, feature: :weather, max_args: 0, usage: 'locations',
+      description: 'Lists all registered weather locations.'
+
+  command :addlocation, :add_location, feature: :weather, min_args: 3,
+      max_args: 3, usage: 'addlocation <name> <latitude> <longitude>',
+      description: 'Registers a new weather location with the given latitude and longitude.'
+
+  command :dellocation, :remove_location, feature: :weather, min_args: 1,
+      max_args: 1, usage: 'dellocation <name>',
+      description: 'Removes the registered weather location of the given name.'
+
+  command :weather, :show_weather, min_args: 0, feature: :weather,
+      limit: { delay: 120, action: :on_limit}, usage: 'weather [*locations]',
       description: 'Shows weather data for the given location or for all registered locations if none was specified.'
 
   def config_name

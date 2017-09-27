@@ -8,23 +8,40 @@ require_relative 'leaderboard/board'
 class LeaderboardHandler < CommandHandler
   feature :leaderboard, default_enabled: false
 
-  command :listboards, :list_leaderboards, min_args: 0, max_args: 0, pm_enabled: false, feature: :leaderboard,
+  command :listboards, :list_leaderboards, min_args: 0, max_args: 0,
+      pm_enabled: false, feature: :leaderboard, usage: 'listboards',
       description: 'Lists all leaderboards on this server.'
-  command :leaderboard, :show_leaderboard, min_args: 0, max_args: 1, pm_enabled: false, feature: :leaderboard,
+
+  command :leaderboard, :show_leaderboard, min_args: 0, max_args: 1,
+      pm_enabled: false, feature: :leaderboard, usage: 'leaderboard [board_name]',
       description: 'Displays the current state of the named leaderboard.'
-  command :addboard, :add_leaderboard, min_args: 1, max_args: 1, pm_emabled: false, feature: :leaderboard,
+
+  command :addboard, :add_leaderboard, min_args: 1, max_args: 1,
+      pm_emabled: false, feature: :leaderboard, usage: 'addboard <board_name>',
       description: 'Adds a new leaderboard'
-  command :delboard, :delete_leaderboard, min_args: 1, max_args: 1, pm_enabled: false, feature: :leaderboard,
+
+  command :delboard, :delete_leaderboard, min_args: 1, max_args: 1,
+      pm_enabled: false, feature: :leaderboard, usage: 'delboard <board_name>',
       required_permissions: [:administrator], description: 'Deletes the named leaderboard.'
-  command :teaminfo, :team_info, min_args: 2, max_args: 2, pm_enabled: false, feature: :leaderboard,
+
+  command :teaminfo, :team_info, min_args: 2, max_args: 2, pm_enabled: false,
+      feature: :leaderboard, usage: 'teaminfo <board_name> <team_name>',
       description: 'Displays info about the named team.'
-  command :addteam, :add_team, min_args: 2, max_args: 2, pm_enabled: false, feature: :leaderboard,
+
+  command :addteam, :add_team, min_args: 2, max_args: 2, pm_enabled: false,
+      feature: :leaderboard, usage: 'addteam <board_name> <team_name>',
       description: 'Adds a team with the given name to the leaderboard.'
-  command :delteam, :delete_team, min_args: 2, max_args: 2, pm_enabled: false, feature: :leaderboard,
+
+  command :delteam, :delete_team, min_args: 2, max_args: 2, pm_enabled: false,
+      feature: :leaderboard, usage: 'delteam <board_name> <team_name>',
       description: 'Deletes the team with the given name.'
-  command :jointeam, :join_team, min_args: 2, max_args: 2, pm_enabled: false, feature: :leaderboard,
+
+  command :jointeam, :join_team, min_args: 2, max_args: 2, pm_enabled: false,
+      feature: :leaderboard, usage: 'jointeam <board_name> <team_name>',
       description: 'Joins you to the named team.'
+
   command :editteam, :edit_team, min_args: 5, pm_enabled: false, feature: :leaderboard,
+      usage: 'editteam <board_name> <team_name> <property> <=/+> <value>',
       description: 'Edits the score or description of the given team.'
 
   def redis_name

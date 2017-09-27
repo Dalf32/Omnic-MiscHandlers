@@ -42,7 +42,8 @@ class WikiaSearchHandler < CommandHandler
 
   def create_commands(_event)
     config.commands.each do |command_hash|
-      WikiaSearchHandler.command command_hash[:command], :wikia_search, feature: :wikia, min_args: 1,
+      WikiaSearchHandler.command command_hash[:command], :wikia_search, min_args: 1,
+          feature: :wikia, usage: "#{command_hash[:command]} <search_terms>",
           description: "Searches the #{command_hash[:display_name]} Wiki and returns the top results."
     end
   end

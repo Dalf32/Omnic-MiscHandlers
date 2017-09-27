@@ -6,7 +6,8 @@ require 'open-uri'
 require 'json'
 
 class CatHandler < CommandHandler
-  command :cat, :get_random_cat, description: 'Gets a random picture of a cat!'
+  command :cat, :get_random_cat, usage: 'cat',
+      description: 'Gets a random picture of a cat!'
 
   def config_name
     :cats

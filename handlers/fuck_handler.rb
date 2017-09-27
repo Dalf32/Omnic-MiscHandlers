@@ -6,18 +6,20 @@ require 'open-uri'
 require 'cgi'
 
 class FuckYouHandler < CommandHandler
-  command :fuckyou, :say_random_fuck_you, description: 'Tells the given person "Fuck you" in a random way.'
+  command :fuckyou, :say_random_fuck_you, min_args: 1, usage: 'fuckyou <name>',
+      description: 'Tells the given person "Fuck you" in a random way.'
 
   def config_name
     :fuck_api
   end
 
   def say_random_fuck_you(event, *name_words)
-    from = event.user.nickname.nil? ? event.user.username : event.user.nickname
+    from = event.user.display_name
     name = name_words.join(' ')
     escaped_from = CGI.escape(from)
     escaped_name = CGI.escape(name)
     endpoint = config.fuck_you_endpoints.sample % { name: escaped_name, from: escaped_from }
+
     make_api_request(endpoint).gsub(escaped_from, from).gsub(escaped_name, name)
   end
 
