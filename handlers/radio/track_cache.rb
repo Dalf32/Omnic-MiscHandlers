@@ -13,7 +13,7 @@ class TrackCache
   end
 
   def tracks
-    @tracks_store.values.map{ |track_json| RadioTrack.from_json(track_json) }
+    @tracks_store.values.map { |track_json| RadioTrack.from_json(track_json) }
   end
 
   def add_track(track)
@@ -41,7 +41,7 @@ class TrackCache
 
   def liked_tracks
     likes = @likes_store.members
-    @tracks_store.bulk_values(*likes).map{ |track_json| RadioTrack.from_json(track_json) }
+    @tracks_store.bulk_values(*likes).map { |track_json| RadioTrack.from_json(track_json) }
   end
 
   def likes_count
