@@ -11,6 +11,9 @@ class TwitchHandler < CommandHandler
   command :whoslive, :show_live_users, feature: :twitch, max_args: 0,
       usage: 'whoslive', description: 'Lists which users in this server are live.'
 
+  command :twitch, :link_twitch, feature: :twitch, min_args: 1, max_args: 1,
+      usage: 'twitch <twitch_name>', description: 'Links the given Twitch stream.'
+
   def live(event)
     user = event.author
 
@@ -30,6 +33,10 @@ class TwitchHandler < CommandHandler
     preamble_str + "\n" +
       live_users_list.map { |user| "#{user.display_name}: <#{user.stream_url}>" }
       .join("\n")
+  end
+
+  def link_twitch(_event, twitch_name)
+    "https://www.twitch.tv/#{twitch_name}"
   end
 
   private
