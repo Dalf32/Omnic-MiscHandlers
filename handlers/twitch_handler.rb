@@ -32,7 +32,7 @@ class TwitchHandler < CommandHandler
       usage: 'streamusers',
       description: 'Lists all members with stream announcements enabled.'
 
-  event :playing, :on_playing_status_change, feature: :twitch, type: 1
+  event :playing, :on_playing_status_change, feature: :twitch
 
   def redis_name
     :twitch
