@@ -76,7 +76,7 @@ class TwitchHandler < CommandHandler
 
     server_redis.set(:announce_channel, channels.first.id)
 
-    "Stream announcement channel has been set to #{channels.first.name}"
+    "Stream announcement channel has been set to ##{channels.first.name}"
   end
 
   def add_stream_user(_event, user)
