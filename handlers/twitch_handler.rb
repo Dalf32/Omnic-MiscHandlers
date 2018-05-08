@@ -32,6 +32,10 @@ class TwitchHandler < CommandHandler
       usage: 'streamusers',
       description: 'Lists all members with stream announcements enabled.'
 
+  command :streamannlevel, :set_stream_announce_level, feature: :twitch, min_args: 1,
+      max_args: 1, usage: 'streamannlevel <level>',
+      description: 'Sets the mention level of stream announcements: 0 = no mention, 1 = @ here, 2 = @ everyone'
+
   event :playing, :on_playing_status_change, feature: :twitch
 
   def redis_name
@@ -95,7 +99,24 @@ class TwitchHandler < CommandHandler
     "Stream announcements are enabled for the following users: #{users.map(&:display_name).join(', ')}"
   end
 
+  def set_stream_announce_level(_event, level)
+    message = case level
+              when '0'
+                'Stream announcements will no longer mention users.'
+              when '1'
+                'Stream announcements will now include an @ here mention.'
+              when '2'
+                'Stream announcements will now include an @ everyone mention.'
+              else
+                return 'Invalid level.'
+              end
+
+    server_redis.set(:announce_level, level.to_i)
+    message
+  end
+
   def on_playing_status_change(event)
+    return unless [0, 1].include?(event.type)
     return unless announcements_enabled?
     return unless announce_enabled_for_user?(event.user)
 
@@ -107,7 +128,8 @@ class TwitchHandler < CommandHandler
     return if get_cached_title(event.user) == event.user.game
 
     member = event.server.member(event.user.id)
-    announce_channel.send_message(stream_announce_message(member, '@everyone'))
+    message = stream_announce_message(member, get_announce_preamble)
+    announce_channel.send_message(message)
     cache_stream_title(event.user)
   end
 
@@ -138,8 +160,8 @@ class TwitchHandler < CommandHandler
     bot.channel(channel_id, @server)
   end
 
-  def stream_announce_message(user, preamble = '@here')
-    message = "#{preamble} #{user.display_name} is live now! Check them out: #{user.stream_url}"
+  def stream_announce_message(user, preamble = '@here ')
+    message = "#{preamble}#{user.display_name} is live now! Check them out: #{user.stream_url}"
     message += "\n*#{user.game}*" unless user.game.nil?
     message
   end
@@ -186,5 +208,18 @@ class TwitchHandler < CommandHandler
 
   def cache_key(user_id)
     "stream_cache:#{user_id}"
+  end
+
+  def get_announce_preamble
+    case server_redis.get(:announce_level)
+    when 0
+      ''
+    when 1
+      '@here '
+    when 2
+      '@everyone '
+    else
+      '@here '
+    end
   end
 end
