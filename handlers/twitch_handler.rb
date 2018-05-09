@@ -9,31 +9,32 @@ class TwitchHandler < CommandHandler
       description: "Announces that you're live and links your stream."
 
   command :whoslive, :show_live_users, feature: :twitch, max_args: 0,
-      usage: 'whoslive', description: 'Lists which users in this server are live.'
+      pm_enabled: false, usage: 'whoslive',
+      description: 'Lists which users in this server are live.'
 
   command :twitch, :link_twitch, feature: :twitch, min_args: 1, max_args: 1,
       usage: 'twitch <twitch_name>', description: 'Links the given Twitch stream.'
 
   command :streamannchannel, :set_stream_announce_channel, feature: :twitch,
-      max_args: 1, usage: 'streamannchannel [channel_name]',
+      max_args: 1, pm_enabled: false, usage: 'streamannchannel [channel_name]',
       description: 'Sets or clears the channel for stream announcements.'
 
   command :addstreamuser, :add_stream_user, feature: :twitch, min_args: 1,
-      max_args: 1, required_permissions: [:administrator],
+      max_args: 1, pm_enabled: false, required_permissions: [:administrator],
       usage: 'addstreamuser <user>',
       description: 'Enables stream announcements for the given user.'
 
   command :remstreamuser, :remove_stream_user, feature: :twitch, min_args: 1,
-      max_args: 1, required_permissions: [:administrator],
+      max_args: 1, pm_enabled: false, required_permissions: [:administrator],
       usage: 'remstreamuser <user>',
       description: 'Disables stream announcements for the given user.'
 
   command :streamusers, :list_stream_users, feature: :twitch, max_args: 0,
-      usage: 'streamusers',
+      pm_enabled: false, usage: 'streamusers',
       description: 'Lists all members with stream announcements enabled.'
 
-  command :streamannlevel, :set_stream_announce_level, feature: :twitch, min_args: 1,
-      max_args: 1, usage: 'streamannlevel <level>',
+  command :streamannlevel, :set_stream_announce_level, feature: :twitch,
+      min_args: 1, max_args: 1, pm_enabled: false, usage: 'streamannlevel <level>',
       description: 'Sets the mention level of stream announcements: 0 = no mention, 1 = @ here, 2 = @ everyone'
 
   event :playing, :on_playing_status_change, feature: :twitch
