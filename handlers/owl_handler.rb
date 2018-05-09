@@ -86,6 +86,7 @@ class OwlHandler < CommandHandler
     maps_response = api_client.get_maps
 
     return 'An unexpected error occurred.' if maps_response.error?
+    return 'There is no OWL match live at this time.' unless live_data.live_or_upcoming?
 
     if live_data.live?
       live_match = live_data.live_match
@@ -102,8 +103,6 @@ class OwlHandler < CommandHandler
       end
     else
       next_match = live_data.live_match
-
-      return 'There is no OWL match live at this time.' if next_match.nil?
 
       event.channel.send_embed(' ') do |embed|
         owl_basic_embed(embed)

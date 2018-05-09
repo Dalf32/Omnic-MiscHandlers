@@ -32,6 +32,10 @@ class ApiLiveMatchResponse < HttpResponse
     !body.dig(:data, :nextMatch, :id).nil?
   end
 
+  def live_or_upcoming?
+    !body.dig(:data, :liveMatch, :id).nil?
+  end
+
   private
 
   LIVE_STATE = 'LIVE'.freeze
