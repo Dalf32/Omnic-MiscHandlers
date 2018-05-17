@@ -6,11 +6,11 @@ require_relative '../../api/http_response'
 
 class ApiRankingsResponse < HttpResponse
   def standings
-    rankings = {}
+    rankings = []
 
     body[:content].each do |team|
-      rankings[team[:placement]] = create_team(team[:competitor],
-                                               team[:records].first)
+      rankings << [team[:placement], create_team(team[:competitor],
+                                                 team[:records].first)]
     end
 
     rankings

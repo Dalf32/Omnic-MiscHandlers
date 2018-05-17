@@ -7,7 +7,7 @@ require_relative 'owl_stage'
 
 class ApiStandingsResponse < HttpResponse
   def standings(phase = :league, stage = 0)
-    rankings = {}
+    rankings = []
 
     body[:data].map do |team|
       records = case phase
@@ -21,7 +21,7 @@ class ApiStandingsResponse < HttpResponse
                   next
                 end
 
-      rankings[records[:placement]] = create_team(team, records)
+      rankings << [records[:placement], create_team(team, records)]
     end
 
     rankings

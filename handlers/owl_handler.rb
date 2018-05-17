@@ -148,7 +148,7 @@ class OwlHandler < CommandHandler
   def send_standings(event, standings, title, url)
     return 'An unexpected error occurred.' if standings.nil? || standings.empty?
 
-    standings = standings.to_a.sort
+    standings = standings.sort_by(&:first)
     leader = standings.first.last
 
     event.channel.send_embed(' ') do |embed|
