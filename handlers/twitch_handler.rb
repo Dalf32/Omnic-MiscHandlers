@@ -112,7 +112,7 @@ class TwitchHandler < CommandHandler
                 return 'Invalid level.'
               end
 
-    server_redis.set(:announce_level, level.to_i)
+    server_redis.set(:announce_level, level)
     message
   end
 
@@ -213,11 +213,11 @@ class TwitchHandler < CommandHandler
 
   def get_announce_preamble
     case server_redis.get(:announce_level)
-    when 0
+    when '0'
       ''
-    when 1
+    when '1'
       '@here '
-    when 2
+    when '2'
       '@everyone '
     else
       '@here '
