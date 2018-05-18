@@ -9,17 +9,24 @@ require_relative 'owl/owl_api_client'
 class OwlHandler < CommandHandler
   feature :owl, default_enabled: true
 
-  command :owlteam, :show_team, feature: :owl, usage: 'owlteam <team>',
-          description: 'Shows details of the given OWL team.'
-  command :owlstandings, :show_standings, feature: :owl,
-          usage: 'owlstandings',
-          description: 'Shows the standings for the current OWL season.'
-  command :owlschedule, :show_schedule, feature: :owl, usage: 'owlschedule',
-          description: 'Shows upcoming OWL matches.'
-  command :owllive, :show_live_state, feature: :owl, usage: 'owllive',
-          description: 'Details the currently live match, or the next match if OWL is not yet live.'
-  command :owlstage, :show_stage_rank, feature: :owl, usage: 'owlstage',
-          description: 'Shows the standings for the current OWL stage.'
+  command :owlteam, :show_team, feature: :owl, min_args: 1,
+      usage: 'owlteam <team>',
+      description: 'Shows details of the given OWL team.'
+  command :owlstandings, :show_standings, feature: :owl, max_args: 0,
+      usage: 'owlstandings',
+      description: 'Shows the standings for the current OWL season.'
+  command :owlschedule, :show_schedule, feature: :owl, max_args: 0,
+      usage: 'owlschedule',
+      description: 'Shows upcoming OWL matches.'
+  command :owllive, :show_live_state, feature: :owl, max_args: 0,
+      usage: 'owllive',
+      description: 'Details the currently live match, or the next match if OWL is not yet live.'
+  command :owlstage, :show_stage_rank, feature: :owl, min_args: 0, max_args: 1,
+      usage: 'owlstage [stage_num]',
+      description: 'Shows the standings for the current OWL stage.'
+  command :owlscore, :show_score, feature: :owl, max_args: 0,
+      usage: 'owlscore',
+      description: 'Shows the score of the currently live match'
 
   def config_name
     :owl_api
@@ -82,11 +89,11 @@ class OwlHandler < CommandHandler
     live_data = api_client.get_live_match
 
     return 'An unexpected error occurred.' if live_data.error?
+    return 'There is no OWL match live at this time.' unless live_data.live_or_upcoming?
 
     maps_response = api_client.get_maps
 
     return 'An unexpected error occurred.' if maps_response.error?
-    return 'There is no OWL match live at this time.' unless live_data.live_or_upcoming?
 
     if live_data.live?
       live_match = live_data.live_match
@@ -113,19 +120,28 @@ class OwlHandler < CommandHandler
     end
   end
 
-  def show_stage_rank(event)
-    current_stage = api_client.current_stage
+  def show_stage_rank(event, *stage_num)
+    if stage_num.empty?
+      current_stage = api_client.current_stage
 
-    return 'No stage currently in progress.' if current_stage.nil?
+      return 'No stage currently in progress.' if current_stage.nil?
 
-    standings_response = api_client.get_standings
+      stage_standings(event, current_stage.id, current_stage.name)
+    else
+      stage_num = stage_num.first
+      return 'Invalid Stage number.' unless %w[1 2 3 4].include?(stage_num)
 
-    return 'An unexpected error occurred.' if standings_response.error?
+      stage_standings(event, stage_num.to_i, "Stage #{stage_num}")
+    end
+  end
 
-    standings = standings_response.standings(:stage, current_stage.id)
+  def show_score(_event)
+    live_data = api_client.get_live_match
 
-    send_standings(event, standings, "#{current_stage.name} Standings",
-                   'https://overwatchleague.com/standings')
+    return 'An unexpected error occurred.' if live_data.error?
+    return 'There is no OWL match live at this time.' unless live_data.live?
+
+    live_data.live_match.score_str
   end
 
   private
@@ -158,6 +174,17 @@ class OwlHandler < CommandHandler
       embed.description = "```#{standings_header}\n#{format_standings(standings)}```"
       leader.fill_embed_logo(embed)
     end
+  end
+
+  def stage_standings(event, stage_id, stage_name)
+    standings_response = api_client.get_standings
+
+    return 'An unexpected error occurred.' if standings_response.error?
+
+    standings = standings_response.standings(:stage, stage_id)
+
+    send_standings(event, standings, "#{stage_name} Standings",
+                   'https://overwatchleague.com/standings')
   end
 
   def format_time_left(time_ms)

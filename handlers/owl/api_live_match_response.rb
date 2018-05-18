@@ -46,6 +46,8 @@ class ApiLiveMatchResponse < HttpResponse
                       home: create_team(match[:competitors][1]))
 
       owl_match.games = match[:games].map { |game| create_game(game) }
+      owl_match.result(away_wins: match.dig(:scores, 0, :value),
+                       home_wins: match.dig(:scores, 1, :value), winner: nil)
     end
   end
 

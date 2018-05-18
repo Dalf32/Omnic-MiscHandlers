@@ -71,6 +71,16 @@ class OwlMatch
     "#{away} vs #{home}"
   end
 
+  def score_str
+    away = "#{@away_team.abbrev} #{@away_wins}"
+    away = "**#{away}**" if @away_wins > @home_wins
+
+    home = "#{@home_team.abbrev} #{@home_wins}"
+    home = "**#{home}**" if @home_wins > @away_wins
+
+    "#{away} - #{home}"
+  end
+
   private
 
   def format_maps(maps)
