@@ -21,9 +21,10 @@ class OwlMatch
     @home_team = home
   end
 
-  def result(away_wins:, home_wins:, winner:)
+  def result(away_wins:, home_wins:, draws:, winner:)
     @away_wins = away_wins
     @home_wins = home_wins
+    @draws = draws
     @winner = @away_team.eql?(winner) ? @away_team : @home_team unless winner.nil?
   end
 
@@ -78,7 +79,9 @@ class OwlMatch
     home = "#{@home_team.abbrev} #{@home_wins}"
     home = "**#{home}**" if @home_wins > @away_wins
 
-    "#{away} - #{home}"
+    draw_str = @draws.zero? ? '' : " (#{@draws}D)"
+
+    "#{away} - #{home}#{draw_str}"
   end
 
   private
