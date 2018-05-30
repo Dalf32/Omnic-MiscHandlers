@@ -50,7 +50,9 @@ class ApiScheduleResponse < HttpResponse
       owl_match.teams(away: create_team(match[:competitors][0]),
                       home: create_team(match[:competitors][1]))
 
-      owl_match.result(away_wins: match[:wins][0], home_wins: match[:wins][1],
+      owl_match.result(away_wins: match.dig(:wins, 0),
+                       home_wins: match.dig(:wins, 1),
+                       draws: match.dig(:ties, 0),
                        winner: match.dig(:winner, :id))
     end
   end
