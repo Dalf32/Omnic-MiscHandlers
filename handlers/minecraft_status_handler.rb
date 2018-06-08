@@ -7,11 +7,13 @@ require_relative 'minecraft/minecraft_status_client'
 class MinecraftStatusHandler < CommandHandler
   feature :minecraft, default_enabled: true
 
-  command :mcserver, :show_url, feature: :minecraft, max_args: 0, usage: 'mcserver',
-      description: 'Posts the address of the Minecraft server.'
+  command(:mcserver, :show_url)
+    .feature(:minecraft).max_args(0).usage('mcserver')
+    .description('Posts the address of the Minecraft server.')
 
-  command :mcstatus, :show_status, feature: :minecraft, max_args: 0, usage: 'mcstatus',
-      description: 'Shows the current status of the Minecraft server.'
+  command(:mcstatus, :show_status)
+    .feature(:minecraft).max_args(0).usage('mcstatus')
+    .description('Shows the current status of the Minecraft server.')
 
   def config_name
     :minecraft_status

@@ -9,24 +9,24 @@ require_relative 'owl/owl_api_client'
 class OwlHandler < CommandHandler
   feature :owl, default_enabled: true
 
-  command :owlteam, :show_team, feature: :owl, min_args: 1,
-      usage: 'owlteam <team>',
-      description: 'Shows details of the given OWL team.'
-  command :owlstandings, :show_standings, feature: :owl, max_args: 0,
-      usage: 'owlstandings',
-      description: 'Shows the standings for the current OWL season.'
-  command :owlschedule, :show_schedule, feature: :owl, max_args: 0,
-      usage: 'owlschedule',
-      description: 'Shows upcoming OWL matches.'
-  command :owllive, :show_live_state, feature: :owl, max_args: 0,
-      usage: 'owllive',
-      description: 'Details the currently live match, or the next match if OWL is not yet live.'
-  command :owlstage, :show_stage_rank, feature: :owl, min_args: 0, max_args: 1,
-      usage: 'owlstage [stage_num]',
-      description: 'Shows the standings for the current OWL stage.'
-  command :owlscore, :show_score, feature: :owl, max_args: 0,
-      usage: 'owlscore',
-      description: 'Shows the score of the currently live match'
+  command(:owlteam, :show_team)
+    .feature(:owl).min_args(1).usage('owlteam <team>')
+    .description('Shows details of the given OWL team.')
+  command(:owlstandings, :show_standings)
+    .feature(:owl).max_args(0).usage('owlstandings')
+    .description('Shows the standings for the current OWL season.')
+  command(:owlschedule, :show_schedule)
+    .feature(:owl).max_args(0).usage('owlschedule')
+    .description('Shows upcoming OWL matches.')
+  command(:owllive, :show_live_state)
+    .feature(:owl).max_args(0).usage('owllive')
+    .description('Details the currently live match, or the next match if OWL is not yet live.')
+  command(:owlstage, :show_stage_rank)
+    .feature(:owl).args_range(0, 1).usage('owlstage [stage_num]')
+    .description('Shows the standings for the current OWL stage.')
+  command(:owlscore, :show_score)
+    .feature(:owl).max_args(0).usage('owlscore')
+    .description('Shows the score of the currently live match')
 
   def config_name
     :owl_api

@@ -11,51 +11,61 @@ require_relative 'radio/track_cache'
 class RadioApiHandler < CommandHandler
   feature :radio, default_enabled: true
 
-  command :radio, :radio_link, feature: :radio, usage: 'radio',
-      description: 'Posts a link to the WLTM radio website.'
+  command(:radio, :radio_link)
+    .feature(:radio).usage('radio')
+    .description('Posts a link to the WLTM radio website.')
 
-  command :playing, :show_now_playing, min_args: 0, max_args: 1, feature: :radio,
-      usage: 'playing [*~/-]', limit: { delay: 10, action: :on_limit },
-      description: 'Displays information about the currently playing track on WLTM radio.'
+  command(:playing, :show_now_playing)
+    .args_range(0, 1).feature(:radio).usage('playing [*~/-]')
+    .limit(delay: 10, action: :on_limit)
+    .description('Displays information about the currently playing track on WLTM radio.')
 
-  command :listeners, :show_current_listeners, feature: :radio, max_args: 0,
-      limit: { delay: 10, action: :on_limit }, usage: 'listeners',
-      description: 'Shows the number of people listening to WLTM radio.'
+  command(:listeners, :show_current_listeners)
+    .feature(:radio).max_args(0).limit(delay: 10, action: :on_limit)
+    .usage('listeners')
+    .description('Shows the number of people listening to WLTM radio.')
 
-  command :history, :show_recent_history, feature: :radio, max_args: 0,
-      limit: { delay: 10, action: :on_limit }, usage: 'history',
-      description: 'Shows the tracks that have played in the last hour'
+  command(:history, :show_recent_history)
+    .feature(:radio).max_args(0).limit(delay: 10, action: :on_limit)
+    .usage('history')
+    .description('Shows the tracks that have played in the last hour')
 
-  command :restart, :restart_now_playing_thread, feature: :radio, max_args: 0,
-      required_permissions: [:administrator], usage: 'restart',
-      limit: { delay: 60, action: :on_limit },
-      description: 'Restarts the thread that updates the Now Playing thread.'
+  command(:restart, :restart_now_playing_thread)
+    .feature(:radio).max_args(0).permissions(:administrator).usage('restart')
+    .limit(delay: 60, action: :on_limit)
+    .description('Restarts the thread that updates the Now Playing thread.')
 
-  command :skip, :skip_track, feature: :radio, max_args: 0, usage: 'skip',
-      limit: { delay: 5, action: :on_limit},
-      description: 'Votes to skip the track currently playing on WLTM radio.'
+  command(:skip, :skip_track)
+    .feature(:radio).max_args(0).usage('skip')
+    .limit(delay: 5, action: :on_limit)
+    .description('Votes to skip the track currently playing on WLTM radio.')
 
-  command :queuetrack, :enqueue_track, min_args: 1, feature: :radio,
-      limit: { delay: 10, action: :on_limit }, usage: 'queuetrack <search_terms>',
-      description: 'Enqueues a single track to be played on WLTM radio or returns a list of all the files matching your criteria.'
+  command(:queuetrack, :enqueue_track)
+    .min_args(1).feature(:radio).limit(delay: 10, action: :on_limit)
+    .usage('queuetrack <search_terms>')
+    .description('Enqueues a single track to be played on WLTM radio or returns a list of all the files matching your criteria.')
 
-  command :queuealbum, :enqueue_album, min_args: 1, feature: :radio,
-      limit: { delay: 10, action: :on_limit }, usage: 'queuealbum <search_terms>',
-      description: 'Enqueues an entire album to be played on WLTM radio or returns a list of all the folders matching your criteria.'
+  command(:queuealbum, :enqueue_album)
+    .min_args(1).feature(:radio).limit(delay: 10, action: :on_limit)
+    .usage('queuealbum <search_terms>')
+    .description('Enqueues an entire album to be played on WLTM radio or returns a list of all the folders matching your criteria.')
 
-  command :queuelike, :enqueue_like, min_args: 0, max_args: 0, feature: :radio,
-      limit: { delay: 10, action: :on_limit }, usage: 'queuelike',
-      description: 'Enqueues a track from your likes to be played on WLTM radio.'
+  command(:queuelike, :enqueue_like)
+    .args_range(0, 0).feature(:radio).limit(delay: 10, action: :on_limit)
+    .usage('queuelike')
+    .description('Enqueues a track from your likes to be played on WLTM radio.')
 
-  command :like, :like_track, min_args: 0, max_args: 1, feature: :radio,
-      usage: 'like [dislike/unlike/-]',
-      description: 'Adds the track currently playing on WLTM radio to your likes.'
+  command(:like, :like_track)
+    .args_range(0, 1).feature(:radio).usage('like [dislike/unlike/-]')
+    .description('Adds the track currently playing on WLTM radio to your likes.')
 
-  command :likes, :show_likes, max_args: 0, feature: :radio, usage: 'likes',
-      description: "Lists the tracks you've liked from WLTM radio."
+  command(:likes, :show_likes)
+    .max_args(0).feature(:radio).usage('likes')
+    .description("Lists the tracks you've liked from WLTM radio.")
 
-  command :clrlikes, :clear_likes, max_args: 0, feature: :radio, usage: 'clrlikes',
-      description: 'Clears all of your liked Tracks.'
+  command(:clrlikes, :clear_likes)
+    .max_args(0).feature(:radio).usage('clrlikes')
+    .description('Clears all of your liked Tracks.')
 
   event :ready, :start_now_playing_thread
 

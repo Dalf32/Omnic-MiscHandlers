@@ -3,8 +3,9 @@
 # Author::	Kyle Mullins
 
 class Magic8BallHandler < CommandHandler
-  command :magic8ball, :magic_8_ball, min_args: 1, usage: 'magic8ball <question>',
-      description: 'Simulates a Magic 8-Ball'
+  command(:magic8ball, :magic_8_ball)
+    .min_args(1).usage('magic8ball <question>')
+    .description('Simulates a Magic 8-Ball')
 
   def magic_8_ball(_event, *_question)
     [

@@ -9,9 +9,10 @@ require 'net/http'
 class RedditSearchHandler < CommandHandler
   feature :reddit, default_enabled: false
 
-  command :reddit, :search_reddit, min_args: 1, feature: :reddit,
-      limit: { limit: 20, time_span: 60 }, usage: 'reddit <criteria>',
-      description: 'Searches Reddit for the given string and returns a random result.'
+  command(:reddit, :search_reddit)
+    .min_args(1).feature(:reddit).limit(limit: 20, span: 60)
+    .usage('reddit <criteria>')
+    .description('Searches Reddit for the given string and returns a random result.')
 
   def config_name
     :reddit
@@ -24,7 +25,7 @@ class RedditSearchHandler < CommandHandler
     request_complete_latch = Concurrent::CountDownLatch.new(subs_split.length)
     search_complete_latch = Concurrent::CountDownLatch.new
 
-    futures = subs_split.map { |sub_list|
+    futures = subs_split.map do |sub_list|
       Concurrent::Future.execute(pool: thread_pool) do
         begin
           results = reddit.subreddit(sub_list.join('+'))
@@ -46,7 +47,7 @@ class RedditSearchHandler < CommandHandler
           request_complete_latch.count_down
         end
       end
-    }
+    end
 
     event.channel.start_typing
 
