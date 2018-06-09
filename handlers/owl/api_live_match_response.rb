@@ -3,8 +3,8 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'owl_match'
-require_relative 'owl_game'
+require_relative 'model/owl_match'
+require_relative 'model/owl_game'
 
 class ApiLiveMatchResponse < HttpResponse
   def live_match

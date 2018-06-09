@@ -3,7 +3,7 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'owl_map'
+require_relative 'model/owl_map'
 
 class ApiMapsResponse < HttpResponse
   def maps

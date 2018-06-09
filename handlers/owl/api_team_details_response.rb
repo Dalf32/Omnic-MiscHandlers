@@ -3,8 +3,8 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'owl_team'
-require_relative 'owl_player'
+require_relative 'model/owl_team'
+require_relative 'model/owl_player'
 
 class ApiTeamDetailsResponse < HttpResponse
   def team

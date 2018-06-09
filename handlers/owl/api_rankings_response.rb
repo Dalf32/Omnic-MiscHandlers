@@ -3,6 +3,7 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
+require_relative 'model/owl_team'
 
 class ApiRankingsResponse < HttpResponse
   def standings

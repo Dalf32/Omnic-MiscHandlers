@@ -5,10 +5,10 @@
 require 'date'
 
 require_relative '../../api/http_response'
-require_relative 'owl_stage'
-require_relative 'owl_match'
-require_relative 'owl_team'
-require_relative 'owl_match_week'
+require_relative 'model/owl_stage'
+require_relative 'model/owl_match'
+require_relative 'model/owl_team'
+require_relative 'model/owl_match_week'
 
 class ApiScheduleResponse < HttpResponse
   def stages
