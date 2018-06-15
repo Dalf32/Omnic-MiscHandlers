@@ -22,8 +22,8 @@ class ApiRankingsResponse < HttpResponse
   def create_team(comp, records)
     OwlTeam.new(id: comp[:id], name: comp[:name]).tap do |team|
       team.basic_info(abbrev: comp[:abbreviatedName], home: comp[:homeLocation],
-                      country: comp[:addressCountry],
-                      color: comp[:primaryColor], logo: comp[:logo])
+                      color: comp[:primaryColor], logo: comp[:logo],
+                      website: nil)
 
       team.records(wins: records[:matchWin], losses: records[:matchLoss],
                    map_wins: records[:gameWin], map_losses: records[:gameLoss],

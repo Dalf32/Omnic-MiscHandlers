@@ -20,9 +20,8 @@ class ApiTeamsResponse < HttpResponse
         team = all_teams.find { |t| t.eql?(comp[:id]) }
 
         team.basic_info(abbrev: comp[:abbreviatedName],
-                        home: comp[:homeLocation],
-                        country: comp[:addressCountry],
-                        color: comp[:primaryColor], logo: comp[:logo])
+                        home: comp[:homeLocation], color: comp[:primaryColor],
+                        logo: comp[:logo], website: nil)
       end
     end
   end

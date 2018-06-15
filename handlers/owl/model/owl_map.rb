@@ -15,6 +15,7 @@ class OwlMap
     @icon = icon
     @thumbnail = thumbnail
     @type = type
+    self
   end
 
   def eql?(other)

@@ -12,27 +12,37 @@ class OwlHandler < CommandHandler
   command(:owlteam, :show_team)
     .feature(:owl).min_args(1).usage('owlteam <team>')
     .description('Shows details of the given OWL team.')
+
   command(:owlstandings, :show_standings)
     .feature(:owl).max_args(0).usage('owlstandings')
     .description('Shows the standings for the current OWL season.')
+
   command(:owlschedule, :show_schedule)
     .feature(:owl).max_args(0).usage('owlschedule')
     .description('Shows upcoming OWL matches.')
+
   command(:owllive, :show_live_state)
     .feature(:owl).max_args(0).usage('owllive')
     .description('Details the currently live match, or the next match if OWL is not yet live.')
+
   command(:owlstage, :show_stage_rank)
     .feature(:owl).args_range(0, 1).usage('owlstage [stage_num]')
     .description('Shows the standings for the current OWL stage.')
+
   command(:owlscore, :show_score)
     .feature(:owl).max_args(0).usage('owlscore')
     .description('Shows the score of the currently live match')
+
+  command(:owlplayer, :show_player)
+    .feature(:owl).args_range(1, 2).usage('owlplayer <player> [hero]')
+    .description('Shows details of the given OWL player and optionally, detailed stats for the given hero.')
 
   def config_name
     :owl_api
   end
 
   def show_team(event, *team_name)
+    event.channel.start_typing
     teams_response = api_client.get_teams
 
     return 'An unexpected error occurred.' if teams_response.error?
@@ -49,12 +59,12 @@ class OwlHandler < CommandHandler
 
     event.channel.send_embed(' ') do |embed|
       owl_basic_embed(embed)
-      embed.url = team_details.about_url
       team_details.team.fill_embed(embed)
     end
   end
 
   def show_standings(event)
+    event.channel.start_typing
     standings_response = api_client.get_standings
 
     return 'An unexpected error occurred.' if standings_response.error?
@@ -62,10 +72,11 @@ class OwlHandler < CommandHandler
     standings = standings_response.standings
 
     send_standings(event, standings, 'Season Standings',
-                   'https://overwatchleague.com/standings/season/1/league')
+                   "#{config.website_url}/standings/season/1/league")
   end
 
   def show_schedule(event)
+    event.channel.start_typing
     schedule_response = api_client.get_schedule
 
     return 'An unexpected error occurred.' if schedule_response.error?
@@ -78,14 +89,16 @@ class OwlHandler < CommandHandler
 
     event.channel.send_embed(' ') do |embed|
       owl_basic_embed(embed)
-      embed.author = { name: 'Overwatch League Schedule' }
+      embed.author = { name: 'Overwatch League Schedule',
+                       url: config.website_url }
       embed.title = "#{current_stage.name} #{current_week.name}"
-      embed.url = 'https://overwatchleague.com/schedule'
+      embed.url = "#{config.website_url}/schedule"
       current_week.fill_embed(embed)
     end
   end
 
   def show_live_state(event)
+    event.channel.start_typing
     live_data = api_client.get_live_match
 
     return 'An unexpected error occurred.' if live_data.error?
@@ -101,7 +114,7 @@ class OwlHandler < CommandHandler
       event.channel.send_embed(' ') do |embed|
         owl_basic_embed(embed)
         embed.title = 'Live Now!'
-        embed.url = 'https://overwatchleague.com'
+        embed.url = config.website_url
         embed.description = "***#{live_match}***"
         live_match.fill_live_embed(embed, maps_response.maps)
         live_match.add_home_color_to_embed(embed)
@@ -122,6 +135,7 @@ class OwlHandler < CommandHandler
 
   def show_stage_rank(event, *stage_num)
     if stage_num.empty?
+      event.channel.start_typing
       current_stage = api_client.current_stage
 
       return 'No stage currently in progress.' if current_stage.nil?
@@ -131,17 +145,49 @@ class OwlHandler < CommandHandler
       stage_num = stage_num.first
       return 'Invalid Stage number.' unless %w[1 2 3 4].include?(stage_num)
 
+      event.channel.start_typing
       stage_standings(event, stage_num.to_i, "Stage #{stage_num}")
     end
   end
 
-  def show_score(_event)
+  def show_score(event)
+    event.channel.start_typing
     live_data = api_client.get_live_match
 
     return 'An unexpected error occurred.' if live_data.error?
     return 'There is no OWL match live at this time.' unless live_data.live?
 
     live_data.live_match.score_str
+  end
+
+  def show_player(event, player_name, *hero_name)
+    event.channel.start_typing
+    players_response = api_client.get_players
+
+    return 'An unexpected error occurred.' if players_response.error?
+
+    players = players_response.players
+                              .find_all { |p| p.matches?(player_name) }
+
+    return 'Player does not exist.' if players.empty?
+    return 'More than one player matches the query.' if players.size > 1
+
+    player_details = api_client.get_player_details(players.first.id)
+
+    return 'An unexpected error occurred.' if player_details.error?
+
+    player = player_details.player
+
+    # Find hero if given
+    return 'Per-hero stats are not yet implemented.' unless hero_name.empty?
+
+    event.channel.send_embed(' ') do |embed|
+      owl_basic_embed(embed)
+      player.fill_embed(embed)
+      embed.url = "#{config.website_url}/players/#{player.id}"
+      embed.add_field(name: 'Basic Stats',
+                      value: "```#{stats_header}\n#{player.stats_str}```")
+    end
   end
 
   private
@@ -184,7 +230,12 @@ class OwlHandler < CommandHandler
     standings = standings_response.standings(:stage, stage_id)
 
     send_standings(event, standings, "#{stage_name} Standings",
-                   'https://overwatchleague.com/standings')
+                   "#{config.website_url}/standings/season/1/stage/#{stage_id}")
+  end
+
+  def stats_header
+    format("%10s%-9s|%7s%-7s|%6s\n%s", 'As All', ' Heroes', 'Avg/1', '0 min',
+           'Rank', '-' * 43)
   end
 
   def format_time_left(time_ms)
@@ -196,7 +247,7 @@ class OwlHandler < CommandHandler
   end
 
   def owl_basic_embed(embed)
-    embed.author = { name: 'Overwatch League' }
+    embed.author = { name: 'Overwatch League', url: config.website_url }
     embed.footer = { text: footer_text }
     embed.timestamp = Time.now
   end

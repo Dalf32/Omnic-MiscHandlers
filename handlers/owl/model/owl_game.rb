@@ -16,11 +16,13 @@ class OwlGame
   def basic_info(map_id:, state:)
     @map_id = map_id
     @state = state
+    self
   end
 
   def result(away_score:, home_score:)
     @away_score = away_score
     @home_score = home_score
+    self
   end
 
   def away_score

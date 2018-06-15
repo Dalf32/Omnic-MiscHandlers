@@ -10,16 +10,16 @@ class ApiTeamDetailsResponse < HttpResponse
   def team
     OwlTeam.new(id: body[:id], name: body[:name]).tap do |team|
       team.basic_info(abbrev: body[:abbreviatedName], home: body[:homeLocation],
-                      country: body[:addressCountry],
-                      color: body[:primaryColor], logo: body[:logo])
+                      color: body[:primaryColor], logo: body[:logo],
+                      website: body.dig(:content, :teamWebsite))
 
       rank = body[:ranking]
       team.records(wins: rank[:matchWin], losses: rank[:matchLoss],
                    map_wins: rank[:gameWin], map_losses: rank[:gameLoss],
                    map_draws: rank[:gameTie])
 
-      team.players = players
-      # TODO: team.schedule
+      team.players(players)
+      team.social(**extract_social_links(body[:accounts]))
     end
   end
 
@@ -36,7 +36,14 @@ class ApiTeamDetailsResponse < HttpResponse
     end
   end
 
-  def about_url
-    body[:aboutUrl]
+  private
+
+  def extract_social_links(accounts)
+    links = {}
+
+    accounts.select { |acc| acc[:isPublic] }
+            .each { |acc| links[acc[:accountType].to_sym] = acc[:value] }
+
+    links
   end
 end

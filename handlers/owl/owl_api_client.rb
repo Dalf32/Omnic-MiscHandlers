@@ -10,6 +10,8 @@ require_relative 'api_schedule_response'
 require_relative 'api_live_match_response'
 require_relative 'api_maps_response'
 require_relative 'api_standings_response'
+require_relative 'api_players_response'
+require_relative 'api_player_details_response'
 
 class OwlApiClient < ApiClient
   def initialize(log:, base_url:, endpoints:)
@@ -25,7 +27,8 @@ class OwlApiClient < ApiClient
   end
 
   def get_team_details(team_id)
-    response_hash = make_get_request(endpoint(:team_detail, team_id))
+    response_hash = make_get_request(endpoint(:team_detail, team_id),
+                                     expand: 'team.content')
     ApiTeamDetailsResponse.new(response_hash)
   end
 
@@ -52,6 +55,17 @@ class OwlApiClient < ApiClient
   def get_standings
     response_hash = make_get_request(endpoint(:standings))
     ApiStandingsResponse.new(response_hash)
+  end
+
+  def get_players
+    response_hash = make_get_request(endpoint(:players))
+    ApiPlayersResponse.new(response_hash)
+  end
+
+  def get_player_details(player_id)
+    response_hash = make_get_request(endpoint(:players, player_id),
+                                     expand: 'stats,stat.ranks,similarPlayers,team')
+    ApiPlayerDetailsResponse.new(response_hash)
   end
 
   def current_stage

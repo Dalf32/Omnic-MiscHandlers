@@ -56,9 +56,8 @@ class ApiLiveMatchResponse < HttpResponse
     return if team.nil?
     OwlTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
       owl_team.basic_info(abbrev: team[:abbreviatedName],
-                          home: team[:homeLocation],
-                          country: team[:addressCountry],
-                          color: team[:primaryColor], logo: team[:logo])
+                          home: team[:homeLocation], color: team[:primaryColor],
+                          logo: team[:logo], website: nil)
     end
   end
 

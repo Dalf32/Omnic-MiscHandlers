@@ -14,11 +14,13 @@ class OwlMatch
     @state = state
     @start_date = start_date
     @end_date = end_date
+    self
   end
 
   def teams(away:, home:)
     @away_team = away
     @home_team = home
+    self
   end
 
   def result(away_wins:, home_wins:, draws:, winner:)
@@ -26,6 +28,7 @@ class OwlMatch
     @home_wins = home_wins
     @draws = draws
     @winner = @away_team.eql?(winner) ? @away_team : @home_team unless winner.nil?
+    self
   end
 
   def complete?
