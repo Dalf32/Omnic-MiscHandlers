@@ -2,14 +2,12 @@
 #
 # AUTHOR::  Kyle Mullins
 
-class OwlStage
-  attr_reader :id, :name
-  attr_accessor :weeks, :standings
+require_relative 'identifiable'
 
-  def initialize(id:, name:)
-    @id = id
-    @name = name
-  end
+class OwlStage
+  include Identifiable
+
+  attr_accessor :weeks, :standings
 
   def in_progress?
     @weeks.any?(&:in_progress?)

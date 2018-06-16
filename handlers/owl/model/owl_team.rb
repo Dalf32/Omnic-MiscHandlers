@@ -2,13 +2,14 @@
 #
 # AUTHOR::  Kyle Mullins
 
-class OwlTeam
-  attr_reader :id, :name, :abbrev, :color
+require_relative 'identifiable'
+require_relative 'has_social_links'
 
-  def initialize(id:, name:)
-    @id = id
-    @name = name
-  end
+class OwlTeam
+  include Identifiable
+  include HasSocialLinks
+
+  attr_reader :abbrev, :color
 
   def basic_info(abbrev:, home:, color:, logo:, website:)
     @abbrev = abbrev
@@ -33,17 +34,8 @@ class OwlTeam
     self
   end
 
-  def social(**links)
-    @social_links = links
-    self
-  end
-
   def map_differential
     @map_wins - @map_losses
-  end
-
-  def matches?(name)
-    @name.downcase.include?(name.downcase)
   end
 
   def fill_embed_logo(embed)
@@ -95,24 +87,5 @@ class OwlTeam
                     inline: true)
     embed.add_field(name: '-', value: players_split[1].map(&:to_s).join("\n"),
                     inline: true)
-  end
-
-  def fill_socials_embed(embed)
-    return if @social_links.nil? || @social_links.empty?
-
-    slice_size = (@social_links.size / 2.0).ceil
-    socials_split = format_socials.each_slice(slice_size).to_a
-
-    embed.add_field(name: 'Social',
-                    value: socials_split[0].join("\n"),
-                    inline: true)
-    embed.add_field(name: '-', value: socials_split[1].join("\n"),
-                    inline: true)
-  end
-
-  def format_socials
-    @social_links.map do |type, link|
-      "[#{type.to_s.split('_').first.capitalize}](#{link})"
-    end
   end
 end

@@ -170,7 +170,11 @@ class OwlHandler < CommandHandler
                               .find_all { |p| p.matches?(player_name) }
 
     return 'Player does not exist.' if players.empty?
-    return 'More than one player matches the query.' if players.size > 1
+
+    if players.size > 1
+      players = players.find_all { |p| p.exact_match?(player_name) }
+      return 'More than one player matches the query.' unless players.size == 1
+    end
 
     player_details = api_client.get_player_details(players.first.id)
 

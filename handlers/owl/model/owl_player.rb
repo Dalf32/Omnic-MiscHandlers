@@ -2,13 +2,14 @@
 #
 # AUTHOR::  Kyle Mullins
 
-class OwlPlayer
-  attr_reader :id, :name, :role
+require_relative 'identifiable'
+require_relative 'has_social_links'
 
-  def initialize(id:, name:)
-    @id = id
-    @name = name
-  end
+class OwlPlayer
+  include Identifiable
+  include HasSocialLinks
+
+  attr_reader :role
 
   def basic_info(given_name:, family_name:, home:, country:, role:, number:)
     @real_name = "#{given_name} #{family_name}"
@@ -28,11 +29,6 @@ class OwlPlayer
     self
   end
 
-  def social(**links)
-    @social_links = links
-    self
-  end
-
   def similar_players(*players)
     @similar_players = players
     self
@@ -42,10 +38,6 @@ class OwlPlayer
     @all_stats = all_stats
     @hero_stats = hero_stats
     self
-  end
-
-  def matches?(name)
-    @name.downcase.include?(name.downcase)
   end
 
   def fill_embed(embed)
@@ -77,25 +69,6 @@ class OwlPlayer
   end
 
   private
-
-  def fill_socials_embed(embed)
-    return if @social_links.nil? || @social_links.empty?
-
-    slice_size = (@social_links.size / 2.0).ceil
-    socials_split = format_socials.each_slice(slice_size).to_a
-
-    embed.add_field(name: 'Social',
-                    value: socials_split[0].join("\n"),
-                    inline: true)
-    embed.add_field(name: '-', value: socials_split[1].join("\n"),
-                    inline: true)
-  end
-
-  def format_socials
-    @social_links.map do |type, link|
-      "[#{type.to_s.split('_').first.capitalize}](#{link})"
-    end
-  end
 
   def format_heroes
     return '-' if @heroes.nil? || @heroes.empty?

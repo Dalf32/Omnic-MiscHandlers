@@ -3,15 +3,12 @@
 # AUTHOR::  Kyle Mullins
 
 require 'date'
+require_relative 'identifiable'
 
 class OwlMatchWeek
-  attr_reader :name
-  attr_accessor :matches
+  include Identifiable
 
-  def initialize(id:, name:)
-    @id = id
-    @name = name
-  end
+  attr_accessor :matches
 
   def dates(start_date:, end_date:)
     @start_date = start_date

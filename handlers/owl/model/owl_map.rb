@@ -2,13 +2,12 @@
 #
 # AUTHOR::  Kyle Mullins
 
-class OwlMap
-  attr_reader :id, :name, :thumbnail
+require_relative 'identifiable'
 
-  def initialize(id:, name:)
-    @id = id
-    @name = name
-  end
+class OwlMap
+  include Identifiable
+
+  attr_reader :thumbnail
 
   def basic_info(background:, icon:, thumbnail:, type:)
     @background = background
