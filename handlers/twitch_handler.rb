@@ -2,6 +2,8 @@
 #
 # Author::  Kyle Mullins
 
+require 'twitch-api'
+
 class TwitchHandler < CommandHandler
   feature :twitch, default_enabled: true
 
@@ -47,6 +49,10 @@ class TwitchHandler < CommandHandler
     :twitch
   end
 
+  def config_name
+    :twitch
+  end
+
   def live(event)
     user = event.author
 
@@ -69,7 +75,18 @@ class TwitchHandler < CommandHandler
   end
 
   def link_twitch(_event, twitch_name)
-    "https://www.twitch.tv/#{twitch_name}"
+    stream_data = get_stream_data(twitch_name)
+
+    return "There is no channel called #{twitch_name}" if stream_data.empty?
+
+    if stream_data[:is_live]
+      response = "#{stream_data[:name]} is live now playing #{stream_data[:game]}"
+      response += "\n*#{stream_data[:title]}*"
+    else
+      response = "#{stream_data[:name]} is currently offline"
+    end
+
+    response + "\nhttps://www.twitch.tv/#{stream_data[:name]}"
   end
 
   def set_stream_announce_channel(event, *channel)
@@ -85,7 +102,7 @@ class TwitchHandler < CommandHandler
 
     server_redis.set(:announce_channel, channels.first.id)
 
-    "Stream announcement channel has been set to ##{channels.first.name}"
+    "Stream announcement channel has been set to #{channels.first.mention}"
   end
 
   def add_stream_user(_event, user)
@@ -226,5 +243,30 @@ class TwitchHandler < CommandHandler
     else
       '@here '
     end
+  end
+
+  def twitch_client
+    @twitch_client ||= Twitch::Client.new(client_id: config.client_id)
+  end
+
+  def get_stream_data(channel_name)
+    user_result = twitch_client.get_users(login: channel_name)
+    return {} if user_result.data.empty?
+
+    stream_data = { name: user_result.data.first.display_name }
+    streams_result = twitch_client.get_streams(user_login: channel_name)
+    stream_data[:is_live] = !streams_result.data.empty?
+
+    if stream_data[:is_live]
+      stream = streams_result.data.first
+      stream_data[:game] = get_twitch_game(stream.game_id).name
+      stream_data[:title] = stream.title
+    end
+
+    stream_data
+  end
+
+  def get_twitch_game(game_id)
+    twitch_client.get_games(id: game_id).data.first
   end
 end
