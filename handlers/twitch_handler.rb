@@ -19,29 +19,10 @@ class TwitchHandler < CommandHandler
     .feature(:twitch).args_range(1, 1).usage('twitch <twitch_name>')
     .description('Links the given Twitch stream.')
 
-  command(:streamannchannel, :set_stream_announce_channel)
-    .feature(:twitch).max_args(1).pm_enabled(false)
-    .usage('streamannchannel [channel_name]')
-    .description('Sets or clears the channel for stream announcements.')
-
-  command(:addstreamuser, :add_stream_user)
-    .feature(:twitch).args_range(1, 1).pm_enabled(false)
-    .permissions(:administrator).usage('addstreamuser <user>')
-    .description('Enables stream announcements for the given user.')
-
-  command(:remstreamuser, :remove_stream_user)
-    .feature(:twitch).args_range(1, 1).pm_enabled(false)
-    .permissions(:administrator).usage('remstreamuser <user>')
-    .description('Disables stream announcements for the given user.')
-
-  command(:streamusers, :list_stream_users)
-    .feature(:twitch).max_args(0).pm_enabled(false).usage('streamusers')
-    .description('Lists all members with stream announcements enabled.')
-
-  command(:streamannlevel, :set_stream_announce_level)
-    .feature(:twitch).args_range(1, 1).pm_enabled(false)
-    .usage('streamannlevel <level>')
-    .description('Sets the mention level of stream announcements: 0 = no mention, 1 = @ here, 2 = @ everyone')
+  command(:managestreams, :manage_streams)
+    .feature(:twitch).args_range(0, 2).pm_enabled(false)
+    .usage('managestreams [option] [argument]')
+    .description('Used to manage stream announcements. Try the "help option for more details."')
 
   event(:playing, :on_playing_status_change).feature(:twitch)
 
@@ -89,52 +70,26 @@ class TwitchHandler < CommandHandler
     response + "\nhttps://www.twitch.tv/#{stream_data[:name]}"
   end
 
-  def set_stream_announce_channel(event, *channel)
-    if channel.empty?
-      server_redis.del(:announce_channel)
-      return 'Stream announcement channel has been cleared.'
+  def manage_streams(_event, *args)
+    return manage_streams_summary if args.empty?
+
+    case args.first
+    when 'help'
+      manage_streams_help
+    when 'add', 'remove'
+      return 'Name of User is required' if args.size == 1
+      manage_stream_user(args[1], args.first.to_sym)
+    when 'level'
+      return 'Announcement level is required' if args.size == 1
+      set_stream_announce_level(args[1])
+    when 'channel'
+      return 'Name of Channel is required' if args.size == 1
+      set_stream_announce_channel(event.server.name, args[1])
+    when 'disable'
+      disable_stream_announcements
+    else
+      'Invalid option.'
     end
-
-    channels = bot.find_channel(channel.first, event.server.name, type: 0)
-
-    return "#{channel} does not match any channels on this server" if channels.empty?
-    return "#{channel} matches more than one channel on this server" if channels.count > 1
-
-    server_redis.set(:announce_channel, channels.first.id)
-
-    "Stream announcement channel has been set to #{channels.first.mention}"
-  end
-
-  def add_stream_user(_event, user)
-    manage_stream_user(user, :add)
-  end
-
-  def remove_stream_user(_event, user)
-    manage_stream_user(user, :remove)
-  end
-
-  def list_stream_users(_event)
-    users = server_redis.smembers(:announce_users).map { |id| @server.member(id) }
-
-    return 'Stream announcements are not enabled for any users' if users.empty?
-
-    "Stream announcements are enabled for the following users: #{users.map(&:display_name).join(', ')}"
-  end
-
-  def set_stream_announce_level(_event, level)
-    message = case level
-              when '0'
-                'Stream announcements will no longer mention users.'
-              when '1'
-                'Stream announcements will now include an @ here mention.'
-              when '2'
-                'Stream announcements will now include an @ everyone mention.'
-              else
-                return 'Invalid level.'
-              end
-
-    server_redis.set(:announce_level, level)
-    message
   end
 
   def on_playing_status_change(event)
@@ -268,5 +223,58 @@ class TwitchHandler < CommandHandler
 
   def get_twitch_game(game_id)
     twitch_client.get_games(id: game_id).data.first
+  end
+
+  def manage_streams_summary
+    return 'Stream announcements are disabled, set an announcement channel to enable' unless announcements_enabled?
+
+    response = "Stream announcement channel: #{announce_channel.mention}"
+    response += "\nAnnouncement level: #{server_redis.get(:announce_level)}"
+
+    users = server_redis.smembers(:announce_users).map { |id| @server.member(id) }
+    response + "\nUsers: #{users.map(&:display_name).join(', ')}"
+  end
+
+  def manage_streams_help
+    <<~HELP
+      help - displays this help text
+      add <user> - Enables stream announcements for the given user
+      remove <user> - Disables stream announcements for the given user
+      level <level> - Sets the mention level of stream announcements: 0 = no mention, 1 = @ here, 2 = @ everyone
+      channel <channel> - Sets the channel for stream announcements
+      disable - Disables stream announcements
+    HELP
+  end
+
+  def set_stream_announce_level(level)
+    message = case level
+              when '0'
+                'Stream announcements will no longer mention users.'
+              when '1'
+                'Stream announcements will now include an @ here mention.'
+              when '2'
+                'Stream announcements will now include an @ everyone mention.'
+              else
+                return 'Invalid level.'
+              end
+
+    server_redis.set(:announce_level, level)
+    message
+  end
+
+  def set_stream_announce_channel(server_name, *channel)
+    channels = bot.find_channel(channel.first, server_name, type: 0)
+
+    return "#{channel} does not match any channels on this server" if channels.empty?
+    return "#{channel} matches more than one channel on this server" if channels.count > 1
+
+    server_redis.set(:announce_channel, channels.first.id)
+
+    "Stream announcement channel has been set to #{channels.first.mention}"
+  end
+
+  def disable_stream_announcements
+    server_redis.del(:announce_channel)
+    'Stream announcements have been disabled.'
   end
 end
