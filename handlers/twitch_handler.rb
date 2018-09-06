@@ -39,7 +39,7 @@ class TwitchHandler < CommandHandler
 
     return "Doesn't look like you're live... Make sure you've linked your Twitch account to Discord." unless streaming?(user)
 
-    stream_announce_message(user)
+    build_stream_message(get_stream_data(stream_username(user)))
   end
 
   def show_live_users(event)
@@ -60,17 +60,10 @@ class TwitchHandler < CommandHandler
 
     return "There is no channel called #{twitch_name}" if stream_data.empty?
 
-    if stream_data[:is_live]
-      response = "#{stream_data[:name]} is live now playing #{stream_data[:game]}"
-      response += "\n*#{stream_data[:title]}*"
-    else
-      response = "#{stream_data[:name]} is currently offline"
-    end
-
-    response + "\nhttps://www.twitch.tv/#{stream_data[:name]}"
+    build_stream_message(stream_data)
   end
 
-  def manage_streams(_event, *args)
+  def manage_streams(event, *args)
     return manage_streams_summary if args.empty?
 
     case args.first
@@ -105,7 +98,8 @@ class TwitchHandler < CommandHandler
     return if get_cached_title(event.user) == event.user.game
 
     member = event.server.member(event.user.id)
-    message = stream_announce_message(member, get_announce_preamble)
+    stream_data = get_stream_data(stream_username(member))
+    message = build_stream_message(stream_data, announce_preamble)
     announce_channel.send_message(message)
     cache_stream_title(event.user)
   end
@@ -135,6 +129,21 @@ class TwitchHandler < CommandHandler
   def announce_channel
     channel_id = server_redis.get(:announce_channel)
     bot.channel(channel_id, @server)
+  end
+
+  def build_stream_message(stream_data, preamble = '')
+    if stream_data[:is_live]
+      message = "#{stream_data[:name]} is live now playing #{stream_data[:game]}"
+      message += "\n*#{stream_data[:title]}*"
+    else
+      message = "#{stream_data[:name]} is currently offline"
+    end
+
+    preamble + message + "\nhttps://www.twitch.tv/#{stream_data[:name]}"
+  end
+
+  def stream_username(user)
+    user.stream_url.split('/').last
   end
 
   def stream_announce_message(user, preamble = '@here ')
@@ -187,7 +196,7 @@ class TwitchHandler < CommandHandler
     "stream_cache:#{user_id}"
   end
 
-  def get_announce_preamble
+  def announce_preamble
     case server_redis.get(:announce_level)
     when '0'
       ''
@@ -205,6 +214,7 @@ class TwitchHandler < CommandHandler
   end
 
   def get_stream_data(channel_name)
+    log.debug("Retrieving stream data for: #{channel_name}")
     user_result = twitch_client.get_users(login: channel_name)
     return {} if user_result.data.empty?
 
