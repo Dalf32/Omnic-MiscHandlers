@@ -97,9 +97,9 @@ class TwitchHandler < CommandHandler
 
     return if get_cached_title(event.user) == event.user.game
 
-    member = event.server.member(event.user.id)
-    stream_data = get_stream_data(stream_username(member))
-    message = build_stream_message(stream_data, announce_preamble)
+    stream_data = get_stream_data(stream_username(event.user))
+    preamble = announce_preamble(reannounce?(event.user))
+    message = build_stream_message(stream_data, preamble)
     announce_channel.send_message(message)
     cache_stream_title(event.user)
   end
@@ -146,12 +146,6 @@ class TwitchHandler < CommandHandler
     user.stream_url.split('/').last
   end
 
-  def stream_announce_message(user, preamble = '@here ')
-    message = "#{preamble}#{user.display_name} is live now! Check them out: #{user.stream_url}"
-    message += "\n*#{user.game}*" unless user.game.nil?
-    message
-  end
-
   def find_user(username)
     if username.include?('#')
       @server.members.find_all { |member| member.distinct == username }
@@ -192,12 +186,19 @@ class TwitchHandler < CommandHandler
     server_redis.get(cache_key(user.id))
   end
 
+  def reannounce?(user)
+    server_redis.exists(cache_key(user.id))
+  end
+
   def cache_key(user_id)
     "stream_cache:#{user_id}"
   end
 
-  def announce_preamble
-    case server_redis.get(:announce_level)
+  def announce_preamble(is_reannounce = false)
+    level = server_redis.get(:announce_level)
+    level = [0, level.to_i - 1].max.to_s if is_reannounce
+
+    case level
     when '0'
       ''
     when '1'
