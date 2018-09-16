@@ -63,7 +63,7 @@ class TwitchHandler < CommandHandler
     build_stream_message(stream_data)
   end
 
-  def manage_streams(event, *args)
+  def manage_streams(_event, *args)
     return manage_streams_summary if args.empty?
 
     case args.first
@@ -74,10 +74,10 @@ class TwitchHandler < CommandHandler
       manage_stream_user(args[1], args.first.to_sym)
     when 'level'
       return 'Announcement level is required' if args.size == 1
-      set_stream_announce_level(args[1])
+      update_stream_announce_level(args[1])
     when 'channel'
       return 'Name of Channel is required' if args.size == 1
-      set_stream_announce_channel(event.server.name, args[1])
+      update_stream_announce_channel(args[1])
     when 'disable'
       disable_stream_announcements
     else
@@ -97,7 +97,20 @@ class TwitchHandler < CommandHandler
 
     return if get_cached_title(event.user) == event.user.game
 
-    stream_data = get_stream_data(stream_username(event.user))
+    count = 0
+    stream_data = loop do
+      return if count == 5
+      count += 1
+
+      stream_data = get_stream_data(stream_username(event.user))
+      break stream_data if stream_data[:is_live]
+
+      log.debug("Twitch doesn't think the stream is live yet, sleeping for a bit then retrying.")
+      sleep(30)
+    end
+
+    return if get_cached_title(event.user) == stream_data[:title]
+
     preamble = announce_preamble(reannounce?(event.user))
     message = build_stream_message(stream_data, preamble)
     announce_channel.send_message(message)
@@ -146,34 +159,18 @@ class TwitchHandler < CommandHandler
     user.stream_url.split('/').last
   end
 
-  def find_user(username)
-    if username.include?('#')
-      @server.members.find_all { |member| member.distinct == username }
-    else
-      @server.members.find_all do |member|
-        member.nick&.casecmp(username.downcase)&.zero? ||
-          member.username.casecmp(username.downcase).zero?
-      end
-    end
-  end
-
   def manage_stream_user(user, action)
-    users = find_user(user)
+    found_user = find_user(user)
 
-    return "#{user} does not match any members of this server" if users.empty?
-    return "#{user} matches multiple members of this server" if users.count > 1
+    return found_user.error if found_user.failure?
 
     if action == :add
-      server_redis.sadd(:announce_users, users.first.id)
-      action_str = 'enabled'
+      server_redis.sadd(:announce_users, found_user.value.id)
+      "Stream announcements are now enabled for #{found_user.value.display_name}"
     elsif action == :remove
-      server_redis.srem(:announce_users, users.first.id)
-      action_str = 'disabled'
-    else
-      return
+      server_redis.srem(:announce_users, found_user.value.id)
+      "Stream announcements are now disabled for #{found_user.value.display_name}"
     end
-
-    "Stream announcements are now #{action_str} for #{users.first.display_name}"
   end
 
   def cache_stream_title(user)
@@ -229,6 +226,7 @@ class TwitchHandler < CommandHandler
       stream_data[:title] = stream.title
     end
 
+    log.debug("  #{stream_data}")
     stream_data
   end
 
@@ -248,22 +246,25 @@ class TwitchHandler < CommandHandler
 
   def manage_streams_help
     <<~HELP
-      help - displays this help text
+      help - Displays this help text
       add <user> - Enables stream announcements for the given user
       remove <user> - Disables stream announcements for the given user
-      level <level> - Sets the mention level of stream announcements: 0 = no mention, 1 = @ here, 2 = @ everyone
+      level <level> - Sets the mention level of stream announcements: 0, none = no mention; 1, here = @ here; 2, everyone = @ everyone
       channel <channel> - Sets the channel for stream announcements
       disable - Disables stream announcements
     HELP
   end
 
-  def set_stream_announce_level(level)
+  def update_stream_announce_level(level)
     message = case level
-              when '0'
+              when '0', 'none'
+                level = 0
                 'Stream announcements will no longer mention users.'
-              when '1'
+              when '1', 'here'
+                level = 1
                 'Stream announcements will now include an @ here mention.'
-              when '2'
+              when '2', 'everyone'
+                level = 2
                 'Stream announcements will now include an @ everyone mention.'
               else
                 return 'Invalid level.'
@@ -273,15 +274,14 @@ class TwitchHandler < CommandHandler
     message
   end
 
-  def set_stream_announce_channel(server_name, *channel)
-    channels = bot.find_channel(channel.first, server_name, type: 0)
+  def update_stream_announce_channel(channel)
+    found_channel = find_channel(channel)
 
-    return "#{channel} does not match any channels on this server" if channels.empty?
-    return "#{channel} matches more than one channel on this server" if channels.count > 1
+    return found_channel.error if found_channel.failure?
 
-    server_redis.set(:announce_channel, channels.first.id)
+    server_redis.set(:announce_channel, found_channel.value.id)
 
-    "Stream announcement channel has been set to #{channels.first.mention}"
+    "Stream announcement channel has been set to #{found_channel.value.mention}"
   end
 
   def disable_stream_announcements
