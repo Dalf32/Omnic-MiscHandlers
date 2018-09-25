@@ -22,7 +22,7 @@ class TwitchHandler < CommandHandler
   command(:managestreams, :manage_streams)
     .feature(:twitch).args_range(0, 2).pm_enabled(false)
     .usage('managestreams [option] [argument]')
-    .description('Used to manage stream announcements. Try the "help option for more details."')
+    .description('Used to manage stream announcements. Try the "help" option for more details.')
 
   event(:playing, :on_playing_status_change).feature(:twitch)
 
