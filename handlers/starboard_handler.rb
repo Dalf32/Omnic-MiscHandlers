@@ -10,7 +10,9 @@ class StarboardHandler < CommandHandler
   feature :starboard, default_enabled: false
 
   command(:managestarboard, :manage_starboard)
-    .feature(:starboard)
+    .feature(:starboard).args_range(0, 2).pm_enabled(false)
+    .permissions(:manage_channels).usage('managestarboard [option] [argument]')
+    .description('Used to manage starboard options. Try the "help" option for more details.')
 
   event(:reaction_add, :on_reaction_change).feature(:starboard)
   event(:reaction_remove, :on_reaction_change).feature(:starboard)
