@@ -142,12 +142,13 @@ class StarboardHandler < CommandHandler
   def populate_starboard_embed(embed, message)
     embed.title = 'Content'
     embed.description = message.text
+    embed.description += "\n<embed>" if message.embeds.any?
     embed.url = "https://discordapp.com/channels/#{@server.id}/#{message.channel.id}/#{message.id}"
     embed.color = member_color(message.author).combined
     # TODO: Replace the above with the below on next Discordrb release
     # embed.color = message.author.color.combined
     embed.timestamp = message.edited_timestamp || message.timestamp
-    embed.image = message.attachments.first.url unless message.attachments.empty?
+    embed.image = { url: message.attachments.first.url } if message.attachments.any?
     embed.author = { name: message.author.display_name, icon_url: message.author.avatar_url }
     embed.add_field(name: 'Channel', value: message.channel.mention, inline: true)
     embed.add_field(name: starboard.emoji, value: count_reactions(message), inline: true)
