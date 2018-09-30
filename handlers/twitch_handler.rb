@@ -3,6 +3,7 @@
 # Author::  Kyle Mullins
 
 require 'twitch-api'
+require_relative 'twitch/stream'
 
 class TwitchHandler < CommandHandler
   feature :twitch, default_enabled: true
@@ -39,7 +40,7 @@ class TwitchHandler < CommandHandler
 
     return "Doesn't look like you're live... Make sure you've linked your Twitch account to Discord." unless streaming?(user)
 
-    build_stream_message(get_stream_data(stream_username(user)))
+    get_stream_data(stream_username(user)).format_message
   end
 
   def show_live_users(event)
@@ -58,9 +59,9 @@ class TwitchHandler < CommandHandler
   def link_twitch(_event, twitch_name)
     stream_data = get_stream_data(twitch_name)
 
-    return "There is no channel called #{twitch_name}" if stream_data.empty?
+    return "There is no channel called #{twitch_name}" if stream_data.nil?
 
-    build_stream_message(stream_data)
+    stream_data.format_message
   end
 
   def manage_streams(_event, *args)
@@ -103,16 +104,16 @@ class TwitchHandler < CommandHandler
       count += 1
 
       stream_data = get_stream_data(stream_username(event.user))
-      break stream_data if stream_data[:is_live]
+      break stream_data if stream_data.live?
 
       log.debug("Twitch doesn't think the stream is live yet, sleeping for a bit then retrying.")
       sleep(30)
     end
 
-    return if get_cached_title(event.user) == stream_data[:title]
+    return if get_cached_title(event.user) == stream_data.title
 
     preamble = announce_preamble(reannounce?(event.user))
-    message = build_stream_message(stream_data, preamble)
+    message = stream_data.format_message(preamble)
     announce_channel.send_message(message)
     cache_stream_title(event.user)
   end
@@ -142,17 +143,6 @@ class TwitchHandler < CommandHandler
   def announce_channel
     channel_id = server_redis.get(:announce_channel)
     bot.channel(channel_id, @server)
-  end
-
-  def build_stream_message(stream_data, preamble = '')
-    if stream_data[:is_live]
-      message = "#{stream_data[:name]} is live now playing #{stream_data[:game]}"
-      message += "\n*#{stream_data[:title]}*"
-    else
-      message = "#{stream_data[:name]} is currently offline"
-    end
-
-    preamble + message + "\nhttps://www.twitch.tv/#{stream_data[:name]}"
   end
 
   def stream_username(user)
@@ -213,25 +203,32 @@ class TwitchHandler < CommandHandler
 
   def get_stream_data(channel_name)
     log.debug("Retrieving stream data for: #{channel_name}")
-    user_result = twitch_client.get_users(login: channel_name)
-    return {} if user_result.data.empty?
+    stream_data = get_basic_stream_data(channel_name)
+    return nil if stream_data.nil?
 
-    stream_data = { name: user_result.data.first.display_name }
-    streams_result = twitch_client.get_streams(user_login: channel_name)
-    stream_data[:is_live] = !streams_result.data.empty?
-
-    if stream_data[:is_live]
-      stream = streams_result.data.first
-      stream_data[:game] = get_twitch_game(stream.game_id).name
-      stream_data[:title] = stream.title
-    end
+    get_full_stream_data(stream_data)
 
     log.debug("  #{stream_data}")
     stream_data
   end
 
+  def get_basic_stream_data(channel_name)
+    user_result = twitch_client.get_users(login: channel_name)
+    return nil if user_result.data.empty?
+
+    Stream.new(user_result.data.first)
+  end
+
+  def get_full_stream_data(stream_data)
+    streams_result = twitch_client.get_streams(user_login: stream_data.login)
+    stream_data.populate(streams_result.data)
+
+    return unless stream_data.has_game?
+    stream_data.game = get_twitch_game(stream_data.game_id)
+  end
+
   def get_twitch_game(game_id)
-    twitch_client.get_games(id: game_id).data.first
+    twitch_client.get_games(id: game_id).data.first.name
   end
 
   def manage_streams_summary
