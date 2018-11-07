@@ -31,7 +31,7 @@ class RadioApiHandler < CommandHandler
     .description('Shows the tracks that have played in the last hour')
 
   command(:restart, :restart_now_playing_thread)
-    .feature(:radio).max_args(0).permissions(:administrator).usage('restart')
+    .feature(:radio).max_args(0).owner_only(true).usage('restart')
     .limit(delay: 60, action: :on_limit)
     .description('Restarts the thread that updates the Now Playing thread.')
 
