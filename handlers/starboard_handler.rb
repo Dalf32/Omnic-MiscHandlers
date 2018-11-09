@@ -146,9 +146,7 @@ class StarboardHandler < CommandHandler
     embed.description = message.text
     embed.description += "\n<embed>" if message.embeds.any?
     embed.url = "https://discordapp.com/channels/#{@server.id}/#{message.channel.id}/#{message.id}"
-    embed.color = member_color(message.author).combined
-    # TODO: Replace the above with the below on next Discordrb release
-    # embed.color = message.author.color.combined
+    embed.color = message.author.color.combined
     embed.timestamp = message.edited_timestamp || message.timestamp
     embed.image = { url: message.attachments.first.url } if message.attachments.any?
     embed.author = { name: message.author.display_name, icon_url: message.author.avatar_url }
@@ -198,7 +196,6 @@ class StarboardHandler < CommandHandler
 
   def update_starboard_emoji(emoji)
     return 'Emoji parameter must be either a Unicode or Discord emoji' unless emoji?(emoji)
-    return 'Animated emoji are not supported at this time' if emoji.start_with?('<a:') # TODO: Remove this on next Discordrb release
 
     starboard.emoji = emoji
     "The Starboard emoji is now #{emoji}"
