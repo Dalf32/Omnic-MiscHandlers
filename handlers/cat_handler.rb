@@ -1,6 +1,6 @@
 # cat_handler.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require 'open-uri'
 require 'json'

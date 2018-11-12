@@ -33,7 +33,8 @@ class WikiaSearchHandler < CommandHandler
       wikia_command.fill_embed(embed)
       embed.url = api_client.wiki_url(wikia_command.wiki_name)
       embed.timestamp = Time.now
-      embed.add_field(name: 'See Also', value: search_response.items[1..-1].map(&:url).join("\n"))
+      embed.add_field(name: 'See Also',
+                      value: search_response.items[1..-1].map(&:url).join("\n"))
       article_details.fill_embed(embed)
     end
 
@@ -42,9 +43,11 @@ class WikiaSearchHandler < CommandHandler
 
   def create_commands(_event)
     config.commands.each do |command_hash|
-      WikiaSearchHandler.command command_hash[:command], :wikia_search, min_args: 1,
-          feature: :wikia, usage: "#{command_hash[:command]} <search_terms>",
-          description: "Searches the #{command_hash[:display_name]} Wiki and returns the top results."
+      WikiaSearchHandler.command(command_hash[:command], :wikia_search)
+                        .min_args(1).feature(:wikia)
+                        .usage("#{command_hash[:command]} <search_terms>")
+                        .description("Searches the #{command_hash[:display_name]} Wiki and returns the top results.")
+                        .register
     end
   end
 
@@ -55,6 +58,6 @@ class WikiaSearchHandler < CommandHandler
   end
 
   def wikia_command(command_name)
-    config.commands.map { |command_hash| WikiaCommand.new(command_hash) }.find{ |command| command.matches?(command_name) }
+    config.commands.map { |command_hash| WikiaCommand.new(command_hash) }.find { |command| command.matches?(command_name) }
   end
 end

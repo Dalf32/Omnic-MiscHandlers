@@ -1,6 +1,6 @@
 # hash_util.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 module HashUtil
   def symbolize_keys(hash)

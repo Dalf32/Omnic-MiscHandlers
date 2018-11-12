@@ -1,6 +1,6 @@
 # weather_handler.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require 'forecast_io'
 
@@ -128,13 +128,13 @@ class WeatherHandler < CommandHandler
 
     embed.url = "https://darksky.net/forecast/#{weather.latitude},#{weather.longitude}"
 
-    storm_str = current.nearestStormDistance == 0 ? 'There is a storm nearby!' :
+    storm_str = current.nearestStormDistance.zero? ? 'There is a storm nearby!' :
         "There is a storm #{current.nearestStormDistance}mi to the #{cardinal_direction(current.nearestStormBearing)}"
 
     embed.add_field(name: 'Now', value: <<~NOW
       It is currently #{current.temperature}°F and #{current.summary}.
       Wind: #{current.windSpeed}mph #{cardinal_direction(current.windBearing)}, Humidity: #{(current.humidity * 100).truncate}%, Feels like #{current.apparentTemperature}°F
-      #{storm_str if (0..config.near_storm_threshold).include?(current.nearestStormDistance)}
+      #{storm_str if (0..config.near_storm_threshold).cover?(current.nearestStormDistance)}
     NOW
     )
 
@@ -142,7 +142,7 @@ class WeatherHandler < CommandHandler
 
     embed.add_field(name: 'Today', value: <<~TODAY
       High: #{today.temperatureMax}°F, Low: #{today.temperatureMin}°F
-      #{precip_str if today.precipProbability > 0}
+      #{precip_str if today.precipProbability.positive?}
     TODAY
     )
 
@@ -166,7 +166,7 @@ class WeatherHandler < CommandHandler
     cur_bearing = 11.25
 
     directions.each do |direction|
-      return direction if (cur_bearing..(cur_bearing + increment)).include?(bearing)
+      return direction if (cur_bearing..(cur_bearing + increment)).cover?(bearing)
 
       cur_bearing += increment
     end

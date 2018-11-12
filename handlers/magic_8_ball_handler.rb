@@ -1,6 +1,6 @@
 # magic_8_ball_handler.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 class Magic8BallHandler < CommandHandler
   command(:magic8ball, :magic_8_ball)

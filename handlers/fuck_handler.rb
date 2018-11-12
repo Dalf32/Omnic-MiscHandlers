@@ -1,6 +1,6 @@
 # fuck_handler.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require 'open-uri'
 require 'cgi'
@@ -19,7 +19,8 @@ class FuckYouHandler < CommandHandler
     name = name_words.join(' ')
     escaped_from = CGI.escape(from)
     escaped_name = CGI.escape(name)
-    endpoint = config.fuck_you_endpoints.sample % { name: escaped_name, from: escaped_from }
+    endpoint = format(config.fuck_you_endpoints.sample,
+                      name: escaped_name, from: escaped_from)
 
     make_api_request(endpoint).gsub(escaped_from, from).gsub(escaped_name, name)
   end

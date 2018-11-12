@@ -33,15 +33,19 @@ class StarboardHandler < CommandHandler
       manage_starboard_help
     when 'channel'
       return 'Name of Channel is required' if args.size == 1
+
       update_starboard_channel(args[1])
     when 'threshold'
       return 'Threshold value is required' if args.size == 1
+
       update_starboard_threshold(args[1])
     when 'emoji'
       return 'Emoji is required' if args.size == 1
+
       update_starboard_emoji(args[1])
     when 'exclude', 'include'
       return 'Name of Channel is required' if args.size == 1
+
       manage_excluded_channel(args[1], args.first.to_sym)
     when 'disable'
       starboard.disable
@@ -75,6 +79,7 @@ class StarboardHandler < CommandHandler
 
   def on_message_delete(event)
     return unless starboard.enabled?
+
     remove_from_starboard(event.id) if starboard.on_board?(event.id)
   end
 
@@ -86,7 +91,7 @@ class StarboardHandler < CommandHandler
 
   private
 
-  EMOJI_MENTION_REGEX = /<(a)?:(\w+):(\d+)>/ unless defined? EMOJI_MENTION_REGEX
+  EMOJI_MENTION_REGEX = /<(a)?:(\w+):(\d+)>/.freeze unless defined? EMOJI_MENTION_REGEX
 
   def starboard
     @starboard ||= StarboardStore.new(server_redis)
@@ -221,19 +226,12 @@ class StarboardHandler < CommandHandler
 
   def starboard_emoji?(emoji)
     starboard_emoji = starboard.emoji
-    emoji.name == starboard_emoji || emoji.mention == starboard_emoji
+    [emoji.name, emoji.mention].include?(starboard_emoji)
   end
 
   def self_star_event?(event)
     event.message.reacted_with(starboard_emoji).include?(event.user) &&
       event.message.author.id == event.user.id
-  end
-
-  def member_color(member)
-    color_roles = member.roles.select { |r| r.color.combined.nonzero? }
-    return nil if color_roles.empty?
-
-    color_roles.sort_by(&:position).last.color
   end
 
   def self_star_message(event)

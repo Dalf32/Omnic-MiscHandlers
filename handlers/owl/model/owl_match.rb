@@ -62,6 +62,7 @@ class OwlMatch
   def to_s
     return to_s_with_result unless @winner.nil?
     return 'TBD vs TBD' if @away_team.nil? && @home_team.nil?
+
     "#{@away_team} vs #{@home_team}"
   end
 
@@ -104,6 +105,7 @@ class OwlMatch
       next [away, home] unless is_concluded
       next %W[**#{away}** **#{home}**] if away == home
       next %W[**#{away}** *#{home}*] if away > home
+
       %W[*#{away}* **#{home}**]
     end
   end

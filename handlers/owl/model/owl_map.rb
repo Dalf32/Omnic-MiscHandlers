@@ -20,6 +20,7 @@ class OwlMap
   def eql?(other)
     return false if other.nil?
     return @id == other if other.is_a? String
+
     @id == other.id
   end
 

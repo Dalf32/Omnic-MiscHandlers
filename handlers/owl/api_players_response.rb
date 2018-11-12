@@ -13,6 +13,6 @@ class ApiPlayersResponse < HttpResponse
   end
 
   def full_players
-
+    # TODO: Populate full OwlPlayer objects when needed
   end
 end

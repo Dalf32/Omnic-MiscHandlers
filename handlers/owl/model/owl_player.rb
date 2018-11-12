@@ -72,11 +72,13 @@ class OwlPlayer
 
   def format_heroes
     return '-' if @heroes.nil? || @heroes.empty?
+
     @heroes.map(&:capitalize).join("\n")
   end
 
   def format_similar_players
     return '-' if @similar_players.nil? || @similar_players.empty?
+
     @similar_players.map(&:name).join("\n")
   end
 end

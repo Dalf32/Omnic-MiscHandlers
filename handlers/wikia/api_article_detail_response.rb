@@ -11,8 +11,11 @@ class ApiArticleDetailResponse < HttpResponse
   end
 
   def items
-    body[:items].map { |article| ArticleDetails.new(id: article[1][:id], title: article[1][:title],
-                                                    url: basepath + article[1][:url], summary: article[1][:abstract]) }
+    body[:items].map do |article|
+      ArticleDetails.new(id: article[1][:id], title: article[1][:title],
+                         url: basepath + article[1][:url],
+                         summary: article[1][:abstract])
+    end
   end
 
   def no_results?

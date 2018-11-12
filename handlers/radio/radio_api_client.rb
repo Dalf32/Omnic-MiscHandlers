@@ -1,6 +1,6 @@
 # radio_api_client.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require_relative '../../api/api_client'
 require_relative 'api_current_track_response'
@@ -63,7 +63,7 @@ class RadioApiClient < ApiClient
   def enqueue_request(user_distinct, search_terms, endpoint)
     json_body = JSON.generate(on_behalf_of: user_distinct)
     auth = gen_hmac_auth(json_body)
-    uri = endpoint(endpoint) + '/' + URI.escape(search_terms, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+    uri = endpoint(endpoint) + '/' + URI.encode_www_form(search_terms, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
 
     response_hash = make_post_request(uri, json_body, headers: { authorization: auth })
     ApiEnqueueResponse.new(response_hash)

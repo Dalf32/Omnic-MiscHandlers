@@ -1,6 +1,6 @@
 # reddit_search_handler.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require 'redd'
 require 'concurrent'

@@ -1,6 +1,6 @@
 # radio_track.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require 'json'
 require 'chronic_duration'

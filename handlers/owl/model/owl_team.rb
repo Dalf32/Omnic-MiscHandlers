@@ -68,11 +68,13 @@ class OwlTeam
     return false if other.nil?
     return @id == other if other.is_a? Numeric
     return @name == other if other.is_a? String
+
     @id == other.id
   end
 
   def to_s
     return "#{@name} (#{@abbrev})" unless @abbrev.nil?
+
     @name
   end
 

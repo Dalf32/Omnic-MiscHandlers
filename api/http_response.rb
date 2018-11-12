@@ -1,6 +1,6 @@
 # http_response.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 class HttpResponse
   def initialize(response)

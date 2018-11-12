@@ -258,6 +258,7 @@ class OwlHandler < CommandHandler
 
   def add_next_match_embed(embed, match, time_to_match)
     return if match.nil?
+
     embed.add_field(name: 'Next Match', value: match, inline: true)
     embed.add_field(name: 'Time Until Start',
                     value: format_time_left(time_to_match), inline: true)

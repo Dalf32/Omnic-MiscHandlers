@@ -1,6 +1,6 @@
 # api_skip_response.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require_relative '../../api/http_response'
 

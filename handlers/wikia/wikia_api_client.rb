@@ -25,7 +25,7 @@ class WikiaApiClient < ApiClient
   end
 
   def wiki_url(wiki_name)
-    @basepath_pattern % { wiki_name: wiki_name }
+    format(@basepath_pattern, wiki_name: wiki_name)
   end
 
   private

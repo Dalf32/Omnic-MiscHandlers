@@ -159,15 +159,15 @@ class LeaderboardHandler < CommandHandler
     end
 
     case op_str
-      when '='
-        operator = '='
-      when '+'
-        operator = '+='
-      else
-        return "Fourth parameter must be one of '=' or '+'"
+    when '='
+      operator = '='
+    when '+'
+      operator = '+='
+    else
+      return "Fourth parameter must be one of '=' or '+'"
     end
 
-    eval("team.#{property} #{operator} #{value}")
+    eval("team.#{property} #{operator} #{value}", __FILE__, __LINE__)
     leaderboard.to_redis(server_redis)
 
     "Team #{team.name} has been modified successfully."

@@ -13,6 +13,7 @@ class ApiLiveMatchResponse < HttpResponse
 
   def next_match
     return nil unless next_match?
+
     create_match(body.dig(:data, :nextMatch))
   end
 
@@ -54,6 +55,7 @@ class ApiLiveMatchResponse < HttpResponse
 
   def create_team(team)
     return if team.nil?
+
     OwlTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
       owl_team.basic_info(abbrev: team[:abbreviatedName],
                           home: team[:homeLocation], color: team[:primaryColor],

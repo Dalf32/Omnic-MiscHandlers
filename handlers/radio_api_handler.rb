@@ -1,6 +1,6 @@
 # radio_api_handler.rb
 #
-# Author::	Kyle Mullins
+# Author::  Kyle Mullins
 
 require 'chronic_duration'
 require 'redis-objects'
@@ -207,7 +207,7 @@ class RadioApiHandler < CommandHandler
     end.join("\n\t"))
 
     event.message.await(event.message.id, start_with: /(\d|cancel)/i) do |await_event|
-      if await_event.message.text.downcase == 'cancel'
+      if await_event.message.text.casecmp('cancel').zero?
         await_event.message.reply('Ok, no track queued.')
         next
       end
@@ -387,6 +387,6 @@ class RadioApiHandler < CommandHandler
   end
 
   def random_color
-    '0x%06x' % (rand * 0xffffff)
+    format('0x%06x', (rand * 0xffffff))
   end
 end

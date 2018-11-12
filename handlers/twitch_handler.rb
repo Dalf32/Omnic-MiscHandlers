@@ -53,7 +53,7 @@ class TwitchHandler < CommandHandler
 
     preamble_str + "\n" +
       live_users_list.map { |user| "#{user.display_name}: <#{user.stream_url}>" }
-      .join("\n")
+                     .join("\n")
   end
 
   def link_twitch(_event, twitch_name)
@@ -72,12 +72,15 @@ class TwitchHandler < CommandHandler
       manage_streams_help
     when 'add', 'remove'
       return 'Name of User is required' if args.size == 1
+
       manage_stream_user(args[1], args.first.to_sym)
     when 'level'
       return 'Announcement level is required' if args.size == 1
+
       update_stream_announce_level(args[1])
     when 'channel'
       return 'Name of Channel is required' if args.size == 1
+
       update_stream_announce_channel(args[1])
     when 'disable'
       disable_stream_announcements
@@ -101,8 +104,8 @@ class TwitchHandler < CommandHandler
     count = 0
     stream_data = loop do
       return if count == 5
-      count += 1
 
+      count += 1
       stream_data = get_stream_data(stream_username(event.user))
       break stream_data if stream_data.live?
 
@@ -224,6 +227,7 @@ class TwitchHandler < CommandHandler
     stream_data.populate(streams_result.data)
 
     return unless stream_data.has_game?
+
     stream_data.game = get_twitch_game(stream_data.game_id)
   end
 
