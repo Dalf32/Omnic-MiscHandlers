@@ -19,7 +19,7 @@ class ApiPlayerDetailsResponse < HttpResponse
       player.social(**extract_social_links(player_data[:accounts]))
 
       player.similar_players(*body.dig(:data, :similarPlayers)
-                                 .map { |p| create_player(p) })
+                                  .map(&method(:create_player)))
 
       player.stats(all_stats: extract_stats(body.dig(:data, :stats, :all),
                                             body.dig(:data, :statRanks)),
@@ -61,7 +61,7 @@ class ApiPlayerDetailsResponse < HttpResponse
 
   def extract_stats(stat_data, stat_ranks)
     stat_map = {
-      damage_avg_per_10m: 'Damage', healing_avg_per_10m: 'Healing',
+      hero_damage_avg_per_10m: 'Hero Damage', healing_avg_per_10m: 'Healing',
       eliminations_avg_per_10m: 'Eliminations',
       final_blows_avg_per_10m: 'Final Blows', deaths_avg_per_10m: 'Deaths',
       ultimates_earned_avg_per_10m: 'Ultimates Earned',
