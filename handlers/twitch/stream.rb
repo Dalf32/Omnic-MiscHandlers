@@ -35,7 +35,7 @@ class Stream
   def format_message(preamble = '')
     if live?
       message = "#{@name} is live now playing #{@game}"
-      message += "\n*#{@title}*"
+      message += "\n*#{@title.strip}*"
     else
       message = "#{@name} is currently offline"
     end
