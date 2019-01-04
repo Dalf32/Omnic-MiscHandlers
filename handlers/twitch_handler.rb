@@ -4,6 +4,7 @@
 
 require 'twitch-api'
 require_relative 'twitch/stream'
+require_relative 'twitch/announce_store'
 
 class TwitchHandler < CommandHandler
   feature :twitch, default_enabled: true
@@ -25,7 +26,7 @@ class TwitchHandler < CommandHandler
     .permissions(:manage_server).usage('managestreams [option] [argument]')
     .description('Used to manage stream announcements. Try the "help" option for more details.')
 
-  event(:playing, :on_playing_status_change).feature(:twitch)
+  event(:playing, :on_playing_status_change)
 
   def redis_name
     :twitch
@@ -90,38 +91,25 @@ class TwitchHandler < CommandHandler
   end
 
   def on_playing_status_change(event)
-    return unless [0, 1].include?(event.type)
-    return unless announcements_enabled?
-    return unless announce_enabled_for_user?(event.user)
+    @bot.servers.values.each do |server|
+      current_redis = server_redis(server)
 
-    unless event.type == 1
-      server_redis.del(cache_key(event.user.id))
-      return
+      next if event.user.on(server).nil?
+      next unless Omnic.features[:twitch].enabled?(current_redis)
+
+      handle_playing_status_change(event, current_redis)
     end
-
-    return if get_cached_title(event.user) == event.user.game
-
-    count = 0
-    stream_data = loop do
-      return if count == 5
-
-      count += 1
-      stream_data = get_stream_data(stream_username(event.user))
-      break stream_data if stream_data.live?
-
-      log.debug("Twitch doesn't think the stream is live yet, sleeping for a bit then retrying.")
-      sleep(30)
-    end
-
-    return if get_cached_title(event.user) == stream_data.title
-
-    preamble = announce_preamble(reannounce?(event.user))
-    message = stream_data.format_message(preamble)
-    announce_channel.send_message(message)
-    cache_stream_title(event.user)
   end
 
   private
+
+  def twitch_client
+    @twitch_client ||= Twitch::Client.new(client_id: config.client_id)
+  end
+
+  def announce_store
+    @announce_store ||= AnnounceStore.new(server_redis)
+  end
 
   def streaming?(user)
     stream_type = user.stream_type.nil? ? 0 : user.stream_type
@@ -135,17 +123,8 @@ class TwitchHandler < CommandHandler
           .select { |user| streaming?(user) }
   end
 
-  def announcements_enabled?
-    server_redis.exists(:announce_channel)
-  end
-
-  def announce_enabled_for_user?(user)
-    server_redis.sismember(:announce_users, user.id)
-  end
-
   def announce_channel
-    channel_id = server_redis.get(:announce_channel)
-    bot.channel(channel_id, @server)
+    bot.channel(announce_store.channel, @server)
   end
 
   def stream_username(user)
@@ -158,34 +137,51 @@ class TwitchHandler < CommandHandler
     return found_user.error if found_user.failure?
 
     if action == :add
-      server_redis.sadd(:announce_users, found_user.value.id)
+      announce_store.add_user(found_user.value)
       "Stream announcements are now enabled for #{found_user.value.display_name}"
     elsif action == :remove
-      server_redis.srem(:announce_users, found_user.value.id)
+      announce_store.remove_user(found_user.value)
       "Stream announcements are now disabled for #{found_user.value.display_name}"
     end
   end
 
-  def cache_stream_title(user)
-    cache_key = cache_key(user.id)
-    server_redis.set(cache_key, user.game)
-    server_redis.expire(cache_key, 86_400) # Set to expire in 24 hours just in case
+  def handle_playing_status_change(event, current_redis)
+    announcements = AnnounceStore.new(current_redis)
+
+    return unless [0, 1].include?(event.type)
+    return unless announcements.enabled?
+    return unless announcements.enabled_for_user?(event.user)
+
+    unless event.type == 1
+      announcements.clear_user_cache(event.user)
+      return
+    end
+
+    return if announcements.cached_title(event.user) == event.user.game
+
+    count = 0
+    stream_data = loop do
+      return if count == 5
+
+      count += 1
+      stream_data = get_stream_data(stream_username(event.user))
+      break stream_data if stream_data.live?
+
+      log.debug("Twitch doesn't think the stream is live yet, sleeping for a bit then retrying.")
+      sleep(30)
+    end
+
+    return if announcements.cached_title(event.user) == stream_data.title
+
+    is_reannounce = announcements.title_cached?(event.user)
+    preamble = announce_preamble(announcements, is_reannounce)
+    message = stream_data.format_message(preamble)
+    announce_channel.send_message(message)
+    announcements.cache_stream_title(event.user)
   end
 
-  def get_cached_title(user)
-    server_redis.get(cache_key(user.id))
-  end
-
-  def reannounce?(user)
-    server_redis.exists(cache_key(user.id))
-  end
-
-  def cache_key(user_id)
-    "stream_cache:#{user_id}"
-  end
-
-  def announce_preamble(is_reannounce = false)
-    level = server_redis.get(:announce_level)
+  def announce_preamble(announcements_store, is_reannounce = false)
+    level = announcements_store.announce_level
     level = [0, level.to_i - 1].max.to_s if is_reannounce
 
     case level
@@ -198,10 +194,6 @@ class TwitchHandler < CommandHandler
     else
       '@here '
     end
-  end
-
-  def twitch_client
-    @twitch_client ||= Twitch::Client.new(client_id: config.client_id)
   end
 
   def get_stream_data(channel_name)
@@ -236,13 +228,13 @@ class TwitchHandler < CommandHandler
   end
 
   def manage_streams_summary
-    return 'Stream announcements are disabled, set an announcement channel to enable' unless announcements_enabled?
+    return 'Stream announcements are disabled, set an announcement channel to enable' unless announce_store.enabled?
 
     response = "Stream announcement channel: #{announce_channel.mention}"
-    response += "\nAnnouncement level: #{server_redis.get(:announce_level)}"
+    response += "\nAnnouncement level: #{announce_store.announce_level}"
 
-    users = server_redis.smembers(:announce_users).map { |id| @server.member(id) }
-    response + "\nUsers: #{users.map(&:display_name).join(', ')}"
+    users = announce_store.users.map { |id| @server.member(id).display_name }
+    response + "\nUsers: #{users.join(', ')}"
   end
 
   def manage_streams_help
@@ -271,7 +263,7 @@ class TwitchHandler < CommandHandler
                 return 'Invalid level.'
               end
 
-    server_redis.set(:announce_level, level)
+    announce_store.announce_level = level
     message
   end
 
@@ -280,13 +272,13 @@ class TwitchHandler < CommandHandler
 
     return found_channel.error if found_channel.failure?
 
-    server_redis.set(:announce_channel, found_channel.value.id)
+    announce_store.channel = found_channel.value
 
     "Stream announcement channel has been set to #{found_channel.value.mention}"
   end
 
   def disable_stream_announcements
-    server_redis.del(:announce_channel)
+    announce_store.clear_channel
     'Stream announcements have been disabled.'
   end
 end
