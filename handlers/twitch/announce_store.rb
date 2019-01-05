@@ -48,13 +48,15 @@ class AnnounceStore
   end
 
   def clear_user_cache(user)
-    @redis.del(cache_key(user.id))
+    # Expire the key instead of deleting so we are resilient to rapid toggling
+    @redis.expire(cache_key(user.id), 300)
   end
 
   def cache_stream_title(user)
     cache_key = cache_key(user.id)
     server_redis.set(cache_key, user.game)
-    server_redis.expire(cache_key, 86_400) # Set to expire in 24 hours just in case
+    # Set to expire in 24 hours just in case we don't get the event
+    server_redis.expire(cache_key, 86_400)
   end
 
   def cached_title(user)
