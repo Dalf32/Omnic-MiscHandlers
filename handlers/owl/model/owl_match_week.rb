@@ -20,6 +20,10 @@ class OwlMatchWeek
     DateTime.now.between?(@start_date, @end_date)
   end
 
+  def upcoming?
+    DateTime.now < @start_date
+  end
+
   def fill_embed(embed)
     date_mask = '%a, %d %b %Y'
     found_next_match = false

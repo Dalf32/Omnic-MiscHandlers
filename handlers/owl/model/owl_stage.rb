@@ -13,8 +13,16 @@ class OwlStage
     @weeks.any?(&:in_progress?)
   end
 
+  def upcoming?
+    @weeks.any?(&:upcoming?)
+  end
+
   def current_week
     @weeks.find(&:in_progress?)
+  end
+
+  def upcoming_week
+    @weeks.find(&:upcoming?)
   end
 
   def matches

@@ -81,11 +81,11 @@ class OwlHandler < CommandHandler
 
     return 'An unexpected error occurred.' if schedule_response.error?
 
-    current_stage = schedule_response.current_stage
+    current_stage = schedule_response.current_stage || schedule_response.upcoming_stage
 
     return 'No stage currently in progress.' if current_stage.nil?
 
-    current_week = current_stage.current_week
+    current_week = current_stage.current_week || current_stage.upcoming_week
 
     event.channel.send_embed(' ') do |embed|
       owl_basic_embed(embed)

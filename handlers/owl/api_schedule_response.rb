@@ -31,6 +31,10 @@ class ApiScheduleResponse < HttpResponse
     stages.find(&:in_progress?)
   end
 
+  def upcoming_stage
+    stages.find(&:upcoming?)
+  end
+
   private
 
   def create_week(week)
