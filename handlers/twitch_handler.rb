@@ -5,6 +5,7 @@
 require 'twitch-api'
 require_relative 'twitch/stream'
 require_relative 'twitch/announce_store'
+require_relative 'twitch/user_stream_store'
 
 class TwitchHandler < CommandHandler
   feature :twitch, default_enabled: true
@@ -91,13 +92,25 @@ class TwitchHandler < CommandHandler
   end
 
   def on_playing_status_change(event)
+    return unless [0, 1].include?(event.type)
+
+    if event.type.zero?
+      user_stream_store.clear_stream_title
+      return
+    end
+
+    is_reannounce = user_stream_store.title_cached?
+    stream_data = handle_playing_status_change(event)
+
+    return if stream_data.nil?
+
     @bot.servers.values.each do |server|
       current_redis = server_redis(server)
 
       next if event.user.on(server).nil?
       next unless Omnic.features[:twitch].enabled?(current_redis)
 
-      handle_playing_status_change(event, current_redis)
+      post_announcement(event.user, current_redis, stream_data, is_reannounce)
     end
   end
 
@@ -109,6 +122,10 @@ class TwitchHandler < CommandHandler
 
   def announce_store
     @announce_store ||= AnnounceStore.new(server_redis)
+  end
+
+  def user_stream_store
+    @user_stream_store ||= UserStreamStore.new(user_redis)
   end
 
   def streaming?(user)
@@ -123,8 +140,8 @@ class TwitchHandler < CommandHandler
           .select { |user| streaming?(user) }
   end
 
-  def announce_channel
-    bot.channel(announce_store.channel, @server)
+  def announce_channel(announcements = announce_store)
+    bot.channel(announcements.channel, @server)
   end
 
   def stream_username(user)
@@ -145,19 +162,8 @@ class TwitchHandler < CommandHandler
     end
   end
 
-  def handle_playing_status_change(event, current_redis)
-    announcements = AnnounceStore.new(current_redis)
-
-    return unless [0, 1].include?(event.type)
-    return unless announcements.enabled?
-    return unless announcements.enabled_for_user?(event.user)
-
-    unless event.type == 1
-      announcements.clear_user_cache(event.user)
-      return
-    end
-
-    return if announcements.cached_title(event.user) == event.user.game
+  def handle_playing_status_change(event)
+    return nil if user_stream_store.cached_title == event.user.game
 
     count = 0
     stream_data = loop do
@@ -171,13 +177,21 @@ class TwitchHandler < CommandHandler
       sleep(30)
     end
 
-    return if announcements.cached_title(event.user) == stream_data.title
+    return nil if user_stream_store.cached_title == stream_data.title
 
-    is_reannounce = announcements.title_cached?(event.user)
+    user_stream_store.cache_stream_title(event.user.game)
+    stream_data
+  end
+
+  def post_announcement(user, current_redis, stream_data, is_reannounce)
+    announcements = AnnounceStore.new(current_redis)
+
+    return unless announcements.enabled?
+    return unless announcements.enabled_for_user?(user)
+
     preamble = announce_preamble(announcements, is_reannounce)
     message = stream_data.format_message(preamble)
-    announce_channel.send_message(message)
-    announcements.cache_stream_title(event.user)
+    announce_channel(announcements).send_message(message)
   end
 
   def announce_preamble(announcements_store, is_reannounce = false)
