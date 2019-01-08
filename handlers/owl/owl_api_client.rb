@@ -76,6 +76,14 @@ class OwlApiClient < ApiClient
     schedule_response.current_stage || schedule_response.upcoming_stage
   end
 
+  def current_season
+    schedule_response = get_schedule
+
+    return 1 if schedule_response.error?
+
+    schedule_response.season - 2017
+  end
+
   private
 
   def endpoint(endpoint_name, *args)

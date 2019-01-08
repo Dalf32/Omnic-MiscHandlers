@@ -3,9 +3,11 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative 'identifiable'
+require_relative 'has_season'
 
 class OwlStage
   include Identifiable
+  include HasSeason
 
   attr_accessor :weeks, :standings, :slug
 

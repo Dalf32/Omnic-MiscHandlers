@@ -15,9 +15,14 @@ class ApiScheduleResponse < HttpResponse
     body.dig(:data, :stages).select { |s| s[:enabled] }.map do |stage|
       OwlStage.new(id: stage[:id], name: stage[:name]).tap do |owl_stage|
         owl_stage.slug = stage[:slug]
+        owl_stage.season = season
         owl_stage.weeks = stage[:weeks].map { |week| create_week(week) }
       end
     end
+  end
+
+  def season
+    body.dig(:data, :id).to_i
   end
 
   def start_date
@@ -40,6 +45,7 @@ class ApiScheduleResponse < HttpResponse
 
   def create_week(week)
     OwlMatchWeek.new(id: week[:id], name: week[:name]).tap do |match_week|
+      match_week.season = season
       match_week.dates(start_date: to_date(week[:startDate]),
                        end_date: to_date(week[:endDate]))
       match_week.matches = week[:matches].map { |match| create_match(match) }

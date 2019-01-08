@@ -4,9 +4,11 @@
 
 require 'date'
 require_relative 'identifiable'
+require_relative 'has_season'
 
 class OwlMatchWeek
   include Identifiable
+  include HasSeason
 
   attr_accessor :matches
 
@@ -29,7 +31,7 @@ class OwlMatchWeek
     found_next_match = false
 
     embed.description = "#{@start_date.strftime(date_mask)} - #{@end_date.strftime(date_mask)}"
-    matches.each_slice(3).with_index do |day_matches, day|
+    matches.each_slice(matches_per_day).with_index do |day_matches, day|
       formatted_matches = day_matches.map do |match|
         if !match.complete? && !found_next_match
           found_next_match = true
@@ -39,10 +41,14 @@ class OwlMatchWeek
         end
       end
 
-      formatted_matches += ['-'] unless (day + 1) * 3 == matches.count
+      formatted_matches += ['-'] unless (day + 1) * matches_per_day == matches.count
 
       embed.add_field(name: "Day #{day + 1}",
                       value: formatted_matches.join("\n"))
     end
+  end
+
+  def matches_per_day
+    season_num == 1 ? 3 : 4
   end
 end
