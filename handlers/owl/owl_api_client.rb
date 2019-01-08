@@ -73,7 +73,7 @@ class OwlApiClient < ApiClient
 
     return nil if schedule_response.error?
 
-    schedule_response.current_stage
+    schedule_response.current_stage || schedule_response.upcoming_stage
   end
 
   private

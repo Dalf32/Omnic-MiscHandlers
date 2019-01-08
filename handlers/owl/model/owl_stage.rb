@@ -7,7 +7,7 @@ require_relative 'identifiable'
 class OwlStage
   include Identifiable
 
-  attr_accessor :weeks, :standings
+  attr_accessor :weeks, :standings, :slug
 
   def in_progress?
     @weeks.any?(&:in_progress?)
@@ -27,6 +27,10 @@ class OwlStage
 
   def matches
     @weeks.map(&:matches).flatten
+  end
+
+  def number
+    @slug.nil? ? @id : @slug[-1]
   end
 
   def to_s

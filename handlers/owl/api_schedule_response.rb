@@ -14,6 +14,7 @@ class ApiScheduleResponse < HttpResponse
   def stages
     body.dig(:data, :stages).select { |s| s[:enabled] }.map do |stage|
       OwlStage.new(id: stage[:id], name: stage[:name]).tap do |owl_stage|
+        owl_stage.slug = stage[:slug]
         owl_stage.weeks = stage[:weeks].map { |week| create_week(week) }
       end
     end

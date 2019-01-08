@@ -140,13 +140,15 @@ class OwlHandler < CommandHandler
 
       return 'No stage currently in progress.' if current_stage.nil?
 
-      stage_standings(event, current_stage.id, current_stage.name)
+      # TODO: detect current season num
+      stage_standings(event, 2, current_stage.number)
     else
       stage_num = stage_num.first
       return 'Invalid Stage number.' unless %w[1 2 3 4].include?(stage_num)
 
+      # TODO: allow/require specifying season
       event.channel.start_typing
-      stage_standings(event, stage_num.to_i, "Stage #{stage_num}")
+      stage_standings(event, 2, stage_num)
     end
   end
 
@@ -226,15 +228,15 @@ class OwlHandler < CommandHandler
     end
   end
 
-  def stage_standings(event, stage_id, stage_name)
+  def stage_standings(event, season_num, stage_num)
     standings_response = api_client.get_standings
 
     return 'An unexpected error occurred.' if standings_response.error?
 
-    standings = standings_response.standings(:stage, stage_id)
+    standings = standings_response.standings(:stage, stage_num)
 
-    send_standings(event, standings, "#{stage_name} Standings",
-                   "#{config.website_url}/standings/season/1/stage/#{stage_id}")
+    send_standings(event, standings, "Stage #{stage_num} Standings",
+                   "#{config.website_url}/standings/season/#{season_num}/stage/#{stage_num}")
   end
 
   def stats_header
