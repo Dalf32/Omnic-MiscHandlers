@@ -26,7 +26,7 @@ class OwlHandler < CommandHandler
     .description('Details the currently live match, or the next match if OWL is not yet live.')
 
   command(:owlstage, :show_stage_rank)
-    .feature(:owl).args_range(0, 1).usage('owlstage [stage_num]')
+    .feature(:owl).args_range(0, 2).usage('owlstage [season_year stage_num]')
     .description('Shows the standings for the current OWL stage.')
 
   command(:owlscore, :show_score)
@@ -70,12 +70,14 @@ class OwlHandler < CommandHandler
     return 'An unexpected error occurred.' if standings_response.error?
 
     standings = standings_response.standings
+    season_num = api_client.current_season
 
     send_standings(event, standings, 'Season Standings',
-                   "#{config.website_url}/standings/season/1/league")
+                   "#{config.website_url}/standings/season/#{season_num}/league")
   end
 
   def show_schedule(event)
+    # TODO: Support passing year
     event.channel.start_typing
     schedule_response = api_client.get_schedule
 
@@ -133,22 +135,24 @@ class OwlHandler < CommandHandler
     end
   end
 
-  def show_stage_rank(event, *stage_num)
-    if stage_num.empty?
+  def show_stage_rank(event, *args)
+    if args.empty?
       event.channel.start_typing
       current_stage = api_client.current_stage
 
       return 'No stage currently in progress.' if current_stage.nil?
 
-      # TODO: detect current season num
-      stage_standings(event, 2, current_stage.number)
+      stage_standings(event, current_stage.season, current_stage.number)
+    elsif args.count == 1
+      'Both the Season year and desired Stage number must be provided.'
     else
-      stage_num = stage_num.first
+      season_year, stage_num = *args
+      season_year = season_year.to_i
+      return 'Invalid Season year.' unless season_year >= 2018
       return 'Invalid Stage number.' unless %w[1 2 3 4].include?(stage_num)
 
-      # TODO: allow/require specifying season
       event.channel.start_typing
-      stage_standings(event, 2, stage_num)
+      stage_standings(event, season_year, stage_num)
     end
   end
 
@@ -228,13 +232,14 @@ class OwlHandler < CommandHandler
     end
   end
 
-  def stage_standings(event, season_num, stage_num)
-    standings_response = api_client.get_standings
+  def stage_standings(event, season_year, stage_num)
+    standings_response = api_client.get_standings(season_year)
 
     return 'An unexpected error occurred.' if standings_response.error?
 
     standings = standings_response.standings(:stage, stage_num)
 
+    season_num = season_year - 2017
     send_standings(event, standings, "Stage #{stage_num} Standings",
                    "#{config.website_url}/standings/season/#{season_num}/stage/#{stage_num}")
   end
