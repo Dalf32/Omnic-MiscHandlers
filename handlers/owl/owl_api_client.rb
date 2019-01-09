@@ -52,9 +52,9 @@ class OwlApiClient < ApiClient
     ApiMapsResponse.new(response_hash)
   end
 
-  def get_standings(season_year)
-    response_hash = make_get_request(endpoint(:standings),
-                                     season: season_year)
+  def get_standings(season_year = nil)
+    args = season_year.nil? ? {} : { season: season_year }
+    response_hash = make_get_request(endpoint(:standings), args)
     ApiStandingsResponse.new(response_hash)
   end
 

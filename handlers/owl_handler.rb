@@ -77,7 +77,6 @@ class OwlHandler < CommandHandler
   end
 
   def show_schedule(event)
-    # TODO: Support passing year
     event.channel.start_typing
     schedule_response = api_client.get_schedule
 
