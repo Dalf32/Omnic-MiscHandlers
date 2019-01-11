@@ -2,7 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require_relative '../../api/api_client'
+require_relative 'ow_api_client'
 require_relative 'api_teams_response'
 require_relative 'api_team_details_response'
 require_relative 'api_rankings_response'
@@ -13,14 +13,7 @@ require_relative 'api_standings_response'
 require_relative 'api_players_response'
 require_relative 'api_player_details_response'
 
-class OwlApiClient < ApiClient
-  def initialize(log:, base_url:, endpoints:)
-    super(log: log)
-
-    @base_url = base_url
-    @endpoints = endpoints
-  end
-
+class OwlApiClient < OwApiClient
   def get_teams
     response_hash = make_get_request(endpoint(:teams))
     ApiTeamsResponse.new(response_hash)
@@ -40,16 +33,6 @@ class OwlApiClient < ApiClient
   def get_schedule
     response_hash = make_get_request(endpoint(:schedule))
     ApiScheduleResponse.new(response_hash)
-  end
-
-  def get_live_match
-    response_hash = make_get_request(endpoint(:live_match))
-    ApiLiveMatchResponse.new(response_hash)
-  end
-
-  def get_maps
-    response_hash = make_get_request(endpoint(:maps))
-    ApiMapsResponse.new(response_hash)
   end
 
   def get_standings(season_year = nil)
@@ -83,12 +66,5 @@ class OwlApiClient < ApiClient
     return 1 if schedule_response.error?
 
     schedule_response.season - 2017
-  end
-
-  private
-
-  def endpoint(endpoint_name, *args)
-    url_params = args.empty? ? '' : '/' + args.join('/')
-    "#{@base_url}#{@endpoints[endpoint_name]}#{url_params}"
   end
 end
