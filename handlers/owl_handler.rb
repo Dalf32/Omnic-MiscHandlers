@@ -2,11 +2,12 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require 'chronic_duration'
-
+require_relative 'ow/ow_helper'
 require_relative 'ow/owl_api_client'
 
 class OwlHandler < CommandHandler
+  include OwHelper
+
   feature :owl, default_enabled: true
 
   command(:owlteam, :show_team)
@@ -114,20 +115,17 @@ class OwlHandler < CommandHandler
 
       event.channel.send_embed(' ') do |embed|
         owl_basic_embed(embed)
-        embed.title = 'Live Now!'
-        embed.url = config.website_url
-        embed.description = "***#{live_match}***"
-        live_match.fill_live_embed(embed, maps_response.maps)
+        live_match_embed(embed, live_match, maps_response.maps)
         live_match.add_home_color_to_embed(embed)
-        add_next_match_embed(embed, live_data.next_match,
-                             live_data.time_to_next_match)
+        next_match_embed(embed, live_data.next_match,
+                         live_data.time_to_next_match)
       end
     else
       next_match = live_data.live_match
 
       event.channel.send_embed(' ') do |embed|
         owl_basic_embed(embed)
-        add_next_match_embed(embed, next_match, live_data.time_to_match)
+        next_match_embed(embed, next_match, live_data.time_to_match)
         next_match.add_maps_to_embed(embed, maps_response.maps)
         next_match.add_home_color_to_embed(embed)
       end
@@ -248,25 +246,7 @@ class OwlHandler < CommandHandler
            'Rank', '-' * 43)
   end
 
-  def format_time_left(time_ms)
-    ChronicDuration.output(time_ms / 1000)
-  end
-
-  def footer_text
-    "Retrieved from #{config.base_url}"
-  end
-
   def owl_basic_embed(embed)
-    embed.author = { name: 'Overwatch League', url: config.website_url }
-    embed.footer = { text: footer_text }
-    embed.timestamp = Time.now
-  end
-
-  def add_next_match_embed(embed, match, time_to_match)
-    return if match.nil?
-
-    embed.add_field(name: 'Next Match', value: match, inline: true)
-    embed.add_field(name: 'Time Until Start',
-                    value: format_time_left(time_to_match), inline: true)
+    ow_basic_embed(embed, 'Overwatch League')
   end
 end

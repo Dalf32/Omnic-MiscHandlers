@@ -56,6 +56,8 @@ class OwMatch
   end
 
   def add_maps_to_embed(embed, maps)
+    return if @games.empty?
+
     embed.add_field(name: 'Maps', value: format_maps(maps))
   end
 

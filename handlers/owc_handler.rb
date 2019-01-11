@@ -2,11 +2,12 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require 'chronic_duration'
-
+require_relative 'ow/ow_helper'
 require_relative 'ow/owc_api_client'
 
 class OwcHandler < CommandHandler
+  include OwHelper
+
   feature :owc, default_enabled: true
 
   command(:owcregions, :list_regions)
@@ -78,19 +79,16 @@ class OwcHandler < CommandHandler
 
       event.channel.send_embed(' ') do |embed|
         owc_basic_embed(embed)
-        embed.title = 'Live Now!'
-        embed.url = config.website_url
-        embed.description = "***#{live_match}***"
-        live_match.fill_live_embed(embed, maps_response.maps)
-        add_next_match_embed(embed, live_data.next_match,
-                             live_data.time_to_next_match)
+        live_match_embed(embed, live_match, maps_response.maps)
+        next_match_embed(embed, live_data.next_match,
+                         live_data.time_to_next_match)
       end
     else
       next_match = live_data.live_match
 
       event.channel.send_embed(' ') do |embed|
         owc_basic_embed(embed)
-        add_next_match_embed(embed, next_match, live_data.time_to_match)
+        next_match_embed(embed, next_match, live_data.time_to_match)
         next_match.add_maps_to_embed(embed, maps_response.maps)
       end
     end
@@ -113,26 +111,8 @@ class OwcHandler < CommandHandler
                                      endpoints: config.endpoints)
   end
 
-  def format_time_left(time_ms)
-    ChronicDuration.output(time_ms / 1000)
-  end
-
-  def footer_text
-    "Retrieved from #{config.base_url}"
-  end
-
   def owc_basic_embed(embed)
-    embed.author = { name: 'Overwatch Contenders', url: config.website_url }
-    embed.footer = { text: footer_text }
-    embed.timestamp = Time.now
+    ow_basic_embed(embed, 'Overwatch Contenders')
     embed.color = config.home_color
-  end
-
-  def add_next_match_embed(embed, match, time_to_match)
-    return if match.nil?
-
-    embed.add_field(name: 'Next Match', value: match, inline: true)
-    embed.add_field(name: 'Time Until Start',
-                    value: format_time_left(time_to_match), inline: true)
   end
 end
