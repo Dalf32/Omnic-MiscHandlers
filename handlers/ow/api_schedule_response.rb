@@ -6,9 +6,9 @@ require 'date'
 
 require_relative '../../api/http_response'
 require_relative 'model/owl_stage'
-require_relative 'model/owl_match'
-require_relative 'model/owl_team'
-require_relative 'model/owl_match_week'
+require_relative 'model/ow_match'
+require_relative 'model/ow_team'
+require_relative 'model/ow_match_week'
 
 class ApiScheduleResponse < HttpResponse
   def stages
@@ -44,7 +44,7 @@ class ApiScheduleResponse < HttpResponse
   private
 
   def create_week(week)
-    OwlMatchWeek.new(id: week[:id], name: week[:name]).tap do |match_week|
+    OwMatchWeek.new(id: week[:id], name: week[:name]).tap do |match_week|
       match_week.season = season
       match_week.dates(start_date: to_date(week[:startDate]),
                        end_date: to_date(week[:endDate]))
@@ -53,7 +53,7 @@ class ApiScheduleResponse < HttpResponse
   end
 
   def create_match(match)
-    OwlMatch.new(id: match[:id]).tap do |owl_match|
+    OwMatch.new(id: match[:id]).tap do |owl_match|
       owl_match.basic_info(state: match[:state],
                            start_date: to_date(match[:startDateTS]),
                            end_date: to_date(match[:endDateTS]))
@@ -69,7 +69,7 @@ class ApiScheduleResponse < HttpResponse
   end
 
   def create_team(team)
-    OwlTeam.new(id: team[:id], name: team[:name]) unless team.nil?
+    OwTeam.new(id: team[:id], name: team[:name]) unless team.nil?
   end
 
   def to_date(date)

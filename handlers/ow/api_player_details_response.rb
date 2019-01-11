@@ -4,7 +4,7 @@
 
 require_relative '../../api/http_response'
 require_relative 'model/owl_player'
-require_relative 'model/owl_team'
+require_relative 'model/ow_team'
 require_relative 'model/owl_stat'
 
 class ApiPlayerDetailsResponse < HttpResponse
@@ -30,7 +30,7 @@ class ApiPlayerDetailsResponse < HttpResponse
   private
 
   def create_team(team)
-    OwlTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
+    OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
       owl_team.basic_info(abbrev: team[:abbreviatedName],
                           home: team[:homeLocation],
                           color: team.dig(:colors, :primary, :color),

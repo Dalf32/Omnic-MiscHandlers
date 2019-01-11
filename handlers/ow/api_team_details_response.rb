@@ -3,12 +3,12 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_team'
+require_relative 'model/ow_team'
 require_relative 'model/owl_player'
 
 class ApiTeamDetailsResponse < HttpResponse
   def team
-    OwlTeam.new(id: body[:id], name: body[:name]).tap do |team|
+    OwTeam.new(id: body[:id], name: body[:name]).tap do |team|
       team.basic_info(abbrev: body[:abbreviatedName], home: body[:homeLocation],
                       color: body[:primaryColor], logo: body[:logo],
                       website: body.dig(:content, :teamWebsite))

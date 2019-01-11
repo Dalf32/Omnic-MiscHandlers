@@ -4,7 +4,7 @@
 
 require 'chronic_duration'
 
-require_relative 'owc/owc_api_client'
+require_relative 'ow/owc_api_client'
 
 class OwcHandler < CommandHandler
   feature :owc, default_enabled: true
@@ -101,7 +101,7 @@ class OwcHandler < CommandHandler
     live_data = api_client.get_live_match
 
     return 'An unexpected error occurred.' if live_data.error?
-    return 'There is no OWL match live at this time.' unless live_data.live?
+    return 'There is no OWC match live at this time.' unless live_data.live?
 
     live_data.live_match.score_str
   end

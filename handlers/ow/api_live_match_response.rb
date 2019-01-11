@@ -3,8 +3,8 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_match'
-require_relative 'model/owl_game'
+require_relative 'model/ow_match'
+require_relative 'model/ow_game'
 
 class ApiLiveMatchResponse < HttpResponse
   def live_match
@@ -42,7 +42,7 @@ class ApiLiveMatchResponse < HttpResponse
   LIVE_STATE = 'LIVE'.freeze
 
   def create_match(match)
-    OwlMatch.new(id: match[:id]).tap do |owl_match|
+    OwMatch.new(id: match[:id]).tap do |owl_match|
       owl_match.teams(away: create_team(match[:competitors][0]),
                       home: create_team(match[:competitors][1]))
 
@@ -56,7 +56,7 @@ class ApiLiveMatchResponse < HttpResponse
   def create_team(team)
     return if team.nil?
 
-    OwlTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
+    OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
       owl_team.basic_info(abbrev: team[:abbreviatedName],
                           home: team[:homeLocation], color: team[:primaryColor],
                           logo: team[:logo], website: nil)
@@ -64,7 +64,7 @@ class ApiLiveMatchResponse < HttpResponse
   end
 
   def create_game(game)
-    OwlGame.new(id: game[:id]).tap do |owl_game|
+    OwGame.new(id: game[:id]).tap do |owl_game|
       owl_game.basic_info(map_id: game.dig(:attributes, :map),
                           state: game[:state])
 

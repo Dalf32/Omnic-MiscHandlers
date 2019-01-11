@@ -3,7 +3,7 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_team'
+require_relative 'model/ow_team'
 
 class ApiRankingsResponse < HttpResponse
   def standings
@@ -20,7 +20,7 @@ class ApiRankingsResponse < HttpResponse
   private
 
   def create_team(comp, records)
-    OwlTeam.new(id: comp[:id], name: comp[:name]).tap do |team|
+    OwTeam.new(id: comp[:id], name: comp[:name]).tap do |team|
       team.basic_info(abbrev: comp[:abbreviatedName], home: comp[:homeLocation],
                       color: comp[:primaryColor], logo: comp[:logo],
                       website: nil)

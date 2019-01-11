@@ -1,10 +1,10 @@
-# owl_map.rb
+# ow_map.rb
 #
 # AUTHOR::  Kyle Mullins
 
 require_relative 'identifiable'
 
-class OwlMap
+class OwMap
   include Identifiable
 
   attr_reader :thumbnail

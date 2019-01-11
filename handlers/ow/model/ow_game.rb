@@ -1,8 +1,8 @@
-# owl_game.rb
+# ow_game.rb
 #
 # AUTHOR::  Kyle Mullins
 
-class OwlGame
+class OwGame
   attr_reader :id
 
   PENDING_STATE = 'PENDING'.freeze

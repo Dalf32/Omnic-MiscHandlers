@@ -4,8 +4,8 @@
 
 require_relative '../../api/api_client'
 require_relative 'api_regions_response'
-require_relative '../owl/api_live_match_response'
-require_relative '../owl/api_maps_response'
+require_relative 'api_live_match_response'
+require_relative 'api_maps_response'
 
 class OwcApiClient < ApiClient
   def initialize(log:, base_url:, endpoints:)

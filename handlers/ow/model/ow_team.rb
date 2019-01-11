@@ -1,11 +1,11 @@
-# owl_team.rb
+# ow_team.rb
 #
 # AUTHOR::  Kyle Mullins
 
 require_relative 'identifiable'
 require_relative 'has_social_links'
 
-class OwlTeam
+class OwTeam
   include Identifiable
   include HasSocialLinks
 

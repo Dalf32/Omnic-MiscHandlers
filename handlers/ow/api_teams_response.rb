@@ -3,13 +3,13 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_team'
+require_relative 'model/ow_team'
 
 class ApiTeamsResponse < HttpResponse
   def teams
     body[:competitors].map do |comp|
-      OwlTeam.new(id: comp.dig(:competitor, :id),
-                  name: comp.dig(:competitor, :name))
+      OwTeam.new(id: comp.dig(:competitor, :id),
+                 name: comp.dig(:competitor, :name))
     end
   end
 

@@ -2,7 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require_relative '../../owl/model/identifiable'
+require_relative 'identifiable'
 
 class OwcRegion
   include Identifiable

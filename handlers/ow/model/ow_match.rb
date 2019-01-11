@@ -1,8 +1,8 @@
-# owl_match.rb
+# ow_match.rb
 #
 # AUTHOR::  Kyle Mullins
 
-class OwlMatch
+class OwMatch
   attr_reader :id
   attr_writer :games
 

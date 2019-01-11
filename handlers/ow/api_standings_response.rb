@@ -30,7 +30,7 @@ class ApiStandingsResponse < HttpResponse
   private
 
   def create_team(team, records)
-    OwlTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
+    OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
       owl_team.basic_info(abbrev: team[:abbreviatedName], home: '',
                           color: team.dig(:colors, :primary, :color),
                           logo: team.dig(:logo, :main, :png), website: nil)

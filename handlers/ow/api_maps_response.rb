@@ -3,12 +3,12 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_map'
+require_relative 'model/ow_map'
 
 class ApiMapsResponse < HttpResponse
   def maps
     body.map do |map|
-      OwlMap.new(id: map[:id], name: map.dig(:name, :en_US)).tap do |owl_map|
+      OwMap.new(id: map[:id], name: map.dig(:name, :en_US)).tap do |owl_map|
         owl_map.basic_info(background: map[:background], icon: map[:icon],
                            thumbnail: map[:thumbnail], type: map[:type])
       end

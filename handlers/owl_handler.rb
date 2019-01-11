@@ -4,7 +4,7 @@
 
 require 'chronic_duration'
 
-require_relative 'owl/owl_api_client'
+require_relative 'ow/owl_api_client'
 
 class OwlHandler < CommandHandler
   feature :owl, default_enabled: true

@@ -1,4 +1,4 @@
-# owl_match_week.rb
+# ow_match_week.rb
 #
 # AUTHOR::  Kyle Mullins
 
@@ -6,7 +6,7 @@ require 'date'
 require_relative 'identifiable'
 require_relative 'has_season'
 
-class OwlMatchWeek
+class OwMatchWeek
   include Identifiable
   include HasSeason
 
