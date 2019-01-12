@@ -18,13 +18,13 @@ class OwcHandler < CommandHandler
     .feature(:owc).min_args(1).usage('owcteam <team>')
     .description('Shows details of the given OWC team.')
 
-  command(:owcstandings, :show_standings)
-    .feature(:owc).min_args(1).usage('owcstandings <region>')
-    .description('Shows the standings for the current OWC season.')
-
-  command(:owcschedule, :show_schedule)
-    .feature(:owc).min_args(0).usage('owcschedule [region]')
-    .description('Shows upcoming OWC matches.')
+  # command(:owcstandings, :show_standings)
+  #   .feature(:owc).min_args(1).usage('owcstandings <region>')
+  #   .description('Shows the standings for the current OWC season.')
+  #
+  # command(:owcschedule, :show_schedule)
+  #   .feature(:owc).min_args(0).usage('owcschedule [region]')
+  #   .description('Shows upcoming OWC matches.')
 
   command(:owclive, :show_live_state)
     .feature(:owc).max_args(0).usage('owclive')
