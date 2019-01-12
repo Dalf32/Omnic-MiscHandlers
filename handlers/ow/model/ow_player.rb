@@ -1,15 +1,13 @@
-# owl_player.rb
+# ow_player.rb
 #
 # AUTHOR::  Kyle Mullins
 
 require_relative 'identifiable'
 require_relative 'has_social_links'
 
-class OwlPlayer
+class OwPlayer
   include Identifiable
   include HasSocialLinks
-
-  attr_reader :role
 
   def basic_info(given_name:, family_name:, home:, country:, role:, number:)
     @real_name = "#{given_name} #{family_name}"
@@ -38,6 +36,10 @@ class OwlPlayer
     @all_stats = all_stats
     @hero_stats = hero_stats
     self
+  end
+
+  def role
+    @role || ''
   end
 
   def fill_embed(embed)

@@ -4,7 +4,7 @@
 
 require_relative '../../api/http_response'
 require_relative 'model/ow_team'
-require_relative 'model/owl_player'
+require_relative 'model/ow_player'
 
 class ApiTeamDetailsResponse < HttpResponse
   def team
@@ -25,7 +25,7 @@ class ApiTeamDetailsResponse < HttpResponse
 
   def players
     body[:players].map do |player_hash|
-      OwlPlayer.new(id: player_hash[:id], name: player_hash[:name]).tap do |player|
+      OwPlayer.new(id: player_hash[:id], name: player_hash[:name]).tap do |player|
         player.basic_info(given_name: player_hash[:givenName],
                           family_name: player_hash[:familyName],
                           home: player_hash[:homeLocation],

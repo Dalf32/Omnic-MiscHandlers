@@ -10,6 +10,7 @@ class OwTeam
   include HasSocialLinks
 
   attr_reader :abbrev, :color
+  attr_accessor :region
 
   def basic_info(abbrev:, home:, color:, logo:, website:)
     @abbrev = abbrev
@@ -55,6 +56,13 @@ class OwTeam
     fill_players_embed(embed)
   end
 
+  def fill_min_embed(embed)
+    embed.title = @name
+    embed.description = "Region: #{@region}" unless @region.nil?
+    fill_embed_logo(embed)
+    fill_players_embed(embed)
+  end
+
   def map_differential_str
     format('%+d', map_differential)
   end
@@ -81,6 +89,8 @@ class OwTeam
   private
 
   def fill_players_embed(embed)
+    return if @players.nil? || @players.empty?
+
     slice_size = (@players.size / 2.0).ceil
     players_split = @players.sort_by(&:role).each_slice(slice_size).to_a
 

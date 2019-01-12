@@ -3,26 +3,15 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative 'ow_api_client'
-require_relative 'api_teams_response'
-require_relative 'api_team_details_response'
 require_relative 'api_rankings_response'
 require_relative 'api_schedule_response'
-require_relative 'api_live_match_response'
-require_relative 'api_maps_response'
 require_relative 'api_standings_response'
 require_relative 'api_players_response'
 require_relative 'api_player_details_response'
 
 class OwlApiClient < OwApiClient
-  def get_teams
-    response_hash = make_get_request(endpoint(:teams))
-    ApiTeamsResponse.new(response_hash)
-  end
-
   def get_team_details(team_id)
-    response_hash = make_get_request(endpoint(:team_detail, team_id),
-                                     expand: 'team.content')
-    ApiTeamDetailsResponse.new(response_hash)
+    super(team_id, expand: 'team.content')
   end
 
   def get_rankings

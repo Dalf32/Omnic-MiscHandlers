@@ -3,16 +3,16 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_player'
+require_relative 'model/ow_player'
 
 class ApiPlayersResponse < HttpResponse
   def players
     body[:content].map do |player|
-      OwlPlayer.new(id: player[:id], name: player[:name])
+      OwPlayer.new(id: player[:id], name: player[:name])
     end
   end
 
   def full_players
-    # TODO: Populate full OwlPlayer objects when needed
+    # TODO: Populate full OwPlayer objects when needed
   end
 end

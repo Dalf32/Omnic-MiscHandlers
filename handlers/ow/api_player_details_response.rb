@@ -3,7 +3,7 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_player'
+require_relative 'model/ow_player'
 require_relative 'model/ow_team'
 require_relative 'model/owl_stat'
 
@@ -39,8 +39,8 @@ class ApiPlayerDetailsResponse < HttpResponse
   end
 
   def create_player(player_data)
-    OwlPlayer.new(id: player_data[:id],
-                  name: player_data[:name]).tap do |player|
+    OwPlayer.new(id: player_data[:id],
+                 name: player_data[:name]).tap do |player|
       player.basic_info(given_name: player_data[:givenName],
                         family_name: player_data[:familyName],
                         home: player_data[:homeLocation],

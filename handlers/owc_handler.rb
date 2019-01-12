@@ -50,8 +50,29 @@ class OwcHandler < CommandHandler
     regions_str
   end
 
-  def show_team(event, *team)
-    # TODO: Team details
+  def show_team(event, *team_name)
+    event.channel.start_typing
+    teams_response = api_client.get_teams
+
+    return 'An unexpected error occurred.' if teams_response.error?
+
+    teams = teams_response.full_teams
+                          .find_all { |t| t.matches?(team_name.join(' ')) }
+
+    return 'Team does not exist.' if teams.empty?
+    return 'More than one team matches the query.' if teams.size > 1
+
+    found_team = teams.first
+    team_details = api_client.get_team_details(found_team.id)
+
+    found_team.players(team_details.players) unless team_details.error?
+
+    event.channel.send_embed(' ') do |embed|
+      owc_basic_embed(embed)
+      embed.url = "#{config.website_url}/teams"
+      found_team.fill_min_embed(embed)
+      embed.color = config.home_color if found_team.color.nil?
+    end
   end
 
   def show_standings(event, *region)

@@ -22,6 +22,28 @@ class ApiTeamsResponse < HttpResponse
         team.basic_info(abbrev: comp[:abbreviatedName],
                         home: comp[:homeLocation], color: comp[:primaryColor],
                         logo: comp[:logo], website: nil)
+
+        team.region = comp[:region]
+        team.players(players(comp[:players]))
+      end
+    end
+  end
+
+  private
+
+  def players(players_hash)
+    return [] if players_hash.nil?
+
+    players_hash.map do |player_hash|
+      player_hash = player_hash[:player]
+
+      OwPlayer.new(id: player_hash[:id], name: player_hash[:name]).tap do |player|
+        player.basic_info(given_name: player_hash[:givenName],
+                          family_name: player_hash[:familyName],
+                          home: player_hash[:homeLocation],
+                          country: player_hash[:nationality],
+                          role: player_hash.dig(:attributes, :role),
+                          number: player_hash.dig(:attributes, :player_number))
       end
     end
   end
