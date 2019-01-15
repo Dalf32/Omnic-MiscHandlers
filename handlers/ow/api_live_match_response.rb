@@ -37,6 +37,15 @@ class ApiLiveMatchResponse < HttpResponse
     !body.dig(:data, :liveMatch, :id).nil?
   end
 
+  def live_match_has_bracket?
+    !body.dig(:data, :liveMatch, :bracket).nil?
+  end
+
+  def live_match_bracket_title
+    bracket_stage = body.dig(:data, :liveMatch, :bracket, :stage)
+    "#{bracket_stage.dig(:tournament, :title)} #{bracket_stage[:title]}"
+  end
+
   private
 
   LIVE_STATE = 'LIVE'.freeze

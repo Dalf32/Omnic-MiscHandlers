@@ -95,11 +95,13 @@ class OwcHandler < CommandHandler
 
     return 'An unexpected error occurred.' if maps_response.error?
 
+    title = live_data.live_match_has_bracket? ? live_data.live_match_bracket_title : 'Overwatch Contenders'
+
     if live_data.live?
       live_match = live_data.live_match
 
       event.channel.send_embed(' ') do |embed|
-        owc_basic_embed(embed)
+        owc_basic_embed(embed, title)
         live_match_embed(embed, live_match, maps_response.maps)
         next_match_embed(embed, live_data.next_match,
                          live_data.time_to_next_match)
@@ -108,7 +110,7 @@ class OwcHandler < CommandHandler
       next_match = live_data.live_match
 
       event.channel.send_embed(' ') do |embed|
-        owc_basic_embed(embed)
+        owc_basic_embed(embed, title)
         next_match_embed(embed, next_match, live_data.time_to_match)
         next_match.add_maps_to_embed(embed, maps_response.maps)
       end
@@ -132,8 +134,8 @@ class OwcHandler < CommandHandler
                                      endpoints: config.endpoints)
   end
 
-  def owc_basic_embed(embed)
-    ow_basic_embed(embed, 'Overwatch Contenders')
+  def owc_basic_embed(embed, title = 'Overwatch Contenders')
+    ow_basic_embed(embed, title)
     embed.color = config.home_color
   end
 end
