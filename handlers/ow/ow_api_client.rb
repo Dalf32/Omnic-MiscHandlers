@@ -43,4 +43,8 @@ class OwApiClient < ApiClient
     url_params = args.empty? ? '' : '/' + args.join('/')
     "#{@base_url}#{@endpoints[endpoint_name]}#{url_params}"
   end
+
+  def make_get_request(api_url, use_ssl: true, **query_args)
+    super(api_url, use_ssl: use_ssl, **{ locale: 'en-us' }.merge(query_args))
+  end
 end
