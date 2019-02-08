@@ -3,7 +3,7 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_stage'
+require_relative 'model/ow_stage'
 
 class ApiStandingsResponse < HttpResponse
   def standings(phase = :league, stage = 0)

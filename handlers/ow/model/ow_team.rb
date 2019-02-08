@@ -72,12 +72,8 @@ class OwTeam
            @name, @wins, @losses, map_differential_str)
   end
 
-  def eql?(other)
-    return false if other.nil?
-    return @id == other if other.is_a? Numeric
-    return @name == other if other.is_a? String
-
-    @id == other.id
+  def record_str
+    format('%3s - %-3s (%s)', @wins, @losses, map_differential_str)
   end
 
   def to_s

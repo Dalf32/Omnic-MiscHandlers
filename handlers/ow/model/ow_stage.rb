@@ -1,11 +1,11 @@
-# owl_stage.rb
+# ow_stage.rb
 #
 # AUTHOR::  Kyle Mullins
 
 require_relative 'identifiable'
 require_relative 'has_season'
 
-class OwlStage
+class OwStage
   include Identifiable
   include HasSeason
 
@@ -33,9 +33,5 @@ class OwlStage
 
   def number
     @slug.nil? ? @id : @slug[-1]
-  end
-
-  def to_s
-    @name
   end
 end

@@ -204,16 +204,6 @@ class OwlHandler < CommandHandler
                                      endpoints: config.endpoints)
   end
 
-  def standings_header
-    format("%14s%-14s|%4s%-5s|%6s\n%s", 'Te', 'am', 'Rec', 'ord',
-           'Diff', '-' * 46)
-  end
-
-  def format_standings(standings)
-    standings.map { |rank, team| format('%02d %s', rank, team.standings_str) }
-             .join("\n")
-  end
-
   def send_standings(event, standings, title, url)
     return 'An unexpected error occurred.' if standings.nil? || standings.empty?
 
@@ -224,8 +214,11 @@ class OwlHandler < CommandHandler
       owl_basic_embed(embed)
       embed.title = title
       embed.url = url
-      embed.description = "```#{standings_header}\n#{format_standings(standings)}```"
       leader.fill_embed_logo(embed)
+      embed.add_field(name: 'Team', value: format_team_ranks(standings),
+                      inline: true)
+      embed.add_field(name: 'Record (Map Diff)',
+                      value: format_records(standings), inline: true)
     end
   end
 

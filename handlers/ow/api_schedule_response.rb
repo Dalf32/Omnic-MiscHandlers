@@ -5,7 +5,7 @@
 require 'date'
 
 require_relative '../../api/http_response'
-require_relative 'model/owl_stage'
+require_relative 'model/ow_stage'
 require_relative 'model/ow_match'
 require_relative 'model/ow_team'
 require_relative 'model/ow_match_week'
@@ -13,7 +13,7 @@ require_relative 'model/ow_match_week'
 class ApiScheduleResponse < HttpResponse
   def stages
     body.dig(:data, :stages).select { |s| s[:enabled] }.map do |stage|
-      OwlStage.new(id: stage[:id], name: stage[:name]).tap do |owl_stage|
+      OwStage.new(id: stage[:id], name: stage[:name]).tap do |owl_stage|
         owl_stage.slug = stage[:slug]
         owl_stage.season = season
         owl_stage.weeks = stage[:weeks].map { |week| create_week(week) }

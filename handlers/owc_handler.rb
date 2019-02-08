@@ -18,13 +18,13 @@ class OwcHandler < CommandHandler
     .feature(:owc).min_args(1).usage('owcteam <team>')
     .description('Shows details of the given OWC team.')
 
-  # command(:owcstandings, :show_standings)
-  #   .feature(:owc).min_args(1).usage('owcstandings <region>')
-  #   .description('Shows the standings for the current OWC season.')
-  #
-  # command(:owcschedule, :show_schedule)
-  #   .feature(:owc).min_args(0).usage('owcschedule [region]')
-  #   .description('Shows upcoming OWC matches.')
+  command(:owcstandings, :show_standings)
+    .feature(:owc).min_args(1).usage('owcstandings <region>')
+    .description('Shows the standings for the current OWC season.')
+
+  command(:owcschedule, :show_schedule)
+    .feature(:owc).min_args(0).usage('owcschedule [region]')
+    .description('Shows upcoming OWC matches.')
 
   command(:owclive, :show_live_state)
     .feature(:owc).max_args(0).usage('owclive')
@@ -76,12 +76,31 @@ class OwcHandler < CommandHandler
   end
 
   def show_standings(event, *region)
-    # TODO: Region standings
+    event.channel.start_typing
+    standings_response = api_client.get_standings
+
+    return 'An unexpected error occurred.' if standings_response.error?
+
+    regions_standings = standings_response.all_standings
+    regions = regions_standings.keys
+                               .find_all { |r| r.matches?(region.join(' ')) }
+
+    return 'Region does not exist.' if regions.empty?
+
+    if regions.size > 1
+      regions = regions.find_all { |r| r.exact_match?(region.join(' ')) }
+      return 'More than one region matches the query.' unless regions.size == 1
+    end
+
+    standings = regions_standings[regions.first]
+
+    send_standings(event, standings, 'Season Standings')
   end
 
   def show_schedule(event, *region)
     # TODO: Overall schedule
     # TODO: Region schedule
+    'Coming soon!'
   end
 
   def show_live_state(event)
@@ -137,5 +156,23 @@ class OwcHandler < CommandHandler
   def owc_basic_embed(embed, title = 'Overwatch Contenders')
     ow_basic_embed(embed, title)
     embed.color = config.home_color
+  end
+
+  def send_standings(event, standings, title)
+    return 'An unexpected error occurred.' if standings.nil? || standings.empty?
+
+    standings = standings.sort_by(&:first)
+    leader = standings.first.last
+
+    event.channel.send_embed(' ') do |embed|
+      owc_basic_embed(embed)
+      embed.title = title
+      embed.url = "#{config.website_url}/standings"
+      leader.fill_embed_logo(embed)
+      embed.add_field(name: 'Team', value: format_team_ranks(standings),
+                      inline: true)
+      embed.add_field(name: 'Record (Map Diff)',
+                      value: format_records(standings), inline: true)
+    end
   end
 end

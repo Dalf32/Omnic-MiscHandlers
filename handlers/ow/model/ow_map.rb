@@ -23,8 +23,4 @@ class OwMap
 
     @id == other.id
   end
-
-  def to_s
-    @name
-  end
 end

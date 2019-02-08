@@ -17,4 +17,20 @@ module Identifiable
   def exact_match?(name)
     @name.casecmp(name).zero?
   end
+
+  def eql?(other)
+    return false if other.nil?
+    return @id == other if other.is_a? Numeric
+    return @name == other if other.is_a? String
+
+    @id == other.id
+  end
+
+  def hash
+    @name.hash
+  end
+
+  def to_s
+    @name
+  end
 end

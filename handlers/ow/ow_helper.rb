@@ -35,4 +35,15 @@ module OwHelper
     embed.description = "***#{live_match}***"
     live_match.fill_live_embed(embed, maps)
   end
+
+  def format_team_ranks(standings)
+    str = standings.map { |rank, team| format('`%02d` %s', rank, team.name) }
+                   .join("\n")
+    "#{'-' * 33}\n" + str
+  end
+
+  def format_records(standings)
+    str = standings.map { |_, team| "`#{team.record_str}`" }.join("\n")
+    "#{'-' * 21}\n" + str
+  end
 end
