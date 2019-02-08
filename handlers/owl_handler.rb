@@ -32,7 +32,7 @@ class OwlHandler < CommandHandler
 
   command(:owlscore, :show_score)
     .feature(:owl).max_args(0).usage('owlscore')
-    .description('Shows the score of the currently live match')
+    .description('Shows the score of the currently live match in a spoiler-free manner.')
 
   command(:owlplayer, :show_player)
     .feature(:owl).args_range(1, 2).usage('owlplayer <player> [hero]')
@@ -160,7 +160,7 @@ class OwlHandler < CommandHandler
     return 'An unexpected error occurred.' if live_data.error?
     return 'There is no OWL match live at this time.' unless live_data.live?
 
-    live_data.live_match.score_str
+    "||#{live_data.live_match.score_str}||"
   end
 
   def show_player(event, player_name, *hero_name)

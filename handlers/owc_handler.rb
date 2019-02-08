@@ -32,7 +32,7 @@ class OwcHandler < CommandHandler
 
   command(:owcscore, :show_score)
     .feature(:owc).max_args(0).usage('owcscore')
-    .description('Shows the score of the currently live match')
+    .description('Shows the score of the currently live match in a spoiler-free manner.')
 
   def config_name
     :owc_api
@@ -143,7 +143,7 @@ class OwcHandler < CommandHandler
     return 'An unexpected error occurred.' if live_data.error?
     return 'There is no OWC match live at this time.' unless live_data.live?
 
-    live_data.live_match.score_str
+    "||#{live_data.live_match.score_str}||"
   end
 
   private
