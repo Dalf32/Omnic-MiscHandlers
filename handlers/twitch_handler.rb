@@ -8,7 +8,8 @@ require_relative 'twitch/announce_store'
 require_relative 'twitch/user_stream_store'
 
 class TwitchHandler < CommandHandler
-  feature :twitch, default_enabled: true
+  feature :twitch, default_enabled: true,
+                   description: 'Announce when streams are live.'
 
   command(:live, :live)
     .feature(:twitch).max_args(0).usage('live')

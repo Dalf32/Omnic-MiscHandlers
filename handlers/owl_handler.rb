@@ -8,7 +8,8 @@ require_relative 'ow/owl_api_client'
 class OwlHandler < CommandHandler
   include OwHelper
 
-  feature :owl, default_enabled: true
+  feature :owl, default_enabled: true,
+                description: 'Provides access to data from the Overwatch League official API.'
 
   command(:owlteam, :show_team)
     .feature(:owl).min_args(1).usage('owlteam <team>')

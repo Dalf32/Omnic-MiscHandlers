@@ -8,7 +8,8 @@ require_relative 'ow/owc_api_client'
 class OwcHandler < CommandHandler
   include OwHelper
 
-  feature :owc, default_enabled: true
+  feature :owc, default_enabled: true,
+                description: 'Provides access to data from the Overwatch Contenders official API.'
 
   command(:owcregions, :list_regions)
     .feature(:owc).max_args(0).usage('owcregions')

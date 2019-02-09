@@ -7,7 +7,8 @@ require 'unicode/emoji'
 require_relative 'starboard/starboard_store'
 
 class StarboardHandler < CommandHandler
-  feature :starboard, default_enabled: false
+  feature :starboard, default_enabled: false,
+                      description: 'Posts popular messages to a special channel.'
 
   command(:managestarboard, :manage_starboard)
     .feature(:starboard).args_range(0, 2).pm_enabled(false)
