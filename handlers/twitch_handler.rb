@@ -176,6 +176,9 @@ class TwitchHandler < CommandHandler
 
       log.debug("Twitch doesn't think the stream is live yet, sleeping for a bit then retrying.")
       sleep(30)
+    rescue StandardError => e
+      log.error(e.full_message)
+      log.error("Event Type: #{event.type}; User: #{event.user.display_name}; Game: #{event.user.game}; Stream Username: #{event.user.stream_url}")
     end
 
     return nil if user_stream_store.cached_title == stream_data.title
