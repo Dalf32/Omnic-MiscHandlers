@@ -18,4 +18,6 @@ module HasStatus
   def concluded?
     @state == CONCLUDED_STATE
   end
+
+  alias complete? concluded?
 end
