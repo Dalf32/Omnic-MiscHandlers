@@ -9,8 +9,7 @@ class OwMap
 
   attr_reader :thumbnail
 
-  def basic_info(background:, icon:, thumbnail:, type:)
-    @background = background
+  def basic_info(icon:, thumbnail:, type:)
     @icon = icon
     @thumbnail = thumbnail
     @type = type

@@ -9,8 +9,8 @@ class ApiMapsResponse < HttpResponse
   def maps
     body.map do |map|
       OwMap.new(id: map[:id], name: map.dig(:name, :en_US)).tap do |owl_map|
-        owl_map.basic_info(background: map[:background], icon: map[:icon],
-                           thumbnail: map[:thumbnail], type: map[:type])
+        owl_map.basic_info(icon: map[:icon], thumbnail: map[:thumbnail],
+                           type: map[:type])
       end
     end
   end
