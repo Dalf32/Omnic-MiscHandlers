@@ -2,7 +2,11 @@
 #
 # AUTHOR::  Kyle Mullins
 
+require_relative 'has_status'
+
 class OwMatch
+  include HasStatus
+
   attr_reader :id
   attr_writer :games
 
@@ -29,10 +33,6 @@ class OwMatch
     @draws = draws
     @winner = @away_team.eql?(winner) ? @away_team : @home_team unless winner.nil?
     self
-  end
-
-  def complete?
-    @state == 'CONCLUDED'
   end
 
   def fill_live_embed(embed, maps)

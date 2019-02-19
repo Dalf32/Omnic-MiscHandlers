@@ -2,12 +2,12 @@
 #
 # AUTHOR::  Kyle Mullins
 
-class OwGame
-  attr_reader :id
+require_relative 'has_status'
 
-  PENDING_STATE = 'PENDING'.freeze
-  IN_PROGRESS_STATE = 'IN_PROGRESS'.freeze
-  CONCLUDED_STATE = 'CONCLUDED'.freeze
+class OwGame
+  include HasStatus
+
+  attr_reader :id
 
   def initialize(id:)
     @id = id
@@ -35,17 +35,5 @@ class OwGame
 
   def map(all_maps)
     all_maps.find { |map| map.eql?(@map_id) }
-  end
-
-  def pending?
-    @state == PENDING_STATE
-  end
-
-  def in_progress?
-    @state == IN_PROGRESS_STATE
-  end
-
-  def concluded?
-    @state == CONCLUDED_STATE
   end
 end
