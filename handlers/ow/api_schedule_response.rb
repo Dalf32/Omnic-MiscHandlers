@@ -9,6 +9,7 @@ require_relative 'model/ow_stage'
 require_relative 'model/ow_match'
 require_relative 'model/ow_team'
 require_relative 'model/ow_match_week'
+require_relative 'model/owl_event'
 
 class ApiScheduleResponse < HttpResponse
   def stages
@@ -49,6 +50,7 @@ class ApiScheduleResponse < HttpResponse
       match_week.dates(start_date: to_date(week[:startDate]),
                        end_date: to_date(week[:endDate]))
       match_week.matches = week[:matches].map { |match| create_match(match) }
+      match_week.events = week[:events].map { |event| create_event(event) }
     end
   end
 
@@ -70,6 +72,15 @@ class ApiScheduleResponse < HttpResponse
 
   def create_team(team)
     OwTeam.new(id: team[:id], name: team[:name]) unless team.nil?
+  end
+
+  def create_event(event)
+    OwlEvent.new(type: event[:type], titles: event.dig(:data, :titles)).tap do |owl_event|
+      owl_event.basic_info(loc_text: event.dig(:data, :locationText),
+                           loc_url: event.dig(:data, :locationUrl),
+                           descr_url: event.dig(:data, :descriptionUrl),
+                           image: event.dig(:data, :imageUrl))
+    end
   end
 
   def to_date(date)

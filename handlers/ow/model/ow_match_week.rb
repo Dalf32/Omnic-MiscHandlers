@@ -10,7 +10,7 @@ class OwMatchWeek
   include Identifiable
   include HasSeason
 
-  attr_accessor :matches
+  attr_accessor :matches, :events
 
   def dates(start_date:, end_date:)
     @start_date = start_date
@@ -31,6 +31,7 @@ class OwMatchWeek
     found_next_match = false
 
     embed.description = "#{@start_date.strftime(date_mask)} - #{@end_date.strftime(date_mask)}"
+    add_event_to_embed(embed)
     matches.each_slice(matches_per_day).with_index do |day_matches, day|
       formatted_matches = day_matches.map do |match|
         if !match.complete? && !found_next_match
@@ -50,5 +51,14 @@ class OwMatchWeek
 
   def matches_per_day
     season_num == 1 ? 3 : 4
+  end
+
+  private
+
+  def add_event_to_embed(embed)
+    return if @events.empty?
+
+    embed.description += "\n#{'-' * 20}\n#{@events.first.embed_str}"
+    embed.image = { url: @events.first.image }
   end
 end
