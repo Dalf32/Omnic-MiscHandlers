@@ -35,6 +35,10 @@ class OwMatch
     self
   end
 
+  def followed_by?(other_match)
+    @end_date == other_match.start_date
+  end
+
   def fill_live_embed(embed, maps)
     embed.add_field(name: 'Map', value: "#{format_maps(maps)}\n-",
                     inline: true)
@@ -89,6 +93,10 @@ class OwMatch
 
     "#{away} - #{home}#{draw_str}"
   end
+
+  protected
+
+  attr_reader :start_date
 
   private
 
