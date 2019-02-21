@@ -74,7 +74,7 @@ class ApiLiveMatchResponse < HttpResponse
 
   def create_game(game)
     OwGame.new(id: game[:id]).tap do |owl_game|
-      owl_game.basic_info(map_id: game.dig(:attributes, :map),
+      owl_game.basic_info(map_id: game.dig(:attributes, :mapGuid),
                           state: game[:state])
 
       if owl_game.in_progress? || owl_game.concluded?
