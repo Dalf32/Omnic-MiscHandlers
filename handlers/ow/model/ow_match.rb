@@ -36,7 +36,7 @@ class OwMatch
   end
 
   def followed_by?(other_match)
-    @end_date == other_match.start_date
+    (other_match.start_date - @end_date) <= (2 / 24.0) # Two hour difference
   end
 
   def fill_live_embed(embed, maps)
