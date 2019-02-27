@@ -9,16 +9,23 @@ class OwTeam
   include Identifiable
   include HasSocialLinks
 
-  attr_reader :abbrev, :color
+  attr_reader :abbrev
   attr_accessor :region
 
-  def basic_info(abbrev:, home:, color:, logo:, website:)
+  def basic_info(abbrev:, home:, logo:, website:)
     @abbrev = abbrev
     @home = home
-    @color = color
     @logo = logo
     @website = website
     self
+  end
+
+  def colors(**args)
+    @colors = args
+  end
+
+  def color
+    @colors[:primary]
   end
 
   def records(wins:, losses:, map_wins:, map_losses:, map_draws:)
@@ -40,7 +47,7 @@ class OwTeam
   end
 
   def fill_embed_logo(embed)
-    embed.color = "0x#{@color}"
+    embed.color = "0x#{color}"
     embed.thumbnail = { url: @logo }
   end
 

@@ -8,20 +8,17 @@ require_relative 'api_schedule_response'
 require_relative 'api_standings_response'
 require_relative 'api_players_response'
 require_relative 'api_player_details_response'
+require_relative 'api_v2_team_details_response'
 
 class OwlApiClient < OwApiClient
   def get_team_details(team_id)
-    super(team_id, expand: 'team.content')
+    response_hash = make_get_request(endpoint(:team_detail, team_id))
+    ApiV2TeamDetailsResponse.new(response_hash)
   end
 
   def get_rankings
     response_hash = make_get_request(endpoint(:ranking))
     ApiRankingsResponse.new(response_hash)
-  end
-
-  def get_schedule
-    response_hash = make_get_request(endpoint(:schedule))
-    ApiScheduleResponse.new(response_hash)
   end
 
   def get_standings(season_year = nil)

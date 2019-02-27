@@ -5,6 +5,8 @@
 require_relative 'ow_api_client'
 require_relative 'api_regions_response'
 require_relative 'api_region_standings_response'
+require_relative 'api_team_details_response'
+
 
 class OwcApiClient < OwApiClient
   def get_regions
@@ -14,6 +16,11 @@ class OwcApiClient < OwApiClient
 
   def get_teams
     super(expand: 'team.content')
+  end
+
+  def get_team_details(team_id)
+    response_hash = make_get_request(endpoint(:team_detail, team_id))
+    ApiTeamDetailsResponse.new(response_hash)
   end
 
   def get_standings

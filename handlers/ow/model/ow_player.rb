@@ -9,14 +9,27 @@ class OwPlayer
   include Identifiable
   include HasSocialLinks
 
-  def basic_info(given_name:, family_name:, home:, country:, role:, number:)
-    @real_name = "#{given_name} #{family_name}"
-    @given_name = given_name
-    @family_name = family_name
-    @home = "#{home}, #{country}"
+  def basic_info(home:, country:, role:, number:)
+    @home = home
     @country = country
     @role = role
     @number = number
+
+    @home = "#{@home}, #{@country}" unless @country.nil?
+    self
+  end
+
+  def given_name(given_name: nil, family_name: nil, full_name: nil)
+    @given_name = given_name
+    @family_name = family_name
+
+    if full_name.nil?
+      @real_name = "#{given_name} #{family_name}"
+    else
+      @real_name = full_name
+      @given_name, @family_name = *full_name.split(' ')
+    end
+
     self
   end
 

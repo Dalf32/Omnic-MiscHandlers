@@ -20,8 +20,10 @@ class ApiTeamsResponse < HttpResponse
         team = all_teams.find { |t| t.eql?(comp[:id]) }
 
         team.basic_info(abbrev: comp[:abbreviatedName],
-                        home: comp[:homeLocation], color: comp[:primaryColor],
+                        home: comp[:homeLocation],
                         logo: comp[:logo], website: nil)
+        team.colors(primary: body[:primaryColor],
+                    secondary: body[:secondaryColor])
 
         team.region = comp[:region]
         team.players(players(comp[:players]))
@@ -38,9 +40,9 @@ class ApiTeamsResponse < HttpResponse
       player_hash = player_hash[:player]
 
       OwPlayer.new(id: player_hash[:id], name: player_hash[:name]).tap do |player|
-        player.basic_info(given_name: player_hash[:givenName],
-                          family_name: player_hash[:familyName],
-                          home: player_hash[:homeLocation],
+        player.given_name(given_name: player_hash[:givenName],
+                          family_name: player_hash[:familyName])
+        player.basic_info(home: player_hash[:homeLocation],
                           country: player_hash[:nationality],
                           role: player_hash.dig(:attributes, :role),
                           number: player_hash.dig(:attributes, :player_number))

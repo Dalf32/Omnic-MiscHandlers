@@ -6,7 +6,6 @@ require_relative '../../api/api_client'
 require_relative 'api_live_match_response'
 require_relative 'api_maps_response'
 require_relative 'api_teams_response'
-require_relative 'api_team_details_response'
 
 class OwApiClient < ApiClient
   def initialize(log:, base_url:, endpoints:)
@@ -31,10 +30,9 @@ class OwApiClient < ApiClient
     ApiTeamsResponse.new(response_hash)
   end
 
-  def get_team_details(team_id, **query_args)
-    response_hash = make_get_request(endpoint(:team_detail, team_id),
-                                     query_args)
-    ApiTeamDetailsResponse.new(response_hash)
+  def get_schedule
+    response_hash = make_get_request(endpoint(:schedule))
+    ApiScheduleResponse.new(response_hash)
   end
 
   protected

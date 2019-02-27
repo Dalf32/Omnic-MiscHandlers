@@ -33,17 +33,21 @@ class ApiPlayerDetailsResponse < HttpResponse
     OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
       owl_team.basic_info(abbrev: team[:abbreviatedName],
                           home: team[:homeLocation],
-                          color: team.dig(:colors, :primary, :color),
                           logo: team.dig(:logo, :main, :png), website: nil)
+
+      colors = team[:colors]
+      owl_team.colors(primary: colors.dig(:primary, :color),
+                      secondary: colors.dig(:secondary, :color),
+                      tertiary: colors.dig(:tertiary, :color))
     end
   end
 
   def create_player(player_data)
     OwPlayer.new(id: player_data[:id],
                  name: player_data[:name]).tap do |player|
-      player.basic_info(given_name: player_data[:givenName],
-                        family_name: player_data[:familyName],
-                        home: player_data[:homeLocation],
+      player.given_name(given_name: player_data[:givenName],
+                        family_name: player_data[:familyName])
+      player.basic_info(home: player_data[:homeLocation],
                         country: player_data[:nationality],
                         role: player_data.dig(:attributes, :role),
                         number: player_data.dig(:attributes, :player_number))
