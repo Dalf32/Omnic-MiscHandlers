@@ -30,15 +30,19 @@ class ApiStandingsResponse < HttpResponse
   private
 
   def create_team(team, records)
-    OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
-      owl_team.basic_info(abbrev: team[:abbreviatedName], home: '',
-                          color: team.dig(:colors, :primary, :color),
-                          logo: team.dig(:logo, :main, :png), website: nil)
+    OwTeam.new(id: team[:id], name: team[:name]).tap do |ow_team|
+      ow_team.basic_info(abbrev: team[:abbreviatedName], home: '',
+                         logo: team.dig(:logo, :main, :png), website: nil)
 
-      owl_team.records(wins: records[:matchWin], losses: records[:matchLoss],
-                       map_wins: records[:gameWin],
-                       map_losses: records[:gameLoss],
-                       map_draws: records[:gameTie])
+      colors = team[:colors]
+      ow_team.colors(primary: colors.dig(:primary, :color),
+                     secondary: colors.dig(:secondary, :color),
+                     tertiary: colors.dig(:tertiary, :color))
+
+      ow_team.records(wins: records[:matchWin], losses: records[:matchLoss],
+                      map_wins: records[:gameWin],
+                      map_losses: records[:gameLoss],
+                      map_draws: records[:gameTie])
     end
   end
 end

@@ -50,7 +50,7 @@ class ApiScheduleResponse < HttpResponse
       match_week.dates(start_date: to_date(week[:startDate]),
                        end_date: to_date(week[:endDate]))
       match_week.matches = week[:matches].map { |match| create_match(match) }
-      match_week.events = week[:events].map { |event| create_event(event) }
+      match_week.events = week[:events].map { |event| create_event(event) } if week.key?(:events)
     end
   end
 

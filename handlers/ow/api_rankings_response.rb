@@ -22,8 +22,9 @@ class ApiRankingsResponse < HttpResponse
   def create_team(comp, records)
     OwTeam.new(id: comp[:id], name: comp[:name]).tap do |team|
       team.basic_info(abbrev: comp[:abbreviatedName], home: comp[:homeLocation],
-                      color: comp[:primaryColor], logo: comp[:logo],
-                      website: nil)
+                      logo: comp[:logo], website: nil)
+      team.colors(primary: comp[:primaryColor],
+                  secondary: comp[:secondaryColor])
 
       team.records(wins: records[:matchWin], losses: records[:matchLoss],
                    map_wins: records[:gameWin], map_losses: records[:gameLoss],

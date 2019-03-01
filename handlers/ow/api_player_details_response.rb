@@ -30,15 +30,15 @@ class ApiPlayerDetailsResponse < HttpResponse
   private
 
   def create_team(team)
-    OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
-      owl_team.basic_info(abbrev: team[:abbreviatedName],
-                          home: team[:homeLocation],
-                          logo: team.dig(:logo, :main, :png), website: nil)
+    OwTeam.new(id: team[:id], name: team[:name]).tap do |ow_team|
+      ow_team.basic_info(abbrev: team[:abbreviatedName],
+                         home: team[:homeLocation],
+                         logo: team.dig(:logo, :main, :png), website: nil)
 
       colors = team[:colors]
-      owl_team.colors(primary: colors.dig(:primary, :color),
-                      secondary: colors.dig(:secondary, :color),
-                      tertiary: colors.dig(:tertiary, :color))
+      ow_team.colors(primary: colors.dig(:primary, :color),
+                     secondary: colors.dig(:secondary, :color),
+                     tertiary: colors.dig(:tertiary, :color))
     end
   end
 

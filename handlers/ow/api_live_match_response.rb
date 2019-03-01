@@ -65,21 +65,23 @@ class ApiLiveMatchResponse < HttpResponse
   def create_team(team)
     return if team.nil?
 
-    OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
-      owl_team.basic_info(abbrev: team[:abbreviatedName],
-                          home: team[:homeLocation], color: team[:primaryColor],
-                          logo: team[:logo], website: nil)
+    OwTeam.new(id: team[:id], name: team[:name]).tap do |ow_team|
+      ow_team.basic_info(abbrev: team[:abbreviatedName],
+                         home: team[:homeLocation], logo: team[:logo],
+                         website: nil)
+      ow_team.colors(primary: team[:primaryColor],
+                     secondary: team[:secondaryColor])
     end
   end
 
   def create_game(game)
-    OwGame.new(id: game[:id]).tap do |owl_game|
-      owl_game.basic_info(map_id: game.dig(:attributes, :mapGuid),
-                          state: game[:state])
+    OwGame.new(id: game[:id]).tap do |ow_game|
+      ow_game.basic_info(map_id: game.dig(:attributes, :mapGuid),
+                         state: game[:state])
 
-      if owl_game.in_progress? || owl_game.concluded?
-        owl_game.result(away_score: game[:points]&.[](0),
-                        home_score: game[:points]&.[](1))
+      if ow_game.in_progress? || ow_game.concluded?
+        ow_game.result(away_score: game[:points]&.[](0),
+                       home_score: game[:points]&.[](1))
       end
     end
   end

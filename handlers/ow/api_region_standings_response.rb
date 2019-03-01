@@ -27,15 +27,16 @@ class ApiRegionStandingsResponse < HttpResponse
   end
 
   def create_team(team, records)
-    OwTeam.new(id: team[:id], name: team[:name]).tap do |owl_team|
-      owl_team.basic_info(abbrev: team[:abbreviatedName], home: '',
-                          color: team[:primaryColor],
-                          logo: team[:logo], website: nil)
+    OwTeam.new(id: team[:id], name: team[:name]).tap do |ow_team|
+      ow_team.basic_info(abbrev: team[:abbreviatedName], home: '',
+                         logo: team[:logo], website: nil)
+      ow_team.colors(primary: team[:primaryColor],
+                     secondary: team[:secondaryColor])
 
-      owl_team.records(wins: records[:matchWin], losses: records[:matchLoss],
-                       map_wins: records[:gameWin],
-                       map_losses: records[:gameLoss],
-                       map_draws: records[:gameTie])
+      ow_team.records(wins: records[:matchWin], losses: records[:matchLoss],
+                      map_wins: records[:gameWin],
+                      map_losses: records[:gameLoss],
+                      map_draws: records[:gameTie])
     end
   end
 end
