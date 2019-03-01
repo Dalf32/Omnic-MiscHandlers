@@ -44,157 +44,171 @@ class OwlHandler < CommandHandler
   end
 
   def show_team(event, *team_name)
-    event.channel.start_typing
-    teams_response = api_client.get_teams
+    handle_errors(event) do
+      event.channel.start_typing
+      teams_response = api_client.get_teams
 
-    return 'An unexpected error occurred.' if teams_response.error?
+      return 'An unexpected error occurred.' if teams_response.error?
 
-    teams = teams_response.teams
-                          .find_all { |t| t.matches?(team_name.join(' ')) }
+      teams = teams_response.teams
+                            .find_all { |t| t.matches?(team_name.join(' ')) }
 
-    return 'Team does not exist.' if teams.empty?
-    return 'More than one team matches the query.' if teams.size > 1
+      return 'Team does not exist.' if teams.empty?
+      return 'More than one team matches the query.' if teams.size > 1
 
-    team_details = api_client.get_team_details(teams.first.id)
+      team_details = api_client.get_team_details(teams.first.id)
 
-    return 'An unexpected error occurred.' if team_details.error?
+      return 'An unexpected error occurred.' if team_details.error?
 
-    event.channel.send_embed(' ') do |embed|
-      owl_basic_embed(embed)
-      team_details.team.fill_embed(embed)
+      event.channel.send_embed(' ') do |embed|
+        owl_basic_embed(embed)
+        team_details.team.fill_embed(embed)
+      end
     end
   end
 
   def show_standings(event)
-    event.channel.start_typing
-    standings_response = api_client.get_standings
+    handle_errors(event) do
+      event.channel.start_typing
+      standings_response = api_client.get_standings
 
-    return 'An unexpected error occurred.' if standings_response.error?
+      return 'An unexpected error occurred.' if standings_response.error?
 
-    standings = standings_response.standings
-    season_num = api_client.current_season
+      standings = standings_response.standings
+      season_num = api_client.current_season
 
-    send_standings(event, standings, 'Season Standings',
-                   "#{config.website_url}/standings/season/#{season_num}/league")
+      send_standings(event, standings, 'Season Standings',
+                     "#{config.website_url}/standings/season/#{season_num}/league")
+    end
   end
 
   def show_schedule(event)
-    event.channel.start_typing
-    schedule_response = api_client.get_schedule
+    handle_errors(event) do
+      event.channel.start_typing
+      schedule_response = api_client.get_schedule
 
-    return 'An unexpected error occurred.' if schedule_response.error?
+      return 'An unexpected error occurred.' if schedule_response.error?
 
-    current_stage = schedule_response.current_stage || schedule_response.upcoming_stage
+      current_stage = schedule_response.current_stage || schedule_response.upcoming_stage
 
-    return 'No stage currently in progress.' if current_stage.nil?
+      return 'No stage currently in progress.' if current_stage.nil?
 
-    current_week = current_stage.current_week || current_stage.upcoming_week
+      current_week = current_stage.current_week || current_stage.upcoming_week
 
-    event.channel.send_embed(' ') do |embed|
-      owl_basic_embed(embed)
-      embed.author = { name: 'Overwatch League Schedule',
-                       url: config.website_url }
-      embed.title = "#{current_stage.name} #{current_week.name}"
-      embed.url = "#{config.website_url}/schedule"
-      current_week.fill_embed(embed)
+      event.channel.send_embed(' ') do |embed|
+        owl_basic_embed(embed)
+        embed.author = { name: 'Overwatch League Schedule',
+                         url: config.website_url }
+        embed.title = "#{current_stage.name} #{current_week.name}"
+        embed.url = "#{config.website_url}/schedule"
+        current_week.fill_embed(embed)
+      end
     end
   end
 
   def show_live_state(event)
-    event.channel.start_typing
-    live_data = api_client.get_live_match
+    handle_errors(event) do
+      event.channel.start_typing
+      live_data = api_client.get_live_match
 
-    return 'An unexpected error occurred.' if live_data.error?
-    return 'There is no OWL match live at this time.' unless live_data.live_or_upcoming?
+      return 'An unexpected error occurred.' if live_data.error?
+      return 'There is no OWL match live at this time.' unless live_data.live_or_upcoming?
 
-    maps_response = api_client.get_maps
+      maps_response = api_client.get_maps
 
-    return 'An unexpected error occurred.' if maps_response.error?
+      return 'An unexpected error occurred.' if maps_response.error?
 
-    if live_data.live?
-      live_match = live_data.live_match
+      if live_data.live?
+        live_match = live_data.live_match
 
-      event.channel.send_embed(' ') do |embed|
-        owl_basic_embed(embed)
-        live_match_embed(embed, live_match, maps_response.maps)
-        live_match.add_home_color_to_embed(embed)
-        next_match_embed(embed, live_data.next_match,
-                         live_data.time_to_next_match)
-      end
-    else
-      next_match = live_data.live_match
+        event.channel.send_embed(' ') do |embed|
+          owl_basic_embed(embed)
+          live_match_embed(embed, live_match, maps_response.maps)
+          live_match.add_home_color_to_embed(embed)
+          next_match_embed(embed, live_data.next_match,
+                           live_data.time_to_next_match)
+        end
+      else
+        next_match = live_data.live_match
 
-      event.channel.send_embed(' ') do |embed|
-        owl_basic_embed(embed)
-        next_match_embed(embed, next_match, live_data.time_to_match)
-        next_match.add_maps_to_embed(embed, maps_response.maps)
-        next_match.add_home_color_to_embed(embed)
+        event.channel.send_embed(' ') do |embed|
+          owl_basic_embed(embed)
+          next_match_embed(embed, next_match, live_data.time_to_match)
+          next_match.add_maps_to_embed(embed, maps_response.maps)
+          next_match.add_home_color_to_embed(embed)
+        end
       end
     end
   end
 
   def show_stage_rank(event, *args)
-    if args.empty?
-      event.channel.start_typing
-      current_stage = api_client.current_stage
+    handle_errors(event) do
+      if args.empty?
+        event.channel.start_typing
+        current_stage = api_client.current_stage
 
-      return 'No stage currently in progress.' if current_stage.nil?
+        return 'No stage currently in progress.' if current_stage.nil?
 
-      stage_standings(event, current_stage.season, current_stage.number)
-    elsif args.count == 1
-      'Both the Season year and desired Stage number must be provided.'
-    else
-      season_year, stage_num = *args
-      season_year = season_year.to_i
-      return 'Invalid Season year.' unless season_year >= 2018
-      return 'Invalid Stage number.' unless %w[1 2 3 4].include?(stage_num)
+        stage_standings(event, current_stage.season, current_stage.number)
+      elsif args.count == 1
+        'Both the Season year and desired Stage number must be provided.'
+      else
+        season_year, stage_num = *args
+        season_year = season_year.to_i
+        return 'Invalid Season year.' unless season_year >= 2018
+        return 'Invalid Stage number.' unless %w[1 2 3 4].include?(stage_num)
 
-      event.channel.start_typing
-      stage_standings(event, season_year, stage_num)
+        event.channel.start_typing
+        stage_standings(event, season_year, stage_num)
+      end
     end
   end
 
   def show_score(event)
-    event.channel.start_typing
-    live_data = api_client.get_live_match
+    handle_errors(event) do
+      event.channel.start_typing
+      live_data = api_client.get_live_match
 
-    return 'An unexpected error occurred.' if live_data.error?
-    return 'There is no OWL match live at this time.' unless live_data.live?
+      return 'An unexpected error occurred.' if live_data.error?
+      return 'There is no OWL match live at this time.' unless live_data.live?
 
-    "||#{live_data.live_match.score_str}||"
+      "||#{live_data.live_match.score_str}||"
+    end
   end
 
   def show_player(event, player_name, *hero_name)
-    event.channel.start_typing
-    players_response = api_client.get_players
+    handle_errors(event) do
+      event.channel.start_typing
+      players_response = api_client.get_players
 
-    return 'An unexpected error occurred.' if players_response.error?
+      return 'An unexpected error occurred.' if players_response.error?
 
-    players = players_response.players
-                              .find_all { |p| p.matches?(player_name) }
+      players = players_response.players
+                                .find_all { |p| p.matches?(player_name) }
 
-    return 'Player does not exist.' if players.empty?
+      return 'Player does not exist.' if players.empty?
 
-    if players.size > 1
-      players = players.find_all { |p| p.exact_match?(player_name) }
-      return 'More than one player matches the query.' unless players.size == 1
-    end
+      if players.size > 1
+        players = players.find_all { |p| p.exact_match?(player_name) }
+        return 'More than one player matches the query.' unless players.size == 1
+      end
 
-    player_details = api_client.get_player_details(players.first.id)
+      player_details = api_client.get_player_details(players.first.id)
 
-    return 'An unexpected error occurred.' if player_details.error?
+      return 'An unexpected error occurred.' if player_details.error?
 
-    player = player_details.player
+      player = player_details.player
 
-    # Find hero if given
-    return 'Per-hero stats are not yet implemented.' unless hero_name.empty?
+      # Find hero if given
+      return 'Per-hero stats are not yet implemented.' unless hero_name.empty?
 
-    event.channel.send_embed(' ') do |embed|
-      owl_basic_embed(embed)
-      player.fill_embed(embed)
-      embed.url = "#{config.website_url}/players/#{player.id}"
-      embed.add_field(name: 'Basic Stats',
-                      value: "```#{stats_header}\n#{player.stats_str}```")
+      event.channel.send_embed(' ') do |embed|
+        owl_basic_embed(embed)
+        player.fill_embed(embed)
+        embed.url = "#{config.website_url}/players/#{player.id}"
+        embed.add_field(name: 'Basic Stats',
+                        value: "```#{stats_header}\n#{player.stats_str}```")
+      end
     end
   end
 
