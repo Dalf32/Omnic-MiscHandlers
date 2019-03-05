@@ -40,148 +40,160 @@ class OwcHandler < CommandHandler
   end
 
   def list_regions(event)
-    event.channel.start_typing
-    regions_response = api_client.get_regions
+    handle_errors(event) do
+      event.channel.start_typing
+      regions_response = api_client.get_regions
 
-    return 'An unexpected error occurred.' if regions_response.error?
+      return 'An unexpected error occurred.' if regions_response.error?
 
-    regions_str = "**Overwatch Contenders regions:**\n"
-    regions_response.regions.each { |region| regions_str += "#{region}\n" }
+      regions_str = "**Overwatch Contenders regions:**\n"
+      regions_response.regions.each { |region| regions_str += "#{region}\n" }
 
-    regions_str
+      regions_str
+    end
   end
 
   def show_team(event, *team_name)
-    event.channel.start_typing
-    teams_response = api_client.get_teams
+    handle_errors(event) do
+      event.channel.start_typing
+      teams_response = api_client.get_teams
 
-    return 'An unexpected error occurred.' if teams_response.error?
+      return 'An unexpected error occurred.' if teams_response.error?
 
-    teams = teams_response.full_teams
-                          .find_all { |t| t.matches?(team_name.join(' ')) }
+      teams = teams_response.full_teams
+                            .find_all { |t| t.matches?(team_name.join(' ')) }
 
-    return 'Team does not exist.' if teams.empty?
-    return 'More than one team matches the query.' if teams.size > 1
+      return 'Team does not exist.' if teams.empty?
+      return 'More than one team matches the query.' if teams.size > 1
 
-    found_team = teams.first
-    team_details = api_client.get_team_details(found_team.id)
+      found_team = teams.first
+      team_details = api_client.get_team_details(found_team.id)
 
-    found_team.players(team_details.players) unless team_details.error?
+      found_team.players(team_details.players) unless team_details.error?
 
-    event.channel.send_embed(' ') do |embed|
-      owc_basic_embed(embed)
-      embed.url = "#{config.website_url}/teams"
-      found_team.fill_min_embed(embed)
-      embed.color = config.home_color if found_team.color.nil?
+      event.channel.send_embed(' ') do |embed|
+        owc_basic_embed(embed)
+        embed.url = "#{config.website_url}/teams"
+        found_team.fill_min_embed(embed)
+        embed.color = config.home_color if found_team.color.nil?
+      end
     end
   end
 
   def show_standings(event, *region)
-    event.channel.start_typing
-    standings_response = api_client.get_standings
+    handle_errors(event) do
+      event.channel.start_typing
+      standings_response = api_client.get_standings
 
-    return 'An unexpected error occurred.' if standings_response.error?
+      return 'An unexpected error occurred.' if standings_response.error?
 
-    regions_standings = standings_response.all_standings
-    regions = regions_standings.keys
-                               .find_all { |r| r.matches?(region.join(' ')) }
+      regions_standings = standings_response.all_standings
+      regions = regions_standings.keys
+                                 .find_all { |r| r.matches?(region.join(' ')) }
 
-    return 'Region does not exist.' if regions.empty?
+      return 'Region does not exist.' if regions.empty?
 
-    if regions.size > 1
-      regions = regions.find_all { |r| r.exact_match?(region.join(' ')) }
-      return 'More than one region matches the query.' unless regions.size == 1
+      if regions.size > 1
+        regions = regions.find_all { |r| r.exact_match?(region.join(' ')) }
+        return 'More than one region matches the query.' unless regions.size == 1
+      end
+
+      standings = regions_standings[regions.first]
+
+      send_standings(event, standings, 'Season Standings')
     end
-
-    standings = regions_standings[regions.first]
-
-    send_standings(event, standings, 'Season Standings')
   end
 
   def show_schedule(event, *region)
-    event.channel.start_typing
-    schedule_response = api_client.get_schedule
+    handle_errors(event) do
+      event.channel.start_typing
+      schedule_response = api_client.get_schedule
 
-    return 'An unexpected error occurred.' if schedule_response.error?
+      return 'An unexpected error occurred.' if schedule_response.error?
 
-    current_stage = schedule_response.current_stage || schedule_response.upcoming_stage
+      current_stage = schedule_response.current_stage || schedule_response.upcoming_stage
 
-    return 'No stage currently in progress.' if current_stage.nil?
+      return 'No stage currently in progress.' if current_stage.nil?
 
-    current_week = current_stage.current_week || current_stage.upcoming_week
+      current_week = current_stage.current_week || current_stage.upcoming_week
 
-    regions_response = api_client.get_regions
+      regions_response = api_client.get_regions
 
-    return 'An unexpected error occurred.' if regions_response.error?
+      return 'An unexpected error occurred.' if regions_response.error?
 
-    regions = regions_response.regions
+      regions = regions_response.regions
 
-    match_week_strategy = GroupByRegionStrategy.new(regions)
+      match_week_strategy = GroupByRegionStrategy.new(regions)
 
-    unless region.empty?
-      found_regions = regions.find_all { |r| r.matches?(region.join(' ')) }
+      unless region.empty?
+        found_regions = regions.find_all { |r| r.matches?(region.join(' ')) }
 
-      return 'Region does not exist.' if found_regions.empty?
+        return 'Region does not exist.' if found_regions.empty?
 
-      if found_regions.size > 1
-        found_regions = found_regions.find_all { |r| r.exact_match?(region.join(' ')) }
-        return 'More than one region matches the query.' unless found_regions.size == 1
+        if found_regions.size > 1
+          found_regions = found_regions.find_all { |r| r.exact_match?(region.join(' ')) }
+          return 'More than one region matches the query.' unless found_regions.size == 1
+        end
+
+        match_week_strategy = FilterByRegionStrategy.new(found_regions.first)
       end
 
-      match_week_strategy = FilterByRegionStrategy.new(found_regions.first)
-    end
-
-    event.channel.send_embed(' ') do |embed|
-      owc_basic_embed(embed)
-      embed.author = { name: 'Overwatch League Schedule',
-                       url: config.website_url }
-      embed.title = "#{current_stage.name} #{current_week.name}"
-      embed.url = "#{config.website_url}/schedule"
-      current_week.fill_embed(embed, match_strategy: match_week_strategy)
+      event.channel.send_embed(' ') do |embed|
+        owc_basic_embed(embed)
+        embed.author = { name: 'Overwatch League Schedule',
+                         url: config.website_url }
+        embed.title = "#{current_stage.name} #{current_week.name}"
+        embed.url = "#{config.website_url}/schedule"
+        current_week.fill_embed(embed, match_strategy: match_week_strategy)
+      end
     end
   end
 
   def show_live_state(event)
-    event.channel.start_typing
-    live_data = api_client.get_live_match
+    handle_errors(event) do
+      event.channel.start_typing
+      live_data = api_client.get_live_match
 
-    return 'An unexpected error occurred.' if live_data.error?
-    return 'There is no OWC match live at this time.' unless live_data.live_or_upcoming?
+      return 'An unexpected error occurred.' if live_data.error?
+      return 'There is no OWC match live at this time.' unless live_data.live_or_upcoming?
 
-    maps_response = api_client.get_maps
+      maps_response = api_client.get_maps
 
-    return 'An unexpected error occurred.' if maps_response.error?
+      return 'An unexpected error occurred.' if maps_response.error?
 
-    title = live_data.live_match_has_bracket? ? live_data.live_match_bracket_title : 'Overwatch Contenders'
+      title = live_data.live_match_has_bracket? ? live_data.live_match_bracket_title : 'Overwatch Contenders'
 
-    if live_data.live?
-      live_match = live_data.live_match
+      if live_data.live?
+        live_match = live_data.live_match
 
-      event.channel.send_embed(' ') do |embed|
-        owc_basic_embed(embed, title)
-        live_match_embed(embed, live_match, maps_response.maps)
-        next_match_embed(embed, live_data.next_match,
-                         live_data.time_to_next_match)
-      end
-    else
-      next_match = live_data.live_match
+        event.channel.send_embed(' ') do |embed|
+          owc_basic_embed(embed, title)
+          live_match_embed(embed, live_match, maps_response.maps)
+          next_match_embed(embed, live_data.next_match,
+                           live_data.time_to_next_match)
+        end
+      else
+        next_match = live_data.live_match
 
-      event.channel.send_embed(' ') do |embed|
-        owc_basic_embed(embed, title)
-        next_match_embed(embed, next_match, live_data.time_to_match)
-        next_match.add_maps_to_embed(embed, maps_response.maps)
+        event.channel.send_embed(' ') do |embed|
+          owc_basic_embed(embed, title)
+          next_match_embed(embed, next_match, live_data.time_to_match)
+          next_match.add_maps_to_embed(embed, maps_response.maps)
+        end
       end
     end
   end
 
   def show_score(event)
-    event.channel.start_typing
-    live_data = api_client.get_live_match
+    handle_errors(event) do
+      event.channel.start_typing
+      live_data = api_client.get_live_match
 
-    return 'An unexpected error occurred.' if live_data.error?
-    return 'There is no OWC match live at this time.' unless live_data.live?
+      return 'An unexpected error occurred.' if live_data.error?
+      return 'There is no OWC match live at this time.' unless live_data.live?
 
-    "||#{live_data.live_match.score_str}||"
+      "||#{live_data.live_match.score_str}||"
+    end
   end
 
   private
