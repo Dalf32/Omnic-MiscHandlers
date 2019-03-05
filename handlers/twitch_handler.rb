@@ -100,6 +100,8 @@ class TwitchHandler < CommandHandler
       return
     end
 
+    return if event.user.stream_url.nil?
+
     is_reannounce = user_stream_store.title_cached?
     stream_data = handle_playing_status_change(event)
 
@@ -179,7 +181,7 @@ class TwitchHandler < CommandHandler
         sleep(30)
       rescue StandardError => e
         log.error(e.full_message)
-        log.error("Event Type: #{event.type}; User: #{event.user.distinct}; Game: #{event.user.game}; Stream Username: #{event.user.stream_url}")
+        log.debug("Event Type: #{event.type}; User: #{event.user.distinct}; Game: #{event.user.game}; Stream Username: #{event.user.stream_url}")
       end
     end
 
