@@ -83,7 +83,7 @@ class OwcHandler < CommandHandler
   def show_standings(event, *region)
     handle_errors(event) do
       event.channel.start_typing
-      standings_response = api_client.get_standings
+      standings_response = api_client.get_bracket
 
       return 'An unexpected error occurred.' if standings_response.error?
 
@@ -98,9 +98,20 @@ class OwcHandler < CommandHandler
         return 'More than one region matches the query.' unless regions.size == 1
       end
 
+      chosen_region = regions.first
       standings = regions_standings[regions.first]
 
-      send_standings(event, standings, 'Season Standings')
+      if standings.is_a?(Hash)
+        standings.each_pair do |group, ranks|
+          send_standings(event, ranks,
+                         "#{chosen_region.abbreviation} Group #{group} Season Standings")
+        end
+
+        nil
+      else
+        send_standings(event, standings,
+                       "#{chosen_region.abbreviation} Season Standings")
+      end
     end
   end
 
