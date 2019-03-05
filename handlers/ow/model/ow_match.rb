@@ -9,6 +9,7 @@ class OwMatch
 
   attr_reader :id
   attr_writer :games
+  attr_accessor :tournament
 
   def initialize(id:)
     @id = id
@@ -37,6 +38,10 @@ class OwMatch
 
   def followed_by?(other_match)
     (other_match.start_date - @end_date) <= (2 / 24.0) # Two hour difference
+  end
+
+  def starts_near?(other_match)
+    (other_match.start_date - @start_date) <= (3 / 24.0) # Three hour difference
   end
 
   def fill_live_embed(embed, maps)

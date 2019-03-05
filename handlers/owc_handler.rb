@@ -99,9 +99,46 @@ class OwcHandler < CommandHandler
   end
 
   def show_schedule(event, *region)
-    # TODO: Overall schedule
-    # TODO: Region schedule
-    'Coming soon!'
+    event.channel.start_typing
+    schedule_response = api_client.get_schedule
+
+    return 'An unexpected error occurred.' if schedule_response.error?
+
+    current_stage = schedule_response.current_stage || schedule_response.upcoming_stage
+
+    return 'No stage currently in progress.' if current_stage.nil?
+
+    current_week = current_stage.current_week || current_stage.upcoming_week
+
+    regions_response = api_client.get_regions
+
+    return 'An unexpected error occurred.' if regions_response.error?
+
+    regions = regions_response.regions
+
+    match_week_strategy = GroupByRegionStrategy.new(regions)
+
+    unless region.empty?
+      found_regions = regions.find_all { |r| r.matches?(region.join(' ')) }
+
+      return 'Region does not exist.' if found_regions.empty?
+
+      if found_regions.size > 1
+        found_regions = found_regions.find_all { |r| r.exact_match?(region.join(' ')) }
+        return 'More than one region matches the query.' unless found_regions.size == 1
+      end
+
+      match_week_strategy = FilterByRegionStrategy.new(found_regions.first)
+    end
+
+    event.channel.send_embed(' ') do |embed|
+      owc_basic_embed(embed)
+      embed.author = { name: 'Overwatch League Schedule',
+                       url: config.website_url }
+      embed.title = "#{current_stage.name} #{current_week.name}"
+      embed.url = "#{config.website_url}/schedule"
+      current_week.fill_embed(embed, match_strategy: match_week_strategy)
+    end
   end
 
   def show_live_state(event)

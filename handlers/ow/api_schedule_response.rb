@@ -67,6 +67,8 @@ class ApiScheduleResponse < HttpResponse
                        home_wins: match.dig(:wins, 1),
                        draws: match.dig(:ties, 0),
                        winner: match.dig(:winner, :id))
+
+      owl_match.tournament = match.dig(:tournament, :id)
     end
   end
 
