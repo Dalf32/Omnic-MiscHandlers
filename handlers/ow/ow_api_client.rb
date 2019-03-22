@@ -30,8 +30,8 @@ class OwApiClient < ApiClient
     ApiTeamsResponse.new(response_hash)
   end
 
-  def get_schedule
-    response_hash = make_get_request(endpoint(:schedule))
+  def get_schedule(**query_args)
+    response_hash = make_get_request(endpoint(:schedule), query_args)
     ApiScheduleResponse.new(response_hash)
   end
 

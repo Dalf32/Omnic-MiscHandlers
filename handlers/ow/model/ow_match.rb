@@ -7,7 +7,7 @@ require_relative 'has_status'
 class OwMatch
   include HasStatus
 
-  attr_reader :id
+  attr_reader :id, :start_date, :end_date
   attr_writer :games
   attr_accessor :tournament
 
@@ -98,10 +98,6 @@ class OwMatch
 
     "#{away} - #{home}#{draw_str}"
   end
-
-  protected
-
-  attr_reader :start_date
 
   private
 

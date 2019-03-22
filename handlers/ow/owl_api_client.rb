@@ -27,6 +27,10 @@ class OwlApiClient < OwApiClient
     ApiStandingsResponse.new(response_hash)
   end
 
+  def get_schedule
+    super(separateStagePlayoffsWeek: true)
+  end
+
   def get_players
     response_hash = make_get_request(endpoint(:players))
     ApiPlayersResponse.new(response_hash)
