@@ -27,6 +27,10 @@ class OwMatchWeek
     DateTime.now < start_date
   end
 
+  def match_count(match_strategy: BaseWeekStrategy.new)
+    match_strategy.count_matches(@matches)
+  end
+
   def fill_embed(embed, match_strategy: GroupByDaysStrategy.new)
     date_mask = '%a, %d %b %Y'
 

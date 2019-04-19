@@ -13,7 +13,7 @@ require_relative 'model/owl_event'
 
 class ApiScheduleResponse < HttpResponse
   def stages
-    body.dig(:data, :stages).select { |s| s[:enabled] }.map do |stage|
+    @stages ||= body.dig(:data, :stages).select { |s| s[:enabled] }.map do |stage|
       OwStage.new(id: stage[:id], name: stage[:name]).tap do |owl_stage|
         owl_stage.slug = stage[:slug]
         owl_stage.season = season
@@ -40,6 +40,10 @@ class ApiScheduleResponse < HttpResponse
 
   def upcoming_stage
     stages.find(&:upcoming?)
+  end
+
+  def playoffs
+    stages.find(&:playoffs?)
   end
 
   private

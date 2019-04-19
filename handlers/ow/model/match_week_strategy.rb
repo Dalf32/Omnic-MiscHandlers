@@ -2,7 +2,29 @@
 #
 # AUTHOR::  Kyle Mullins
 
-class GroupByDaysStrategy
+class BaseWeekStrategy
+  def add_matches(matches, embed)
+    found_next_match = false
+
+    formatted_matches = matches.map do |match|
+      if !match.complete? && !found_next_match
+        found_next_match = true
+        "**>>**  #{match.to_s_with_result}  **<<**"
+      else
+        match.to_s
+      end
+    end
+
+    embed.add_field(name: 'Matches',
+                    value: formatted_matches.join("\n"))
+  end
+
+  def count_matches(matches)
+    matches.count
+  end
+end
+
+class GroupByDaysStrategy < BaseWeekStrategy
   def add_matches(matches, embed)
     found_next_match = false
     match_count = 0
@@ -32,25 +54,7 @@ class GroupByDaysStrategy
   end
 end
 
-class NoGroupingStrategy
-  def add_matches(matches, embed)
-    found_next_match = false
-
-    formatted_matches = matches.map do |match|
-      if !match.complete? && !found_next_match
-        found_next_match = true
-        "**>>**  #{match.to_s_with_result}  **<<**"
-      else
-        match.to_s
-      end
-    end
-
-    embed.add_field(name: 'Matches',
-                    value: formatted_matches.join("\n"))
-  end
-end
-
-class GroupByRegionStrategy
+class GroupByRegionStrategy < BaseWeekStrategy
   def initialize(regions)
     @regions = regions
   end
@@ -92,7 +96,7 @@ class GroupByRegionStrategy
   end
 end
 
-class FilterByRegionStrategy
+class FilterByRegionStrategy < BaseWeekStrategy
   def initialize(region)
     @region = region
   end
@@ -118,6 +122,10 @@ class FilterByRegionStrategy
       embed.add_field(name: "#{@region.abbreviation} Day #{day + 1}",
                       value: formatted_matches.join("\n"))
     end
+  end
+
+  def count_matches(matches)
+    filter_by_region(matches).count
   end
 
   private

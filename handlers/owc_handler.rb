@@ -107,7 +107,7 @@ class OwcHandler < CommandHandler
                          "#{chosen_region.abbreviation} Group #{group} Season Standings")
         end
 
-        nil
+        nil # Otherwise we return the standings Hash
       else
         send_standings(event, standings,
                        "#{chosen_region.abbreviation} Season Standings")
@@ -126,7 +126,9 @@ class OwcHandler < CommandHandler
 
       return 'No stage currently in progress.' if current_stage.nil?
 
-      current_week = current_stage.current_week || current_stage.upcoming_week
+      stages = [current_stage]
+      playoffs = schedule_response.playoffs
+      stages <<  playoffs unless current_stage.eql?(playoffs)
 
       regions_response = api_client.get_regions
 
@@ -149,14 +151,19 @@ class OwcHandler < CommandHandler
         match_week_strategy = FilterByRegionStrategy.new(found_regions.first)
       end
 
-      event.channel.send_embed(' ') do |embed|
-        owc_basic_embed(embed)
-        embed.author = { name: 'Overwatch League Schedule',
-                         url: config.website_url }
-        embed.title = "#{current_stage.name} #{current_week.name}"
-        embed.url = "#{config.website_url}/schedule"
-        current_week.fill_embed(embed, match_strategy: match_week_strategy)
+      stages.each do |stage|
+        match_week = stage.current_week || stage.upcoming_week
+        next if match_week.match_count(match_strategy: match_week_strategy).zero?
+
+        event.channel.send_embed(' ') do |embed|
+          owc_basic_embed(embed, title = 'Overwatch Contenders Schedule')
+          embed.title = "#{stage.name} #{match_week.name}"
+          embed.url = "#{config.website_url}/schedule"
+          match_week.fill_embed(embed, match_strategy: match_week_strategy)
+        end
       end
+
+      nil # Otherwise we return the stages Array
     end
   end
 

@@ -19,6 +19,10 @@ class OwStage
     @weeks.any?(&:upcoming?)
   end
 
+  def playoffs?
+    @name == 'Playoffs'
+  end
+
   def current_week
     @weeks.find(&:in_progress?)
   end
