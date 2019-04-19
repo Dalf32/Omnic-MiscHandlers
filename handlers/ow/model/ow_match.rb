@@ -72,9 +72,8 @@ class OwMatch
 
   def to_s
     return to_s_with_result unless @winner.nil?
-    return 'TBD vs TBD' if @away_team.nil? && @home_team.nil?
 
-    "#{@away_team} vs #{@home_team}"
+    "#{@away_team || 'TBD'} vs #{@home_team || 'TBD'}"
   end
 
   def to_s_with_result
