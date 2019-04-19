@@ -12,7 +12,8 @@ require_relative 'api_v2_team_details_response'
 
 class OwlApiClient < OwApiClient
   def get_team_details(team_id)
-    response_hash = make_get_request(endpoint(:team_detail, team_id))
+    response_hash = make_get_request(endpoint(:team_detail, team_id),
+                                     expand: :schedule)
     ApiV2TeamDetailsResponse.new(response_hash)
   end
 

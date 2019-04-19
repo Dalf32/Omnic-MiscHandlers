@@ -7,7 +7,7 @@ require_relative 'has_status'
 class OwMatch
   include HasStatus
 
-  attr_reader :id, :start_date, :end_date
+  attr_reader :id, :start_date, :end_date, :away_team, :home_team
   attr_writer :games
   attr_accessor :tournament
 
@@ -96,6 +96,12 @@ class OwMatch
     draw_str = @draws.zero? ? '' : " (#{@draws}D)"
 
     "#{away} - #{home}#{draw_str}"
+  end
+
+  def abbrev_str
+    away = @away_team.nil? ? 'TBD' : @away_team.abbrev
+    home = @home_team.nil? ? 'TBD' : @home_team.abbrev
+    "#{away} vs #{home}"
   end
 
   private

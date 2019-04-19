@@ -42,6 +42,10 @@ class OwTeam
     self
   end
 
+  def upcoming_matches(matches)
+    @matches = matches
+  end
+
   def map_differential
     @map_wins - @map_losses
   end
@@ -61,6 +65,7 @@ class OwTeam
                     inline: true)
     fill_socials_embed(embed)
     fill_players_embed(embed)
+    fill_matches_embed(embed)
   end
 
   def fill_min_embed(embed)
@@ -102,5 +107,24 @@ class OwTeam
                     inline: true)
     embed.add_field(name: '-', value: players_split[1].map(&:to_s).join("\n"),
                     inline: true)
+  end
+
+  def fill_matches_embed(embed)
+    return if @matches.nil? || @matches.empty?
+
+    date_mask = '%a, %d %b %Y'
+
+    embed.add_field(name: 'Upcoming Matches',
+                    value: @matches.map { |match| format_matchup(match) }.join("\n"),
+                    inline: true)
+    embed.add_field(name: '-',
+                    value: @matches.map { |match| match.start_date.strftime(date_mask) }.join("\n"),
+                    inline: true)
+  end
+
+  def format_matchup(match)
+    return match.away_team.to_s if match.home_team.eql?(self)
+
+    "*at* #{match.home_team}"
   end
 end

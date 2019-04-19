@@ -5,6 +5,7 @@
 require_relative '../../api/http_response'
 require_relative 'model/ow_team'
 require_relative 'model/ow_player'
+require_relative 'model/ow_match'
 
 class ApiV2TeamDetailsResponse < HttpResponse
   def team
@@ -27,6 +28,7 @@ class ApiV2TeamDetailsResponse < HttpResponse
 
       team.players(players)
       team.social(**extract_social_links(data[:accounts]))
+      team.upcoming_matches(upcoming_matches)
     end
   end
 
@@ -41,9 +43,30 @@ class ApiV2TeamDetailsResponse < HttpResponse
     end
   end
 
+  def upcoming_matches
+    body.dig(:data, :schedule).map do |match_hash|
+      OwMatch.new(id: match_hash[:id]).tap do |ow_match|
+        ow_match.basic_info(state: match_hash[:state],
+                            start_date: to_date(match_hash[:startDate]),
+                            end_date: to_date(match_hash[:endDate]))
+
+        ow_match.teams(away: create_team(match_hash[:competitors][0]),
+                       home: create_team(match_hash[:competitors][1]))
+      end
+    end
+  end
+
   private
 
   def extract_social_links(accounts)
     accounts.map { |acc| [acc[:type].to_sym, acc[:url]] }.to_h
+  end
+
+  def create_team(team)
+    OwTeam.new(id: team[:id], name: team[:name]) unless team.nil?
+  end
+
+  def to_date(date)
+    DateTime.strptime(date.to_s, '%Q') unless date.nil?
   end
 end
