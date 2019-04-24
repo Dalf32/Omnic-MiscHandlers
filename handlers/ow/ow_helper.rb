@@ -19,6 +19,8 @@ module OwHelper
     embed.author = { name: title, url: config.website_url }
     embed.footer = { text: footer_text }
     embed.timestamp = Time.now
+
+    embed.footer[:icon_url] = config.icon_url if config.key?(:icon_url)
   end
 
   def next_match_embed(embed, match, time_to_match)
