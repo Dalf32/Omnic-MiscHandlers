@@ -2,6 +2,8 @@
 #
 # AUTHOR::  Kyle Mullins
 
+require 'date'
+require 'chronic_duration'
 require_relative 'identifiable'
 require_relative 'has_social_links'
 
@@ -112,13 +114,11 @@ class OwTeam
   def fill_matches_embed(embed)
     return if @matches.nil? || @matches.empty?
 
-    date_mask = '%a, %d %b %Y'
-
     embed.add_field(name: 'Upcoming Matches',
-                    value: @matches.map { |match| format_matchup(match) }.join("\n"),
+                    value: @matches.map { |m| format_matchup(m) }.join("\n"),
                     inline: true)
     embed.add_field(name: '-',
-                    value: @matches.map { |match| match.start_date.strftime(date_mask) }.join("\n"),
+                    value: @matches.map { |m| time_to_start(m) }.join("\n"),
                     inline: true)
   end
 
@@ -126,5 +126,10 @@ class OwTeam
     return match.away_team.to_s if match.home_team.eql?(self)
 
     "*at* #{match.home_team}"
+  end
+
+  def time_to_start(match)
+    time_secs = ((match.start_date - DateTime.now) * (24 * 60 * 60)).to_i
+    ChronicDuration.output(time_secs, weeks: true, units: 3)
   end
 end
