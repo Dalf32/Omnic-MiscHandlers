@@ -167,6 +167,7 @@ class TwitchHandler < CommandHandler
 
   def handle_playing_status_change(event)
     return nil if user_stream_store.cached_title == event.user.game
+    return nil if event.user.stream_url.nil?
 
     count = 0
     stream_data = loop do
