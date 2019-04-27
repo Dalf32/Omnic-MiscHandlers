@@ -93,7 +93,8 @@ class OwMatch
     home = "#{@home_team.abbrev} #{@home_wins}"
     home = "**#{home}**" if @home_wins > @away_wins
 
-    draw_str = @draws.zero? ? '' : " (#{@draws}D)"
+    draws = @games.count(&:draw?)
+    draw_str = draws.zero? ? '' : " (#{draws}D)"
 
     "#{away} - #{home}#{draw_str}"
   end

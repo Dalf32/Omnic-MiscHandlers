@@ -36,4 +36,8 @@ class OwGame
   def map(all_maps)
     all_maps.find { |map| map.eql?(@map_id) }
   end
+
+  def draw?
+    concluded? && @away_score == @home_score
+  end
 end
