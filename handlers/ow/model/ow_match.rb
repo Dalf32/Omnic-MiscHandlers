@@ -104,6 +104,10 @@ class OwMatch
     "#{away} vs #{home}"
   end
 
+  def match_url(website_url)
+    "#{website_url}/match/#{@id}"
+  end
+
   private
 
   def format_maps(maps)

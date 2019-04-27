@@ -123,17 +123,19 @@ class OwlHandler < CommandHandler
 
         event.channel.send_embed(' ') do |embed|
           owl_basic_embed(embed)
-          live_match_embed(embed, live_match, maps_response.maps)
+          live_match_embed(embed, live_match, maps_response.maps,
+                           include_link: true)
           live_match.add_home_color_to_embed(embed)
           next_match_embed(embed, live_data.next_match,
-                           live_data.time_to_next_match)
+                           live_data.time_to_next_match, include_link: true)
         end
       else
         next_match = live_data.live_match
 
         event.channel.send_embed(' ') do |embed|
           owl_basic_embed(embed)
-          next_match_embed(embed, next_match, live_data.time_to_match)
+          next_match_embed(embed, next_match, live_data.time_to_match,
+                           include_link: true)
           next_match.add_maps_to_embed(embed, maps_response.maps)
           next_match.add_home_color_to_embed(embed)
         end
