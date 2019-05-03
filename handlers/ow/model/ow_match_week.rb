@@ -57,7 +57,7 @@ class OwMatchWeek
   end
 
   def next_match
-    @matches.first(&:pending?)
+    @matches.find(&:pending?)
   end
 
   def add_event_to_embed(embed)

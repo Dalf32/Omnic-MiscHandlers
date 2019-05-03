@@ -64,7 +64,7 @@ class OwMatch
   end
 
   def time_to_start
-    ((match.start_date - DateTime.now) * (24 * 60 * 60)).to_i
+    ((@start_date - DateTime.now) * 24 * 60 * 60).to_i
   end
 
   def fill_live_embed(embed, maps)
