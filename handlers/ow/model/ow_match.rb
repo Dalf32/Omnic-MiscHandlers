@@ -2,6 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
+require 'date'
 require_relative 'has_status'
 
 class OwMatch
@@ -60,6 +61,10 @@ class OwMatch
 
   def starts_near?(other_match)
     (other_match.start_date - @start_date) <= (3 / 24.0) # Three hour difference
+  end
+
+  def time_to_start
+    ((match.start_date - DateTime.now) * (24 * 60 * 60)).to_i
   end
 
   def fill_live_embed(embed, maps)

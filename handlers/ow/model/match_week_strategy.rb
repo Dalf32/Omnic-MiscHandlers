@@ -4,11 +4,9 @@
 
 class BaseWeekStrategy
   def add_matches(matches, embed)
-    found_next_match = false
 
     formatted_matches = matches.map do |match|
-      if !match.complete? && !found_next_match
-        found_next_match = true
+      if match.in_progress?
         "**>>**  #{match.to_s_with_result}  **<<**"
       else
         match.to_s
@@ -26,13 +24,11 @@ end
 
 class GroupByDaysStrategy < BaseWeekStrategy
   def add_matches(matches, embed)
-    found_next_match = false
     match_count = 0
 
     match_days(matches).each_with_index do |day_matches, day|
       formatted_matches = day_matches.map do |match|
-        if !match.complete? && !found_next_match
-          found_next_match = true
+        if match.in_progress?
           "**>>**  #{match.to_s_with_result}  **<<**"
         else
           match.to_s
@@ -60,14 +56,12 @@ class GroupByRegionStrategy < BaseWeekStrategy
   end
 
   def add_matches(matches, embed)
-    found_next_match = false
     match_count = 0
     region_counts = Hash.new(0)
 
     regions(matches).each_with_index do |region_matches|
       formatted_matches = region_matches.map do |match|
-        if !match.complete? && !found_next_match
-          found_next_match = true
+        if match.in_progress?
           "**>>**  #{match.to_s_with_result}  **<<**"
         else
           match.to_s
@@ -102,14 +96,12 @@ class FilterByRegionStrategy < BaseWeekStrategy
   end
 
   def add_matches(matches, embed)
-    found_next_match = false
     match_count = 0
     filtered_matches = filter_by_region(matches)
 
     match_days(filtered_matches).each_with_index do |day_matches, day|
       formatted_matches = day_matches.map do |match|
-        if !match.complete? && !found_next_match
-          found_next_match = true
+        if match.in_progress?
           "**>>**  #{match.to_s_with_result}  **<<**"
         else
           match.to_s

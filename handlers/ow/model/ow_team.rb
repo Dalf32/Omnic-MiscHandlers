@@ -2,7 +2,6 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require 'date'
 require 'chronic_duration'
 require_relative 'identifiable'
 require_relative 'has_social_links'
@@ -129,7 +128,7 @@ class OwTeam
   end
 
   def time_to_start(match)
-    time_secs = ((match.start_date - DateTime.now) * (24 * 60 * 60)).to_i
+    time_secs = match.time_to_start
     ChronicDuration.output(time_secs, weeks: true, units: 3)
   end
 end
