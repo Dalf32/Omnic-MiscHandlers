@@ -40,4 +40,12 @@ class OwGame
   def draw?
     concluded? && @away_score == @home_score
   end
+
+  def away_win?
+    concluded? && @away_score > @home_score
+  end
+
+  def home_win?
+    concluded? && @away_score < @home_score
+  end
 end

@@ -36,6 +36,24 @@ class OwMatch
     self
   end
 
+  def away_wins
+    return @away_wins if @games.nil?
+
+    @games.count(&:away_win?)
+  end
+
+  def home_wins
+    return @home_wins if @games.nil?
+
+    @games.count(&:home_win?)
+  end
+
+  def draws
+    return @draws if @games.nil?
+
+    @games.count(&:draw?)
+  end
+
   def followed_by?(other_match)
     (other_match.start_date - @end_date) <= (2 / 24.0) # Two hour difference
   end
@@ -77,23 +95,22 @@ class OwMatch
   end
 
   def to_s_with_result
-    away = "#{@away_team} #{@away_wins}"
+    away = "#{@away_team} #{away_wins}"
     away = "**#{away}**" if @winner == @away_team
 
-    home = "#{@home_team} #{@home_wins}"
+    home = "#{@home_team} #{home_wins}"
     home = "**#{home}**" if @winner == @home_team
 
     "#{away} vs #{home}"
   end
 
   def score_str
-    away = "#{@away_team.abbrev} #{@away_wins}"
-    away = "**#{away}**" if @away_wins > @home_wins
+    away = "#{@away_team.abbrev} #{away_wins}"
+    away = "**#{away}**" if away_wins > home_wins
 
-    home = "#{@home_team.abbrev} #{@home_wins}"
-    home = "**#{home}**" if @home_wins > @away_wins
+    home = "#{@home_team.abbrev} #{home_wins}"
+    home = "**#{home}**" if home_wins > away_wins
 
-    draws = @games.count(&:draw?)
     draw_str = draws.zero? ? '' : " (#{draws}D)"
 
     "#{away} - #{home}#{draw_str}"
