@@ -74,7 +74,7 @@ class OwMatchWeek
 
   def format_time_to_match(match)
     time_secs = match.time_to_start
-    ChronicDuration.output(time_secs, weeks: true, units: 3)
+    ChronicDuration.output(time_secs, weeks: true, units: 2)
   end
 
   def build_description
