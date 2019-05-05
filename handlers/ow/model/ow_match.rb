@@ -72,6 +72,8 @@ class OwMatch
   end
 
   def fill_live_embed(embed, maps)
+    return if @games.empty?
+
     embed.add_field(name: 'Map', value: "#{format_maps(maps)}\n-",
                     inline: true)
 
