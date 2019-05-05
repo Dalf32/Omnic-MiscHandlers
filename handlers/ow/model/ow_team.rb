@@ -89,8 +89,8 @@ class OwTeam
     format('%3s - %-3s (%s)', @wins, @losses, map_differential_str)
   end
 
-  def to_s
-    return "#{@name} (#{@abbrev})" unless @abbrev.nil?
+  def to_s(include_abbrev: true)
+    return "#{@name} (#{@abbrev})" if include_abbrev && !@abbrev.nil?
 
     @name
   end

@@ -64,7 +64,11 @@ class OwMatch
   end
 
   def time_to_start
-    ((@start_date - DateTime.now) * 24 * 60 * 60).to_i
+    time_to_date(@start_date)
+  end
+
+  def time_to_end
+    time_to_date(@end_date)
   end
 
   def fill_live_embed(embed, maps)
@@ -93,10 +97,12 @@ class OwMatch
     embed.add_field(name: 'Maps', value: format_maps(maps))
   end
 
-  def to_s
+  def to_s(include_abbrev: true)
     return to_s_with_result unless @winner.nil?
 
-    "#{@away_team || 'TBD'} vs #{@home_team || 'TBD'}"
+    away_str = @away_team&.to_s(include_abbrev: include_abbrev) || 'TBD'
+    home_str = @home_team&.to_s(include_abbrev: include_abbrev) || 'TBD'
+    "#{away_str} vs #{home_str}"
   end
 
   def to_s_with_result
@@ -151,5 +157,9 @@ class OwMatch
 
       %W[*#{away}* **#{home}**]
     end
+  end
+
+  def time_to_date(date)
+    ((date - DateTime.now) * 24 * 60 * 60).to_i
   end
 end

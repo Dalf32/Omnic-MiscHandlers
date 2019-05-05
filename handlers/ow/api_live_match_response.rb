@@ -52,6 +52,10 @@ class ApiLiveMatchResponse < HttpResponse
 
   def create_match(match)
     OwMatch.new(id: match[:id]).tap do |owl_match|
+      owl_match.basic_info(state: match[:state],
+                           start_date: to_date(match[:startDateTS]),
+                           end_date: to_date(match[:endDateTS]))
+
       owl_match.teams(away: create_team(match[:competitors][0]),
                       home: create_team(match[:competitors][1]))
 
@@ -84,5 +88,9 @@ class ApiLiveMatchResponse < HttpResponse
                        home_score: game[:points]&.[](1))
       end
     end
+  end
+
+  def to_date(date)
+    DateTime.strptime(date.to_s, '%Q') unless date.nil?
   end
 end
