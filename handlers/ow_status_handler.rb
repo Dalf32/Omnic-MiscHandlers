@@ -31,10 +31,10 @@ class OwStatusHandler < CommandHandler
   def check_ow_status
     loop do
       live_data = owl_api_client.get_live_match
-
+      # TODO: Check for error
       if live_data.live?
         log.debug('OWL is live!')
-        set_match_status(live_data.live_match, config.owl_stream)
+        set_match_status(live_data, config.owl_stream)
 
         sleep_duration = wait_time(live_data)
       else
@@ -43,7 +43,7 @@ class OwStatusHandler < CommandHandler
 
         if live_data.live?
           log.debug('OWC is live!')
-          set_match_status(live_data.live_match, config.owc_stream)
+          set_match_status(live_data, config.owc_stream)
 
           sleep_duration = wait_time(live_data)
         else
@@ -54,6 +54,7 @@ class OwStatusHandler < CommandHandler
       end
 
       sleep_duration = [sleep_duration, config.min_sleep_time].max
+      # TODO: config.max_sleep_time
 
       log.debug("Sleeping OW Status thread for #{sleep_duration}s.")
       sleep(sleep_duration)
@@ -77,10 +78,13 @@ class OwStatusHandler < CommandHandler
     bot.update_status('online', nil, nil, 0, false, 0)
   end
 
-  def set_match_status(match, stream_url)
+  def set_match_status(live_data, stream_url)
+    match = live_data.live_match
     time_since_start = DateTime.now - match.start_date
     return clear_status if time_since_start > (config.max_game_time / 24.0)
 
-    bot.update_status('online', match.to_s(include_abbrev: false), stream_url)
+    status_str = match.to_s(include_abbrev: false)
+    status_str = live_data.live_match_bracket_title if match.teams_blank? && live_data.live_match_has_bracket?
+    bot.update_status('online', status_str, stream_url)
   end
 end

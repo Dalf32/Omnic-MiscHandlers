@@ -71,6 +71,10 @@ class OwMatch
     time_to_date(@end_date)
   end
 
+  def teams_blank?
+    @away_team.nil? || @home_team.nil?
+  end
+
   def fill_live_embed(embed, maps)
     return if @games.empty?
 
