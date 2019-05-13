@@ -19,7 +19,11 @@ class HttpResponse
     @response[:response_body]
   end
 
+  def success?
+    status_code.to_s.start_with?('2')
+  end
+
   def error?
-    !status_code.to_s.start_with?('2')
+    !success?
   end
 end

@@ -31,9 +31,9 @@ class OwStatusHandler < CommandHandler
   def check_ow_status
     loop do
       live_data = owl_api_client.get_live_match
-      # TODO: Check for error
-      if live_data.live?
-        log.debug('OWL is live!')
+
+      if live_data.success? && live_data.live?
+        log.debug('ow_status: OWL is live.')
         set_match_status(live_data, config.owl_stream)
 
         sleep_duration = wait_time(live_data)
@@ -41,22 +41,22 @@ class OwStatusHandler < CommandHandler
         sleep_duration = wait_time(live_data)
         live_data = owc_api_client.get_live_match
 
-        if live_data.live?
-          log.debug('OWC is live!')
+        if live_data.success? && live_data.live?
+          log.debug('ow_status: OWC is live.')
           set_match_status(live_data, config.owc_stream)
 
           sleep_duration = wait_time(live_data)
         else
-          log.debug('Neither is live.')
+          log.debug('ow_status: neither is live.')
           clear_status
           sleep_duration = [sleep_duration, wait_time(live_data)].min
         end
       end
 
-      sleep_duration = [sleep_duration, config.min_sleep_time].max
-      # TODO: config.max_sleep_time
+      sleep_duration = sleep_duration.clamp(config.min_sleep_time,
+                                            config.max_sleep_time)
 
-      log.debug("Sleeping OW Status thread for #{sleep_duration}s.")
+      log.debug("Sleeping ow_status thread for #{sleep_duration}s.")
       sleep(sleep_duration)
     rescue StandardError => err
       log.error(err)
@@ -64,6 +64,8 @@ class OwStatusHandler < CommandHandler
   end
 
   def wait_time(live_data)
+    return 0 if live_data.error?
+
     if live_data.live?
       time_left = live_data.live_match.time_to_end || 0
     else
