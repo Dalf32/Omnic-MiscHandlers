@@ -44,10 +44,15 @@ class ApiClient
     response = https.request(request)
 
     unless http_success?(response)
-      @log.error("Received error code #{response.code}: #{response.message}\n#{response.body}")
+      @log.error("API request received error code #{response.code}: #{response.message}\n#{response.body}")
     end
 
-    response_body = symbolize_keys(JSON.parse(response.body))
+    begin
+      response_body = symbolize_keys(JSON.parse(response.body))
+    rescue JSON::ParserError => err
+      @log.debug("Parse error: #{err.message}")
+      response_body = ''
+    end
 
     { http_code: response.code, http_message: response.message, response_body: response_body }
   end

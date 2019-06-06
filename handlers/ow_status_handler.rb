@@ -56,10 +56,10 @@ class OwStatusHandler < CommandHandler
       sleep_duration = sleep_duration.clamp(config.min_sleep_time,
                                             config.max_sleep_time)
 
-      log.debug("Sleeping ow_status thread for #{sleep_duration}s.")
-      sleep(sleep_duration)
+      sleep_thread(sleep_duration)
     rescue StandardError => err
       log.error(err)
+      sleep_thread(config.min_sleep_time)
     end
   end
 
@@ -77,10 +77,14 @@ class OwStatusHandler < CommandHandler
   end
 
   def clear_status
+    return unless bot.connected?
+
     bot.update_status('online', nil, nil, 0, false, 0)
   end
 
   def set_match_status(live_data, stream_url)
+    return unless bot.connected?
+
     match = live_data.live_match
     time_since_start = DateTime.now - match.start_date
     return clear_status if time_since_start > (config.max_game_time / 24.0)
@@ -88,5 +92,10 @@ class OwStatusHandler < CommandHandler
     status_str = match.to_s(include_abbrev: false)
     status_str = live_data.live_match_bracket_title if match.teams_blank? && live_data.live_match_has_bracket?
     bot.update_status('online', status_str, stream_url)
+  end
+
+  def sleep_thread(sleep_duration)
+    log.debug("Sleeping ow_status thread for #{sleep_duration}s.")
+    sleep(sleep_duration)
   end
 end
