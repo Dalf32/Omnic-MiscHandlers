@@ -64,11 +64,11 @@ class OwMatch
   end
 
   def time_to_start
-    time_to_date(@start_date)
+    time_to_date(@start_date) unless @start_date.nil?
   end
 
   def time_to_end
-    time_to_date(@end_date)
+    time_to_date(@end_date) unless @end_date.nil?
   end
 
   def teams_blank?
