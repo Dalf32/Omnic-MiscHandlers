@@ -39,6 +39,10 @@ class OwlHandler < CommandHandler
     .feature(:owl).args_range(1, 2).usage('owlplayer <player> [hero]')
     .description('Shows details of the given OWL player and optionally, detailed stats for the given hero.')
 
+  command(:owlday, :show_day)
+    .feature(:owl).max_args(0).usage('owlday')
+    .description('Shows the OWL matches happening today.')
+
   def config_name
     :owl_api
   end
@@ -210,6 +214,34 @@ class OwlHandler < CommandHandler
         embed.url = "#{config.website_url}/players/#{player.id}"
         embed.add_field(name: 'Basic Stats',
                         value: "```#{stats_header}\n#{player.stats_str}```")
+      end
+    end
+  end
+
+  def show_day(event)
+    handle_errors(event) do
+      event.channel.start_typing
+      schedule_response = api_client.get_schedule
+
+      return 'An unexpected error occurred.' if schedule_response.error?
+
+      current_stage = schedule_response.current_stage
+
+      return 'No stage currently in progress.' if current_stage.nil?
+
+      current_week = current_stage.current_week
+      match_strategy = FilterByDayStrategy.new
+      match_count = current_week.match_count(match_strategy: match_strategy)
+
+      return 'There are no games today.' if match_count.zero?
+
+      event.channel.send_embed(' ') do |embed|
+        owl_basic_embed(embed)
+        embed.author = { name: 'Overwatch League Schedule',
+                         url: config.website_url }
+        embed.title = "#{current_stage.name} #{current_week.name}"
+        embed.url = "#{config.website_url}/schedule"
+        current_week.fill_embed(embed, match_strategy: match_strategy)
       end
     end
   end

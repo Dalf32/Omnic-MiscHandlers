@@ -130,3 +130,41 @@ class FilterByRegionStrategy < BaseWeekStrategy
     matches.chunk_while { |m1, m2| m1.starts_near?(m2) }
   end
 end
+
+class FilterByDayStrategy < GroupByDaysStrategy
+  def add_matches(matches, embed)
+    formatted_matches = matches_today(matches).map do |match|
+      if match.in_progress?
+        "**>>**  #{match.to_s_with_result}  **<<**"
+      else
+        match.to_s
+      end
+    end
+
+    embed.add_field(name: 'Today', value: formatted_matches.join("\n"))
+  end
+
+  def count_matches(matches)
+    matches_today(matches).count
+  end
+
+  private
+
+  def matches_today(matches)
+    match_days(matches).min_by { |day_matches| time_from_day(day_matches) }
+  end
+
+  def time_from_day(day_matches)
+    day_start = day_matches.first.start_date
+    day_end = day_matches.last.end_date
+    now = DateTime.now
+
+    if now < day_start
+      day_start - now
+    elsif now > day_end
+      now - day_end
+    else
+      0
+    end
+  end
+end
