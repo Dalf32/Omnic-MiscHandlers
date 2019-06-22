@@ -79,12 +79,16 @@ class OwMatchWeek
 
   def build_description
     descr = format_dates
+    next_game = next_match
 
     if match_live?
       descr += "\n*Live Now!*"
-    else
-      match = next_match
-      descr += "\n*Next match in #{format_time_to_match(match)}*" unless match.nil?
+    elsif !next_game.nil?
+      descr += if next_game.time_to_start.negative?
+                 "\n*Next match starting soon*"
+               else
+                 "\n*Next match in #{format_time_to_match(next_game)}*"
+               end
     end
 
     descr
