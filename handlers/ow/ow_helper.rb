@@ -8,6 +8,8 @@ module OwHelper
   protected
 
   def format_time_left(time_ms)
+    return 'Starting soon' if time_ms.negative?
+
     ChronicDuration.output(time_ms / 1000)
   end
 
