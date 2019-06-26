@@ -151,7 +151,7 @@ class OwcHandler < CommandHandler
         match_week_strategy = FilterByRegionStrategy.new(found_regions.first)
       end
 
-      stages.each do |stage|
+      stages.compact.each do |stage|
         match_week = stage.current_week || stage.upcoming_week
         next if match_week.match_count(match_strategy: match_week_strategy).zero?
 
