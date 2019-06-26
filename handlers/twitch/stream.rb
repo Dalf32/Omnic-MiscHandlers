@@ -24,8 +24,8 @@ class Stream
     @is_live
   end
 
-  def has_game?
-    !@game_id.nil?
+  def playing_game?
+    !(@game_id.nil? || @game_id == '0')
   end
 
   def url
@@ -34,7 +34,8 @@ class Stream
 
   def format_message(preamble = '')
     if live?
-      message = "#{@name} is live now playing #{@game}"
+      message = "#{@name} is live now"
+      message += " playing #{@game}" if playing_game?
       message += "\n*#{@title.strip}*"
     else
       message = "#{@name} is currently offline"

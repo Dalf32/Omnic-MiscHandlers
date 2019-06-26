@@ -59,12 +59,15 @@ class TwitchHandler < CommandHandler
                      .join("\n")
   end
 
-  def link_twitch(_event, twitch_name)
-    stream_data = get_stream_data(twitch_name)
+  def link_twitch(event, twitch_name)
+    handle_errors(event) do
+      event.channel.start_typing
+      stream_data = get_stream_data(twitch_name)
 
-    return "There is no channel called #{twitch_name}" if stream_data.nil?
+      return "There is no channel called #{twitch_name}" if stream_data.nil?
 
-    stream_data.format_message
+      stream_data.format_message
+    end
   end
 
   def manage_streams(_event, *args)
@@ -241,7 +244,7 @@ class TwitchHandler < CommandHandler
     streams_result = twitch_client.get_streams(user_login: stream_data.login)
     stream_data.populate(streams_result.data)
 
-    return unless stream_data.has_game?
+    return unless stream_data.playing_game?
 
     stream_data.game = get_twitch_game(stream_data.game_id)
   end
