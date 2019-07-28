@@ -2,7 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require 'Oga'
+require 'oga'
 
 class PatchNotes
   attr_reader :title, :sections
