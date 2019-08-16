@@ -8,11 +8,12 @@ require_relative 'api_maps_response'
 require_relative 'api_teams_response'
 
 class OwApiClient < ApiClient
-  def initialize(log:, base_url:, endpoints:)
+  def initialize(log:, base_url:, endpoints:, locale:)
     super(log: log)
 
     @base_url = base_url
     @endpoints = endpoints
+    @locale = locale
   end
 
   def get_live_match
@@ -43,6 +44,6 @@ class OwApiClient < ApiClient
   end
 
   def make_get_request(api_url, use_ssl: true, **query_args)
-    super(api_url, use_ssl: use_ssl, **{ locale: 'en_US' }.merge(query_args))
+    super(api_url, use_ssl: use_ssl, **{ locale: @locale }.merge(query_args))
   end
 end

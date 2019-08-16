@@ -20,12 +20,14 @@ class OwStatusHandler < CommandHandler
 
   def owc_api_client
     @owc_api_client ||= OwcApiClient.new(log: log, base_url: config.owc_base_url,
-                                         endpoints: config.owc_endpoints)
+                                         endpoints: config.owc_endpoints,
+                                         locale: config.locale)
   end
 
   def owl_api_client
     @owl_api_client ||= OwlApiClient.new(log: log, base_url: config.owl_base_url,
-                                         endpoints: config.owl_endpoints)
+                                         endpoints: config.owl_endpoints,
+                                         locale: config.locale)
   end
 
   def check_ow_status

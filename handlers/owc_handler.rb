@@ -218,7 +218,8 @@ class OwcHandler < CommandHandler
 
   def api_client
     @api_client ||= OwcApiClient.new(log: log, base_url: config.base_url,
-                                     endpoints: config.endpoints)
+                                     endpoints: config.endpoints,
+                                     locale: config.locale)
   end
 
   def owc_basic_embed(embed, title = 'Overwatch Contenders')

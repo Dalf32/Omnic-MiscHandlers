@@ -250,7 +250,8 @@ class OwlHandler < CommandHandler
 
   def api_client
     @api_client ||= OwlApiClient.new(log: log, base_url: config.base_url,
-                                     endpoints: config.endpoints)
+                                     endpoints: config.endpoints,
+                                     locale: config.locale)
   end
 
   def send_standings(event, standings, title, url)
