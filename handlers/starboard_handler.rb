@@ -26,6 +26,10 @@ class StarboardHandler < CommandHandler
     :starboard
   end
 
+  def config_name
+    :starboard
+  end
+
   def manage_starboard(_event, *args)
     return manage_starboard_summary if args.empty?
 
@@ -150,14 +154,15 @@ class StarboardHandler < CommandHandler
   def populate_starboard_embed(embed, message)
     embed.title = 'Content'
     embed.description = message.text
-    embed.description += "\n<embed>" if message.embeds.any?
     embed.url = "https://discordapp.com/channels/#{@server.id}/#{message.channel.id}/#{message.id}"
     embed.color = message.author.color.combined
     embed.timestamp = message.edited_timestamp || message.timestamp
-    embed.image = { url: message.attachments.first.url } if message.attachments.any?
     embed.author = { name: message.author.display_name, icon_url: message.author.avatar_url }
     embed.add_field(name: 'Channel', value: message.channel.mention, inline: true)
     embed.add_field(name: starboard.emoji, value: count_reactions(message), inline: true)
+
+    add_message_attachment(embed, message.attachments.first)
+    add_message_embed(embed, message.embeds.first)
   end
 
   def manage_starboard_summary
@@ -237,5 +242,23 @@ class StarboardHandler < CommandHandler
 
   def self_star_message(event)
     event.channel.send_message("#{event.user.mention}, You cannot #{starboard.emoji} your own messages!")
+  end
+
+  def add_message_attachment(embed, attachment)
+    return if attachment.nil?
+    return if attachment.url.nil?
+
+    file_extension = attachment.filename.split('.').last.downcase
+    if config.image_extensions.include?(file_extension)
+      embed.image = { url: attachment.url }
+    else
+      embed.add_field(name: 'Attachment', value: attachment.url, inline: false)
+    end
+  end
+
+  def add_message_embed(embed, msg_embed)
+    return if msg_embed.nil?
+
+    embed.description += "\n\n*<additional content embedded>*"
   end
 end
