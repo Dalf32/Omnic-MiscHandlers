@@ -33,6 +33,10 @@ class GamblingHandler < CommandHandler
     .feature(:gambling).max_args(0).usage('slotsymbols')
     .description('Shows the possible symbols for the slots game.')
 
+  command(:duel, :start_duel)
+    .feature(:gambling).args_range(2, 2).usage('duel <opponent> <wager>')
+    .pm_enabled(false).description('Challenges the given player to a duel. Should they accept, both users put up the wagered amount and the winner claims the sum!')
+
   # TODO:
   # duels
   # leaderboard (topmoney?)
@@ -81,7 +85,7 @@ class GamblingHandler < CommandHandler
   end
 
   def play_slots(event, wager)
-    return 'Invalid wager.' if wager.casecmp('all').zero? || !wager.to_i.positive?
+    return 'Invalid wager.' unless wager.casecmp('all').zero? || wager.to_i.positive?
 
     ensure_funds(event.message)
     wager_amt = wager.casecmp('all').zero? ? user_funds : wager.to_i
@@ -105,6 +109,26 @@ class GamblingHandler < CommandHandler
   def show_symbols(_event)
     config.slots.symbols.map
           .with_index { |sym, i| "#{sym} | #{i + 1}" }.join("\n")
+  end
+
+  def start_duel(event, opponent, wager)
+    ensure_funds(event.message)
+    found_user = find_user(opponent)
+    return found_user.error if found_user.failure?
+    return 'You cannot challenge yourself.' if found_user.value.id == @user.id
+    return 'Invalid wager.' unless wager.casecmp('all').zero? || wager.to_i.positive?
+
+    opp_user = found_user.value
+    wager_amt = wager.casecmp('all').zero? ? user_funds : wager.to_i
+    return 'Your opponent does not have sufficient funds.' if wager_amt > user_funds(opp_user.id)
+
+    event.message.reply("#{opp_user.mention}, #{@user.display_name} has challenged you to a duel for $#{wager_amt}! Do you accept? [Y/N]")
+    answer = opp_user.await!(timeout: 120, start_with: /yes|no|[yn]$/i)&.text
+    is_declined = answer.nil? || %w[n no].include?(answer.downcase)
+    return "#{@user.mention}, your opponent declined the challenge." if is_declined 
+
+    event.message.reply('Challenge accepted!')
+    duel(opp_user, wager_amt)
   end
 
   private
@@ -146,13 +170,13 @@ class GamblingHandler < CommandHandler
     @funds_set ||= Redis::SortedSet.new([server_redis.namespace, 'funds'])
   end
 
-  def user_funds
-    funds_set[@user.id].to_i
+  def user_funds(user_id = @user.id)
+    funds_set[user_id].to_i
   end
 
-  def update_funds(wager, payout)
+  def update_funds(wager, payout, user_id = @user.id)
     win_amt = (wager * payout).to_i
-    funds_set[@user.id] += win_amt - wager
+    funds_set[user_id] += win_amt - wager
   end
 
   def user_rank_str
@@ -170,5 +194,32 @@ class GamblingHandler < CommandHandler
 
   def claim_key
     "claims:#{@user.id}"
+  end
+
+  def duel(opponent, wager)
+    my_rolls = roll(3, 6)
+    opp_rolls = roll(3, 6)
+    duel_str = "You each roll 3d6...\n"
+    duel_str += "#{format_rolls(@user, my_rolls)}, #{format_rolls(opponent, opp_rolls)}"
+
+    winner = @user
+    loser = opponent
+
+    if my_rolls.sum < opp_rolls.sum
+      winner = opponent
+      loser = @user
+    end
+
+    update_funds(wager, 2, winner.id)
+    update_funds(wager, 0, loser.id)
+    duel_str + "\n#{winner.display_name} **wins** $#{wager * 2}!"
+  end
+
+  def roll(num_dice, dice_rank)
+    Array.new(num_dice) { rand(1..dice_rank) }
+  end
+
+  def format_rolls(user, rolls)
+    "#{user.display_name} rolled [#{rolls.join(' + ')}] = #{rolls.sum}"
   end
 end
