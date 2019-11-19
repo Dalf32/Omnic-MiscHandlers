@@ -71,7 +71,8 @@ class GamblingHandler < CommandHandler
     "#{@user.display_name}, you've claimed your daily bonus of $#{claim_amt}#{streak_str}"
   end
 
-  def calc_slots_par(_event, num_runs = 1_000_000, wager_amt = 5)
+  def calc_slots_par(event, num_runs = 1_000_000, wager_amt = 5)
+    event.channel.start_typing
     winnings = 0.0
     wager_amt = wager_amt.to_i
 
