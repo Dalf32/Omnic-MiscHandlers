@@ -6,27 +6,36 @@ require 'redis-objects'
 
 class GamblingHandler < CommandHandler
   feature :gambling, default_enabled: false,
-                     description: ''
+                     description: 'Allows users to wager currency in games of chance.'
 
   command(:money, :show_money)
     .feature(:gambling).max_args(0).usage('money').pm_enabled(false)
-    .description('')
+    .description('Shows how much money you have and your rank on the leaderboard.')
+
+  command(:dailymoney, :claim_daily_money)
+    .feature(:gambling).max_args(0).usage('dailymoney').pm_enabled(false)
+    .description('Claims daily money, building up a streak grants bonus money!')
 
   command(:slotspar, :calc_slots_par)
     .feature(:gambling).args_range(0, 2).owner_only(true)
-    .usage('slotspar [num_runs] [wager_amt]').description('')
+    .usage('slotspar [num_runs] [wager_amt]')
+    .description('Calculates the PAR for the slots game.')
 
   command(:slots, :play_slots)
     .feature(:gambling).args_range(1, 1).usage('slots <wager>')
-    .pm_enabled(false).description('')
+    .pm_enabled(false).description('Bet some money and spin the slots for a chance to win big!')
 
   command(:slotspaytable, :show_paytable)
     .feature(:gambling).max_args(0).usage('slotspaytable')
-    .description('')
+    .description('Shows the paytable for the slots game.')
 
   command(:slotsymbols, :show_symbols)
     .feature(:gambling).max_args(0).usage('slotsymbols')
-    .description('')
+    .description('Shows the possible symbols for the slots game.')
+
+  # TODO:
+  # duels
+  # leaderboard (topmoney?)
 
   def config_name
     :gambling
@@ -39,6 +48,24 @@ class GamblingHandler < CommandHandler
   def show_money(event)
     ensure_funds(event.message)
     "You have $#{user_funds} and are rank #{user_rank_str} on the leaderboard!"
+  end
+
+  def claim_daily_money(event)
+    ensure_funds(event.message)
+    streak = 1
+
+    if server_redis.exists(claim_key)
+      streak = server_redis.get(claim_key).to_i + 1
+      ttl = server_redis.ttl(claim_key)
+      return 'You can only claim money once a day.' if ttl > ONE_DAY
+    end
+
+    server_redis.setex(claim_key, ONE_DAY * 2, streak)
+    claim_amt = 50 + (25 * [18, streak - 1].min)
+    funds_set[@user.id] += claim_amt
+
+    streak_str = streak > 1 ? ", you're on a #{streak} day streak!" : '!'
+    "You've claimed your daily bonus of $#{claim_amt}#{streak_str}"
   end
 
   def calc_slots_par(_event, num_runs = 1_000_000, wager_amt = 5)
@@ -81,6 +108,8 @@ class GamblingHandler < CommandHandler
   end
 
   private
+
+  ONE_DAY = 24 * 60 * 60 unless defined? ONE_DAY
 
   def spin_slots
     symbol_count = config.slots.symbols.count
@@ -133,9 +162,13 @@ class GamblingHandler < CommandHandler
   end
 
   def ensure_funds(message)
-    return if funds_set.member?(message.author.id)
+    return if funds_set.member?(@user.id)
 
-    funds_set[message.author.id] = config.slots.start_funds
-    message.reply("#{message.author.mention} you've been granted $#{config.slots.start_funds} to start off, don't lose it all too quick!")
+    funds_set[@user.id] = config.slots.start_funds
+    message.reply("#{@user.mention} you've been granted $#{config.slots.start_funds} to start off, don't lose it all too quick!")
+  end
+
+  def claim_key
+    "claims:#{@user.id}"
   end
 end
