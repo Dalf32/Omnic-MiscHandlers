@@ -38,7 +38,6 @@ class GamblingHandler < CommandHandler
     .pm_enabled(false).description('Challenges the given player to a duel. Should they accept, both users put up the wagered amount and the winner claims the sum!')
 
   # TODO:
-  # duels
   # leaderboard (topmoney?)
 
   def config_name
@@ -51,7 +50,7 @@ class GamblingHandler < CommandHandler
 
   def show_money(event)
     ensure_funds(event.message)
-    "You have $#{user_funds} and are rank #{user_rank_str} on the leaderboard!"
+    "#{@user.display_name}, you have $#{user_funds} and are rank #{user_rank_str} on the leaderboard!"
   end
 
   def claim_daily_money(event)
@@ -69,7 +68,7 @@ class GamblingHandler < CommandHandler
     funds_set[@user.id] += claim_amt
 
     streak_str = streak > 1 ? ", you're on a #{streak} day streak!" : '!'
-    "You've claimed your daily bonus of $#{claim_amt}#{streak_str}"
+    "#{@user.display_name}, you've claimed your daily bonus of $#{claim_amt}#{streak_str}"
   end
 
   def calc_slots_par(_event, num_runs = 1_000_000, wager_amt = 5)
@@ -95,7 +94,7 @@ class GamblingHandler < CommandHandler
     payout = lookup_payout(reels)
     update_funds(wager_amt, payout)
 
-    "You spun #{format_reels(reels)} and #{payout_str(payout, wager_amt)}"
+    "#{@user.display_name}, you spun #{format_reels(reels)} and #{payout_str(payout, wager_amt)}"
   end
 
   def show_paytable(_event)
