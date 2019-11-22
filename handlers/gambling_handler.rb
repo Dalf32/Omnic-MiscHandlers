@@ -9,7 +9,7 @@ class GamblingHandler < CommandHandler
                      description: 'Allows users to wager currency in games of chance.'
 
   command(:money, :show_money)
-    .feature(:gambling).max_args(0).usage('money').pm_enabled(false)
+    .feature(:gambling).args_range(0, 1).usage('money').pm_enabled(false)
     .description('Shows how much money you have and your rank on the leaderboard.')
 
   command(:dailymoney, :claim_daily_money)
@@ -48,7 +48,9 @@ class GamblingHandler < CommandHandler
     :gambling
   end
 
-  def show_money(event)
+  def show_money(event, player = nil)
+    return show_money_other_user(event.message, player) unless player.nil?
+
     ensure_funds(event.message)
     "#{@user.display_name}, you have $#{user_funds} and are rank #{user_rank_str} on the leaderboard!"
   end
@@ -67,8 +69,8 @@ class GamblingHandler < CommandHandler
     claim_amt = 50 + (25 * [18, streak - 1].min)
     funds_set[@user.id] += claim_amt
 
-    streak_str = streak > 1 ? ", you're on a #{streak} day streak!" : '!'
-    "#{@user.display_name}, you've claimed your daily bonus of $#{claim_amt}#{streak_str}"
+    streak_str = streak > 1 ? ". You're on a #{streak} day streak" : ''
+    "#{@user.display_name}, you've claimed your daily bonus of $#{claim_amt}#{streak_str}!"
   end
 
   def calc_slots_par(event, num_runs = 1_000_000, wager_amt = 5)
@@ -120,6 +122,7 @@ class GamblingHandler < CommandHandler
 
     opp_user = found_user.value
     wager_amt = wager.casecmp('all').zero? ? user_funds : wager.to_i
+    ensure_funds(event.message, opp_user)
     return 'Your opponent does not have sufficient funds.' if wager_amt > user_funds(opp_user.id)
 
     event.message.reply("#{opp_user.mention}, #{@user.display_name} has challenged you to a duel for $#{wager_amt}! Do you accept? [Y/N]")
@@ -162,7 +165,7 @@ class GamblingHandler < CommandHandler
     when 0..1
       "*only lost* $#{wager - win_amt}!"
     else
-      "**won** $#{win_amt}!"
+      win_amt == wager ? "**won back** your $#{wager}!" : "**won** $#{win_amt}!"
     end
   end
 
@@ -179,17 +182,17 @@ class GamblingHandler < CommandHandler
     funds_set[user_id] += win_amt - wager
   end
 
-  def user_rank_str
+  def user_rank_str(user_id = @user.id)
     total_users = funds_set.count
-    user_rank = total_users - funds_set.rank(@user.id)
+    user_rank = total_users - funds_set.rank(user_id)
     "#{user_rank}/#{total_users}"
   end
 
-  def ensure_funds(message)
-    return if funds_set.member?(@user.id)
+  def ensure_funds(message, user = @user)
+    return if funds_set.member?(user.id)
 
-    funds_set[@user.id] = config.slots.start_funds
-    message.reply("#{@user.mention} you've been granted $#{config.slots.start_funds} to start off, don't lose it all too quick!")
+    funds_set[user.id] = config.slots.start_funds
+    message.reply("#{user.mention} you've been granted $#{config.slots.start_funds} to start off, don't lose it all too quick!")
   end
 
   def claim_key
@@ -221,5 +224,14 @@ class GamblingHandler < CommandHandler
 
   def format_rolls(user, rolls)
     "#{user.display_name} rolled [#{rolls.join(' + ')}] = #{rolls.sum}"
+  end
+
+  def show_money_other_user(message, player_str)
+    found_user = find_user(player_str)
+    return found_user.error if found_user.failure?
+
+    user = found_user.value
+    ensure_funds(message)
+    "#{user.display_name} has $#{user_funds(user.id)} and is rank #{user_rank_str(user.id)} on the leaderboard!"
   end
 end
