@@ -118,6 +118,7 @@ class GamblingHandler < CommandHandler
     found_user = find_user(opponent)
     return found_user.error if found_user.failure?
     return 'You cannot challenge yourself.' if found_user.value.id == @user.id
+    return 'You cannot challenge bots.' if found_user.value.bot_account?
     return 'Invalid wager.' unless wager.casecmp('all').zero? || wager.to_i.positive?
 
     opp_user = found_user.value
@@ -231,6 +232,8 @@ class GamblingHandler < CommandHandler
     return found_user.error if found_user.failure?
 
     user = found_user.value
+    return 'Bots cannot gamble!' if user.bot_account?
+
     ensure_funds(message)
     "#{user.display_name} has $#{user_funds(user.id)} and is rank #{user_rank_str(user.id)} on the leaderboard!"
   end
