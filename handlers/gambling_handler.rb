@@ -9,7 +9,7 @@ class GamblingHandler < CommandHandler
                      description: 'Allows users to wager currency in games of chance.'
 
   command(:money, :show_money)
-    .feature(:gambling).args_range(0, 1).usage('money').pm_enabled(false)
+    .feature(:gambling).args_range(0, 1).usage('money [user]').pm_enabled(false)
     .description('Shows how much money you have and your rank on the leaderboard.')
 
   command(:dailymoney, :claim_daily_money)
