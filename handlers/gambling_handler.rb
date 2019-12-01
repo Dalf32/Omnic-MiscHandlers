@@ -87,11 +87,10 @@ class GamblingHandler < CommandHandler
   end
 
   def play_slots(event, wager)
-    return 'Invalid wager.' unless wager.casecmp('all').zero? || wager.to_i.positive?
-
     ensure_funds(event.message)
-    wager_amt = wager.casecmp('all').zero? ? user_funds : wager.to_i
-    return "You don't have enough money for that!" if wager_amt > user_funds
+    wager_result = wager_for_gambling(wager)
+    wager_amt = wager_result.value
+    return wager_result.error if wager_result.failure?
 
     reels = spin_slots
     payout = lookup_payout(reels)
@@ -115,24 +114,17 @@ class GamblingHandler < CommandHandler
 
   def start_duel(event, opponent, wager)
     ensure_funds(event.message)
-    found_user = find_user(opponent)
-    return found_user.error if found_user.failure?
-    return 'You cannot challenge yourself.' if found_user.value.id == @user.id
-    return 'You cannot challenge bots.' if found_user.value.bot_account?
-    return 'Invalid wager.' unless wager.casecmp('all').zero? || wager.to_i.positive?
-
+    found_user = find_user_for_duel(opponent)
     opp_user = found_user.value
-    wager_amt = wager.casecmp('all').zero? ? user_funds : wager.to_i
+    return found_user.error if found_user.failure?
+
     ensure_funds(event.message, opp_user)
-    return 'Your opponent does not have sufficient funds.' if wager_amt > user_funds(opp_user.id)
 
-    event.message.reply("#{opp_user.mention}, #{@user.display_name} has challenged you to a duel for $#{wager_amt}! Do you accept? [Y/N]")
-    answer = opp_user.await!(timeout: 120, start_with: /yes|no|[yn]$/i)&.text
-    is_declined = answer.nil? || %w[n no].include?(answer.downcase)
-    return "#{@user.mention}, your opponent declined the challenge." if is_declined 
+    wager_result = wager_for_duel(wager, opp_user)
+    wager_amt = wager_result.value
+    return wager_result.error if wager_result.failure?
 
-    event.message.reply('Challenge accepted!')
-    duel(opp_user, wager_amt)
+    challenge_duel(event.message, opp_user, wager_amt)
   end
 
   private
@@ -236,5 +228,45 @@ class GamblingHandler < CommandHandler
 
     ensure_funds(message)
     "#{user.display_name} has $#{user_funds(user.id)} and is rank #{user_rank_str(user.id)} on the leaderboard!"
+  end
+
+  def find_user_for_duel(opponent)
+    found_user = find_user(opponent)
+    return found_user if found_user.failure?
+
+    found_user.error = 'You cannot challenge yourself.' if found_user.value.id == @user.id
+    found_user.error = 'Bots cannot gamble!' if found_user.value.bot_account?
+    found_user
+  end
+
+  def wager_for_gambling(wager)
+    wager_amt = 0
+    wager_amt = user_funds if wager.casecmp('all').zero?
+    wager_amt = user_funds / 2 if wager.casecmp('half').zero?
+    wager_amt = wager.to_i if wager.to_i.positive?
+
+    Result.new.tap do |result|
+      result.error = 'Invalid wager.' if wager_amt.zero?
+      result.error = "You don't have enough money for that!" if wager_amt > user_funds
+      result.value = wager_amt
+    end
+  end
+
+  def wager_for_duel(wager, opp_user)
+    result = wager_for_gambling(wager)
+    return result if result.failure?
+
+    result.error = 'Your opponent does not have sufficient funds.' if result.value > user_funds(opp_user.id)
+    result
+  end
+
+  def challenge_duel(message, opp_user, wager_amt)
+    message.reply("#{opp_user.mention}, #{@user.display_name} has challenged you to a duel for $#{wager_amt}! Do you accept? [Y/N]")
+    answer = opp_user.await!(timeout: 120, start_with: /yes|no|[yn]$/i)&.text
+    is_declined = answer.nil? || %w[n no].include?(answer.downcase)
+    return "#{@user.mention}, your opponent declined the challenge." if is_declined
+
+    message.reply('Challenge accepted!')
+    duel(opp_user, wager_amt)
   end
 end
