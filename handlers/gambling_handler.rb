@@ -68,7 +68,7 @@ class GamblingHandler < CommandHandler
 
     server_redis.setex(claim_key, ONE_DAY * 2, streak)
     claim_amt = 50 + (25 * [18, streak - 1].min)
-    funds_set[@user.id] += claim_amt
+    lock_funds(@user.id) { funds_set[@user.id] += claim_amt }
 
     streak_str = streak > 1 ? ". You're on a #{streak} day streak" : ''
     "#{@user.display_name}, you've claimed your daily bonus of $#{claim_amt}#{streak_str}!"
@@ -114,15 +114,18 @@ class GamblingHandler < CommandHandler
 
   def play_slots(event, wager)
     ensure_funds(event.message)
-    wager_result = wager_for_gambling(wager)
-    wager_amt = wager_result.value
-    return wager_result.error if wager_result.failure?
 
-    reels = spin_slots
-    payout = lookup_payout(reels)
-    update_funds(wager_amt, payout)
+    lock_funds(@user.id) do
+      wager_result = wager_for_gambling(wager)
+      wager_amt = wager_result.value
+      return wager_result.error if wager_result.failure?
 
-    "#{@user.display_name}, you spun #{format_reels(reels)} and #{payout_str(payout, wager_amt)}"
+      reels = spin_slots
+      payout = lookup_payout(reels)
+      update_funds(wager_amt, payout)
+
+      "#{@user.display_name}, you spun #{format_reels(reels)} and #{payout_str(payout, wager_amt)}"
+    end
   end
 
   def show_paytable(_event)
@@ -146,16 +149,33 @@ class GamblingHandler < CommandHandler
 
     ensure_funds(event.message, opp_user)
 
-    wager_result = wager_for_duel(wager, opp_user)
-    wager_amt = wager_result.value
-    return wager_result.error if wager_result.failure?
+    lock_funds(@user.id) do
+      lock_funds(opp_user.id) do
+        wager_result = wager_for_duel(wager, opp_user)
+        wager_amt = wager_result.value
+        return wager_result.error if wager_result.failure?
 
-    challenge_duel(event.message, opp_user, wager_amt)
+        challenge_duel(event.message, opp_user, wager_amt)
+      end
+    end
   end
 
   private
 
   ONE_DAY = 24 * 60 * 60 unless defined? ONE_DAY
+
+  def lock_funds(user_id)
+    retval = nil
+
+    Omnic.mutex("gambling:#{@server.id}:#{user_id}").tap do |mutex|
+      mutex.acquire
+      retval = yield
+    ensure
+      mutex.release
+    end
+
+    retval
+  end
 
   def spin_slots
     symbol_count = config.slots.symbols.count
@@ -212,7 +232,7 @@ class GamblingHandler < CommandHandler
   def ensure_funds(message, user = @user)
     return if funds_set.include?(user.id)
 
-    funds_set[user.id] = config.slots.start_funds
+    lock_funds(@user.id) { funds_set[user.id] = config.slots.start_funds }
     message.reply("#{user.mention} you've been granted $#{config.slots.start_funds} to start off, don't lose it all too quick!")
   end
 
