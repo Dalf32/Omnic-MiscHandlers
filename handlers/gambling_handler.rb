@@ -2,7 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require 'redis-objects'
+require_relative 'gambling/funds_set'
 
 class GamblingHandler < CommandHandler
   feature :gambling, default_enabled: false,
@@ -189,11 +189,11 @@ class GamblingHandler < CommandHandler
   end
 
   def funds_set
-    @funds_set ||= Redis::SortedSet.new([server_redis.namespace, 'funds'])
+    @funds_set ||= FundsSet.new(server_redis)
   end
 
   def user_funds(user_id = @user.id)
-    funds_set[user_id].to_i
+    funds_set[user_id]
   end
 
   def update_funds(wager, payout, user_id = @user.id)
@@ -202,17 +202,15 @@ class GamblingHandler < CommandHandler
   end
 
   def user_rank(user_id = @user.id)
-    funds_set.count - funds_set.rank(user_id)
+    funds_set.rank(user_id)
   end
 
   def user_rank_str(user_id = @user.id)
-    total_users = funds_set.count
-    user_rank = total_users - funds_set.rank(user_id)
-    "#{user_rank}/#{total_users}"
+    funds_set.rank_str(user_id)
   end
 
   def ensure_funds(message, user = @user)
-    return if funds_set.member?(user.id)
+    return if funds_set.include?(user.id)
 
     funds_set[user.id] = config.slots.start_funds
     message.reply("#{user.mention} you've been granted $#{config.slots.start_funds} to start off, don't lose it all too quick!")
@@ -301,11 +299,11 @@ class GamblingHandler < CommandHandler
   end
 
   def money_leaders
-    funds_set[-10..-1].map do |user_id|
+    funds_set.leaders.map do |user_id|
       {
           rank: user_rank(user_id), name: @server.member(user_id).display_name,
           funds: user_funds(user_id)
       }
-    end.reverse
+    end
   end
 end
