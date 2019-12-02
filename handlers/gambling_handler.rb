@@ -16,6 +16,10 @@ class GamblingHandler < CommandHandler
     .feature(:gambling).max_args(0).usage('dailymoney').pm_enabled(false)
     .description('Claims daily money, building up a streak grants bonus money!')
 
+  command(:moneyleaders, :show_money_leaders)
+    .feature(:gambling).max_args(0).usage('moneyleaders').pm_enabled(false)
+    .description('Shows the top ranking players.')
+
   command(:slotspar, :calc_slots_par)
     .feature(:gambling).args_range(0, 2).owner_only(true)
     .usage('slotspar [num_runs] [wager_amt]')
@@ -36,9 +40,6 @@ class GamblingHandler < CommandHandler
   command(:duel, :start_duel)
     .feature(:gambling).args_range(2, 2).usage('duel <opponent> <wager>')
     .pm_enabled(false).description('Challenges the given player to a duel. Should they accept, both users put up the wagered amount and the winner claims the sum!')
-
-  # TODO:
-  # leaderboard (topmoney?)
 
   def config_name
     :gambling
@@ -71,6 +72,31 @@ class GamblingHandler < CommandHandler
 
     streak_str = streak > 1 ? ". You're on a #{streak} day streak" : ''
     "#{@user.display_name}, you've claimed your daily bonus of $#{claim_amt}#{streak_str}!"
+  end
+
+  def show_money_leaders(_event)
+    leaders = money_leaders
+
+    max_name_len = [*leaders.map { |usr| usr[:name].length }, 4].max
+    max_money_len = [*leaders.map { |usr| usr[:funds].to_s.length }, 5].max + 1
+
+    name_pad = (max_name_len / 2.0).ceil
+    money_pad = (max_money_len / 2.0).ceil
+
+    row_template = "%4s  |  %#{name_pad}s%-#{name_pad}s  |  %#{money_pad}s%-#{money_pad}s"
+    header_str = format(row_template, 'Rank', 'Na', 'me', 'Mon', 'ey')
+    div_str = format(row_template, '----', '--', '--', '---', '--')
+
+    rows_str = leaders.map do |leader|
+      name_split = leader[:name].chars.each_slice((leader[:name].length / 2.0).ceil).to_a
+      money_split = leader[:funds].to_s.chars.each_slice((leader[:funds].to_s.length / 2.0).ceil).to_a
+
+      format(row_template, format(' %03i', leader[:rank]),
+             name_split[0].join, name_split[1..-1].flatten.join,
+             '$' + money_split[0].join, money_split[1..-1].flatten.join)
+    end
+
+    "```#{header_str}\n#{div_str}\n#{rows_str.join("\n")}```"
   end
 
   def calc_slots_par(event, num_runs = 1_000_000, wager_amt = 5)
@@ -175,6 +201,10 @@ class GamblingHandler < CommandHandler
     funds_set[user_id] += win_amt - wager
   end
 
+  def user_rank(user_id = @user.id)
+    funds_set.count - funds_set.rank(user_id)
+  end
+
   def user_rank_str(user_id = @user.id)
     total_users = funds_set.count
     user_rank = total_users - funds_set.rank(user_id)
@@ -268,5 +298,14 @@ class GamblingHandler < CommandHandler
 
     message.reply('Challenge accepted!')
     duel(opp_user, wager_amt)
+  end
+
+  def money_leaders
+    funds_set[-10..-1].map do |user_id|
+      {
+          rank: user_rank(user_id), name: @server.member(user_id).display_name,
+          funds: user_funds(user_id)
+      }
+    end.reverse
   end
 end
