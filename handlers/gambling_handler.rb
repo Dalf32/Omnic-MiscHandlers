@@ -3,6 +3,7 @@
 # AUTHOR::  Kyle Mullins
 
 require_relative 'gambling/funds_set'
+require_relative 'gambling/slot_machine'
 
 class GamblingHandler < CommandHandler
   feature :gambling, default_enabled: false,
@@ -105,7 +106,7 @@ class GamblingHandler < CommandHandler
     wager_amt = wager_amt.to_i
 
     num_runs.to_i.times do
-      payout = lookup_payout(spin_slots)
+      payout = slot_machine.payout(slot_machine.spin)
       winnings += payout * wager_amt
     end
 
@@ -120,25 +121,20 @@ class GamblingHandler < CommandHandler
       wager_amt = wager_result.value
       return wager_result.error if wager_result.failure?
 
-      reels = spin_slots
-      payout = lookup_payout(reels)
+      reels = slot_machine.spin
+      payout = slot_machine.payout(reels)
       update_funds(wager_amt, payout)
 
-      "#{@user.display_name}, you spun #{format_reels(reels)} and #{payout_str(payout, wager_amt)}"
+      "#{@user.display_name}, you spun #{slot_machine.format_reels(reels)} and #{payout_str(payout, wager_amt)}"
     end
   end
 
   def show_paytable(_event)
-    pay_str = config.slots.paytable.to_a
-                    .map { |k, v| "#{format_reels(k)} = x#{v}" }.join("\n")
-    pay_str += "\nAny 3 matching symbols not in the above table have a " \
-               "payout equal to their rank.\n"
-    pay_str + 'Any 2 matching symbols have a payout equal to half their rank.'
+    slot_machine.paytable_str
   end
 
   def show_symbols(_event)
-    config.slots.symbols.map
-          .with_index { |sym, i| "#{sym} | #{i + 1}" }.join("\n")
+    slot_machine.symbols_str
   end
 
   def start_duel(event, opponent, wager)
@@ -177,20 +173,13 @@ class GamblingHandler < CommandHandler
     retval
   end
 
-  def spin_slots
-    symbol_count = config.slots.symbols.count
-    (1..3).map { rand(1..symbol_count) }
+  def slot_machine
+    @slot_machine ||= SlotMachine.new(config.slots.symbols,
+                                      config.slots.paytable)
   end
 
-  def lookup_payout(reels)
-    payout = config.slots.paytable.fetch(reels, 0)
-    return payout unless payout.zero?
-
-    reels.map { |symbol| symbol * (reels.count(symbol) - 1) }.max / 2.0
-  end
-
-  def format_reels(reels)
-    reels.map { |reel| config.slots.symbols[reel - 1] }.join(' | ')
+  def funds_set
+    @funds_set ||= FundsSet.new(server_redis)
   end
 
   def payout_str(payout, wager)
@@ -206,10 +195,6 @@ class GamblingHandler < CommandHandler
     else
       win_amt == wager ? "**won back** your $#{wager}!" : "**won** $#{win_amt}!"
     end
-  end
-
-  def funds_set
-    @funds_set ||= FundsSet.new(server_redis)
   end
 
   def user_funds(user_id = @user.id)
