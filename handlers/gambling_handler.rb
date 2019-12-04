@@ -217,8 +217,8 @@ class GamblingHandler < CommandHandler
   def ensure_funds(message, user = @user)
     return if funds_set.include?(user.id)
 
-    lock_funds(@user.id) { funds_set[user.id] = config.slots.start_funds }
-    message.reply("#{user.mention} you've been granted $#{config.slots.start_funds} to start off, don't lose it all too quick!")
+    lock_funds(@user.id) { funds_set[user.id] = config.start_funds }
+    message.reply("#{user.mention} you've been granted $#{config.start_funds} to start off, don't lose it all too quick!")
   end
 
   def claim_key
