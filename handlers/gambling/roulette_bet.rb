@@ -44,7 +44,7 @@ class RouletteBet
   end
 
   def winnings
-    @wager * payout
+    (@wager * payout).to_i
   end
 
   def to_s
