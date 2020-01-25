@@ -353,11 +353,25 @@ class GamblingHandler < CommandHandler
     found_user
   end
 
+  def wager_from_str(wager)
+    return user_funds if wager.casecmp('all').zero?
+    return user_funds / 2 if wager.casecmp('half').zero?
+    return rand(user_funds) + 1 if wager.casecmp('random').zero?
+
+    wager = wager.gsub(',', '')
+
+    if wager =~ /\A\d+\.?\d*[km]?\Z/i
+      wager_amt = wager.to_f
+      wager_amt *= 1000 if wager.end_with?('k')
+      wager_amt *= 1_000_000 if wager.end_with?('m')
+      return wager_amt.to_i
+    end
+
+    0
+  end
+
   def wager_for_gambling(wager)
-    wager_amt = 0
-    wager_amt = user_funds if wager.casecmp('all').zero?
-    wager_amt = user_funds / 2 if wager.casecmp('half').zero?
-    wager_amt = wager.to_i if wager.to_i.positive?
+    wager_amt = wager_from_str(wager)
 
     Result.new.tap do |result|
       result.error = 'Invalid wager.' if wager_amt.zero?
