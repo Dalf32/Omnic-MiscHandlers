@@ -161,6 +161,8 @@ class EvenOddBet < RouletteBet
   end
 
   def win?(pocket)
+    return false if pocket.number.to_i.zero?
+
     even? ? pocket.number.to_i.even? : pocket.number.to_i.odd?
   end
 
@@ -198,9 +200,9 @@ class DozenBet < RouletteBet
     case @bet[0]
     when 'p'
       (1..12)
-    when 'd'
-      (13..24)
     when 'm'
+      (13..24)
+    when 'd'
       (25..36)
     else
       0
