@@ -75,7 +75,7 @@ class SingleBet < RouletteBet
   end
 
   def self.payout
-    38
+    36
   end
 
   def win?(pocket)
