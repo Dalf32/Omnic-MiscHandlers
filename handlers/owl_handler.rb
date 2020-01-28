@@ -213,7 +213,7 @@ class OwlHandler < CommandHandler
         player.fill_embed(embed)
         embed.url = "#{config.website_url}/players/#{player.id}"
         embed.add_field(name: 'Basic Stats',
-                        value: "```#{stats_header}\n#{player.stats_str}```")
+                        value: "```#{player.stats_table(35)}```", inline: false)
       end
     end
   end
@@ -282,11 +282,6 @@ class OwlHandler < CommandHandler
     season_num = season_year - 2017
     send_standings(event, standings, "Stage #{stage_num} Standings",
                    "#{config.website_url}/standings/season/#{season_num}/stage/#{stage_num}")
-  end
-
-  def stats_header
-    format("%10s%-9s|%7s%-7s|%6s\n%s", 'As All', ' Heroes', 'Avg/1', '0 min',
-           'Rank', '-' * 43)
   end
 
   def owl_basic_embed(embed)

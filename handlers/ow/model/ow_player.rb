@@ -2,6 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
+require 'tabulo'
 require_relative 'identifiable'
 require_relative 'has_social_links'
 
@@ -71,8 +72,12 @@ class OwPlayer
     embed.thumbnail = { url: @headshot }
   end
 
-  def stats_str
-    @all_stats.map(&:format_table_row).join("\n")
+  def stats_table(max_width)
+    Tabulo::Table.new(@all_stats, border: :modern, column_padding: 0) do |table|
+      table.add_column('As All Heroes', &:name)
+      table.add_column('Avg/10 min', &:value_str)
+      table.add_column('Rank', &:rank)
+    end.pack(max_table_width: max_width).to_s
   end
 
   def to_s
