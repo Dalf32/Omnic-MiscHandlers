@@ -38,6 +38,10 @@ GEM
     ruby-ll (2.1.2)
       ansi
       ast
+    tabulo (2.2.0)
+      tty-screen (= 0.7.0)
+      unicode-display_width (= 1.6.0)
+    tty-screen (0.7.0)
     twitch-api (0.3.0)
       faraday (>= 0.12.2)
       faraday_middleware (~> 0.12)
@@ -45,6 +49,7 @@ GEM
       unf_ext
     unf_ext (0.0.7.5-x64-mingw32)
     unf_ext (0.0.7.5-x86-mingw32)
+    unicode-display_width (1.6.0)
     unicode-emoji (1.1.0)
 
 PLATFORMS
@@ -57,6 +62,7 @@ DEPENDENCIES
   json (>= 1.8)
   oga (~> 2.0)
   redd (= 0.8.1)
+  tabulo (~> 2.2)
   twitch-api (>= 0.3.0)
   unicode-emoji (>= 1.1.0)
 

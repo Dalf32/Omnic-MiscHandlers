@@ -48,7 +48,7 @@ class RouletteBet
   end
 
   def to_s
-    return "$#{@wager} on #{@bet.capitalize}" unless wager.nil?
+    return "#{@wager.format_currency} on #{@bet.capitalize}" unless wager.nil?
 
     @bet.capitalize
   end

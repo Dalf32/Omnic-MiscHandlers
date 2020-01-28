@@ -2,6 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
+require 'tabulo'
 require_relative 'gambling/funds_set'
 require_relative 'gambling/slot_machine'
 require_relative 'gambling/roulette_wheel'
@@ -69,7 +70,7 @@ class GamblingHandler < CommandHandler
     return show_money_other_user(event.message, player) unless player.nil?
 
     ensure_funds(event.message)
-    "#{@user.display_name}, you have $#{user_funds} and are rank #{user_rank_str} on the leaderboard!"
+    "#{@user.display_name}, you have #{user_funds.format_currency} and are rank #{user_rank_str} on the leaderboard!"
   end
 
   def claim_daily_money(event)
@@ -87,32 +88,21 @@ class GamblingHandler < CommandHandler
     lock_funds(@user.id) { funds_set[@user.id] += claim_amt }
 
     streak_str = streak > 1 ? ". You're on a #{streak} day streak" : ''
-    "#{@user.display_name}, you've claimed your daily bonus of $#{claim_amt}#{streak_str}!"
+    "#{@user.display_name}, you've claimed your daily bonus of #{claim_amt.format_currency}#{streak_str}!"
   end
 
   def show_money_leaders(_event)
-    leaders = money_leaders
-
-    max_name_len = [*leaders.map { |usr| usr[:name].length }, 4].max
-    max_money_len = [*leaders.map { |usr| usr[:funds].to_s.length }, 5].max + 1
-
-    name_pad = (max_name_len / 2.0).ceil
-    money_pad = (max_money_len / 2.0).ceil
-
-    row_template = "%4s  |  %#{name_pad}s%-#{name_pad}s  |  %#{money_pad}s%-#{money_pad}s"
-    header_str = format(row_template, 'Rank', 'Na', 'me', 'Mon', 'ey')
-    div_str = format(row_template, '----', '--', '--', '---', '--')
-
-    rows_str = leaders.map do |leader|
-      name_split = leader[:name].chars.each_slice((leader[:name].length / 2.0).ceil).to_a
-      money_split = leader[:funds].to_s.chars.each_slice((leader[:funds].to_s.length / 2.0).ceil).to_a
-
-      format(row_template, format(' %03i', leader[:rank]),
-             name_split[0].join, name_split[1..-1].flatten.join,
-             '$' + money_split[0].join, money_split[1..-1].flatten.join)
+    table = Tabulo::Table.new(funds_set.leaders, border: :modern) do |table|
+      table.add_column('Rank', formatter: -> (r) { '%03i' % r }) do |leader|
+        user_rank(leader)
+      end
+      table.add_column('Name') { |leader| @server.member(leader).display_name }
+      table.add_column('Money', formatter: :format_currency.to_proc) do |leader|
+        user_funds(leader)
+      end
     end
 
-    "```#{header_str}\n#{div_str}\n#{rows_str.join("\n")}```"
+    "```#{table.pack}```"
   end
 
   def calc_slots_par(event, num_runs = 1_000_000, wager_amt = 5)
@@ -193,7 +183,7 @@ class GamblingHandler < CommandHandler
       user = @server.member(user_id)
       if bet.win?(pocket)
         lock_funds(user.id) { funds_set[user.id] += bet.winnings }
-        "#{user.mention} bet #{bet} and wins $#{bet.winnings}!"
+        "#{user.mention} bet #{bet} and wins #{bet.winnings.format_currency}!"
       else
         "#{user.mention} bet #{bet} and loses."
       end
@@ -268,13 +258,17 @@ class GamblingHandler < CommandHandler
 
     case payout
     when 0
-      "*lost* your $#{wager}!"
+      "*lost* your #{wager.format_currency}!"
     when 1
-      "**won back** your $#{wager}!"
+      "**won back** your #{wager.format_currency}!"
     when 0..1
-      "*only lost* $#{wager - win_amt}!"
+      "*only lost* #{wager - win_amt.format_currency}!"
     else
-      win_amt == wager ? "**won back** your $#{wager}!" : "**won** $#{win_amt}!"
+      if win_amt == wager
+        "**won back** your #{wager.format_currency}!"
+      else
+        "**won** #{win_amt.format_currency}!"
+      end
     end
   end
 
@@ -299,7 +293,8 @@ class GamblingHandler < CommandHandler
     return if funds_set.include?(user.id)
 
     lock_funds(@user.id) { funds_set[user.id] = config.start_funds }
-    message.reply("#{user.mention} you've been granted $#{config.start_funds} to start off, don't lose it all too quick!")
+    funds_str = config.start_funds.format_currency
+    message.reply("#{user.mention} you've been granted #{funds_str} to start off, don't lose it all too quick!")
   end
 
   def claim_key
@@ -322,7 +317,7 @@ class GamblingHandler < CommandHandler
 
     update_funds(wager, 2, winner.id)
     update_funds(wager, 0, loser.id)
-    duel_str + "\n#{winner.display_name} **wins** $#{wager * 2}!"
+    duel_str + "\n#{winner.display_name} **wins** #{(wager * 2).format_currency}!"
   end
 
   def roll(num_dice, dice_rank)
@@ -341,7 +336,8 @@ class GamblingHandler < CommandHandler
     return 'Bots cannot gamble!' if user.bot_account?
 
     ensure_funds(message)
-    "#{user.display_name} has $#{user_funds(user.id)} and is rank #{user_rank_str(user.id)} on the leaderboard!"
+    user_funds_str = user_funds(user.id).format_currency
+    "#{user.display_name} has #{user_funds_str} and is rank #{user_rank_str(user.id)} on the leaderboard!"
   end
 
   def find_user_for_duel(opponent)
@@ -389,22 +385,13 @@ class GamblingHandler < CommandHandler
   end
 
   def challenge_duel(message, opp_user, wager_amt)
-    message.reply("#{opp_user.mention}, #{@user.display_name} has challenged you to a duel for $#{wager_amt}! Do you accept? [Y/N]")
+    message.reply("#{opp_user.mention}, #{@user.display_name} has challenged you to a duel for #{wager_amt.format_currency}! Do you accept? [Y/N]")
     answer = opp_user.await!(timeout: 120, start_with: /yes|no|[yn]$/i)&.text
     is_declined = answer.nil? || %w[n no].include?(answer.downcase)
     return "#{@user.mention}, your opponent declined the challenge." if is_declined
 
     message.reply('Challenge accepted!')
     duel(opp_user, wager_amt)
-  end
-
-  def money_leaders
-    funds_set.leaders.map do |user_id|
-      {
-          rank: user_rank(user_id), name: @server.member(user_id).display_name,
-          funds: user_funds(user_id)
-      }
-    end
   end
 
   def end_roulette
