@@ -307,17 +307,20 @@ class GamblingHandler < CommandHandler
     duel_str = "You each roll 3d6...\n"
     duel_str += "#{format_rolls(@user, my_rolls)}, #{format_rolls(opponent, opp_rolls)}"
 
-    winner = @user
-    loser = opponent
+    duel_str + case my_rolls.sum <=> opp_rolls.sum
+               when 1
+                 complete_duel(wager, @user, opponent)
+               when -1
+                 complete_duel(wager, opponent, @user)
+               else
+                 "\nThe duel was a draw! Money has been returned."
+               end
+  end
 
-    if my_rolls.sum < opp_rolls.sum
-      winner = opponent
-      loser = @user
-    end
-
+  def complete_duel(wager, winner, loser)
     update_funds(wager, 2, winner.id)
     update_funds(wager, 0, loser.id)
-    duel_str + "\n#{winner.display_name} **wins** #{(wager * 2).format_currency}!"
+    "\n#{winner.display_name} **wins** #{(wager * 2).format_currency}!"
   end
 
   def roll(num_dice, dice_rank)
