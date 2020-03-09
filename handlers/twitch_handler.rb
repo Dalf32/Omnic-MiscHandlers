@@ -151,7 +151,7 @@ class TwitchHandler < CommandHandler
   end
 
   def stream_username(user)
-    user.stream_url.split('/').last
+    user&.stream_url&.split('/')&.last
   end
 
   def manage_stream_user(user, action)
