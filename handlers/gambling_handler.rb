@@ -262,7 +262,7 @@ class GamblingHandler < CommandHandler
     when 1
       "**won back** your #{wager.format_currency}!"
     when 0..1
-      "*only lost* #{wager - win_amt.format_currency}!"
+      "*only lost* #{(wager - win_amt).format_currency}!"
     else
       if win_amt == wager
         "**won back** your #{wager.format_currency}!"
