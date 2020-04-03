@@ -138,7 +138,7 @@ class TwitchHandler < CommandHandler
     stream_type = user.stream_type.nil? ? 0 : user.stream_type
     stream_type = stream_type.is_a?(String) ? stream_type.to_i : stream_type
 
-    stream_type.positive?
+    stream_type == 1 # This is the type used for Twitch streams
   end
 
   def live_users(server)
