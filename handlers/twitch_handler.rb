@@ -6,6 +6,7 @@ require 'twitch-api'
 require_relative 'twitch/stream'
 require_relative 'twitch/announce_store'
 require_relative 'twitch/user_stream_store'
+require_relative 'twitch/twitch_api_client'
 
 class TwitchHandler < CommandHandler
   feature :twitch, default_enabled: true,
@@ -123,7 +124,7 @@ class TwitchHandler < CommandHandler
   private
 
   def twitch_client
-    @twitch_client ||= Twitch::Client.new(client_id: config.client_id)
+    @twitch_client ||= init_twitch_client
   end
 
   def announce_store
@@ -132,6 +133,15 @@ class TwitchHandler < CommandHandler
 
   def user_stream_store
     @user_stream_store ||= UserStreamStore.new(user_redis)
+  end
+
+  def init_twitch_client
+    # NOTE: We are assuming work will be finished before the token expires
+    bearer_token = TwitchApiClient.new(log: log, auth_url: config.auth_url)
+                                  .get_bearer_token(client_id: config.client_id,
+                                                    client_secret: config.client_secret)
+
+    Twitch::Client.new(client_id: config.client_id, access_token: bearer_token)
   end
 
   def streaming?(user)
