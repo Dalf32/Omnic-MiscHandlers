@@ -43,6 +43,7 @@ module RoulettePlugin
       user = @server.member(user_id)
       if bet.win?(pocket)
         lock_funds(user.id) { funds_set[user.id] += bet.winnings }
+        update_house_funds(-bet.winnings)
         "#{user.mention} bet #{bet} and wins #{bet.winnings.format_currency}!"
       else
         "#{user.mention} bet #{bet} and loses."
@@ -67,6 +68,7 @@ module RoulettePlugin
       return wager_result.error if wager_result.failure?
 
       funds_set[@user.id] -= wager_amt
+      update_house_funds(wager_amt)
       roulette_bets.add_bet(@user.id, bet.with_wager(wager_amt))
     end
 

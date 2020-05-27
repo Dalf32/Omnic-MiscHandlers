@@ -24,6 +24,10 @@ class GamblingHandler < CommandHandler
     .feature(:gambling).max_args(0).usage('moneyleaders').pm_enabled(false)
     .description('Shows the top ranking players.')
 
+  command(:housemoney, :show_house_money)
+    .feature(:gambling).max_args(0).usage('housemoney').pm_enabled(false)
+    .description('Shows the amount of money the House has earned.')
+
   include DuelPlugin
   include SlotsPlugin
   include RoulettePlugin
@@ -75,9 +79,14 @@ class GamblingHandler < CommandHandler
     "```#{table.pack}```"
   end
 
+  def show_house_money(_event)
+    "The House has #{house_funds.format_currency} in the bank."
+  end
+
   private
 
   ONE_DAY = 24 * 60 * 60 unless defined? ONE_DAY
+  HOUSE_MONEY_KEY = 'house' unless defined? HOUSE_MONEY_KEY
 
   def lock_funds(user_id)
     retval = nil
@@ -180,6 +189,24 @@ class GamblingHandler < CommandHandler
       result.error = 'Invalid wager.' if wager_amt.zero?
       result.error = "You don't have enough money for that!" if wager_amt > user_funds
       result.value = wager_amt
+    end
+  end
+
+  def ensure_house_funds
+    return if server_redis.exists(HOUSE_MONEY_KEY)
+
+    lock_funds(HOUSE_MONEY_KEY) { server_redis.set(HOUSE_MONEY_KEY, 0) }
+  end
+
+  def house_funds
+    ensure_house_funds
+    server_redis.get(HOUSE_MONEY_KEY).to_i
+  end
+
+  def update_house_funds(amount)
+    ensure_house_funds
+    lock_funds(HOUSE_MONEY_KEY) do
+      server_redis.set(HOUSE_MONEY_KEY, house_funds + amount)
     end
   end
 end

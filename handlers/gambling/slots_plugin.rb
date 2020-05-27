@@ -48,6 +48,7 @@ module SlotsPlugin
       reels = slot_machine.spin
       payout = slot_machine.payout(reels)
       update_funds(wager_amt, payout)
+      update_house_funds(wager_amt - (wager_amt * payout).to_i)
 
       "#{@user.display_name}, you spun #{slot_machine.format_reels(reels)} and #{payout_str(payout, wager_amt)}"
     end
