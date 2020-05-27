@@ -4,10 +4,9 @@
 
 require 'tabulo'
 require_relative 'gambling/funds_set'
-require_relative 'gambling/slot_machine'
-require_relative 'gambling/roulette_wheel'
-require_relative 'gambling/roulette_bet'
-require_relative 'gambling/roulette_bets_set'
+require_relative 'gambling/duel_plugin'
+require_relative 'gambling/slots_plugin'
+require_relative 'gambling/roulette_plugin'
 
 class GamblingHandler < CommandHandler
   feature :gambling, default_enabled: false,
@@ -25,38 +24,9 @@ class GamblingHandler < CommandHandler
     .feature(:gambling).max_args(0).usage('moneyleaders').pm_enabled(false)
     .description('Shows the top ranking players.')
 
-  command(:slotspar, :calc_slots_par)
-    .feature(:gambling).args_range(0, 2).owner_only(true)
-    .usage('slotspar [num_runs] [wager_amt]')
-    .description('Calculates the PAR for the slots game.')
-
-  command(:slots, :play_slots)
-    .feature(:gambling).args_range(1, 1).usage('slots <wager>')
-    .pm_enabled(false).description('Bet some money and spin the slots for a chance to win big!')
-
-  command(:slotspaytable, :show_slots_paytable)
-    .feature(:gambling).max_args(0).usage('slotspaytable')
-    .description('Shows the paytable for the slots game.')
-
-  command(:slotsymbols, :show_symbols)
-    .feature(:gambling).max_args(0).usage('slotsymbols')
-    .description('Shows the possible symbols for the slots game.')
-
-  command(:duel, :start_duel)
-    .feature(:gambling).args_range(2, 2).usage('duel <opponent> <wager>')
-    .pm_enabled(false).description('Challenges the given player to a duel. Should they accept, both users put up the wagered amount and the winner claims the sum!')
-
-  command(:roulette, :start_roulette)
-    .feature(:gambling).max_args(0).usage('roulette')
-    .description('Starts a game of roulette.')
-
-  command(:roulettebet, :enter_roulette_bet)
-    .feature(:gambling).args_range(2, 2).usage('roulettebet <bet> <wager>')
-    .description('Enters your bet for the active roulette game.')
-
-  command(:roulettepaytable, :show_roulette_paytable)
-    .feature(:gambling).max_args(0).usage('roulettepaytable')
-    .description('Shows the paytable for the roulette game.')
+  include DuelPlugin
+  include SlotsPlugin
+  include RoulettePlugin
 
   def config_name
     :gambling
@@ -105,120 +75,6 @@ class GamblingHandler < CommandHandler
     "```#{table.pack}```"
   end
 
-  def calc_slots_par(event, num_runs = 1_000_000, wager_amt = 5)
-    event.channel.start_typing
-    winnings = 0.0
-    wager_amt = wager_amt.to_i
-
-    num_runs.to_i.times do
-      payout = slot_machine.payout(slot_machine.spin)
-      winnings += payout * wager_amt
-    end
-
-    "PAR: #{(winnings / (wager_amt * num_runs.to_i)) * 100.0}%"
-  end
-
-  def play_slots(event, wager)
-    ensure_funds(event.message)
-
-    lock_funds(@user.id) do
-      wager_result = wager_for_gambling(wager)
-      wager_amt = wager_result.value
-      return wager_result.error if wager_result.failure?
-
-      reels = slot_machine.spin
-      payout = slot_machine.payout(reels)
-      update_funds(wager_amt, payout)
-
-      "#{@user.display_name}, you spun #{slot_machine.format_reels(reels)} and #{payout_str(payout, wager_amt)}"
-    end
-  end
-
-  def show_slots_paytable(_event)
-    slot_machine.paytable_str
-  end
-
-  def show_symbols(_event)
-    slot_machine.symbols_str
-  end
-
-  def start_duel(event, opponent, wager)
-    ensure_funds(event.message)
-    found_user = find_user_for_duel(opponent)
-    opp_user = found_user.value
-    return found_user.error if found_user.failure?
-
-    ensure_funds(event.message, opp_user)
-
-    lock_funds(@user.id) do
-      lock_funds(opp_user.id) do
-        wager_result = wager_for_duel(wager, opp_user)
-        wager_amt = wager_result.value
-        return wager_result.error if wager_result.failure?
-
-        challenge_duel(event.message, opp_user, wager_amt)
-      end
-    end
-  end
-
-  def start_roulette(event)
-    return 'A roulette game is already in progress.' if server_redis.exists('roulette')
-
-    event.message.reply('A game of roulette is about to start, get your bets in!')
-    server_redis.set('roulette', 0)
-
-    unless @user.await!(timeout: 90, start_with: /cancel$/i)&.text.nil?
-      end_roulette
-      return 'The game has been cancelled.'
-    end
-
-    event.message.reply('**The wheel has been spun, last call for bets!**')
-    sleep(30)
-
-    pocket = roulette_wheel.spin
-    ret_str = "The ball lands on #{pocket}!\n"
-
-    # TODO: Table: Player | Bet | Result (w/l + payout)
-    ret_str += roulette_bets.all_bets.map do |user_id, bet|
-      user = @server.member(user_id)
-      if bet.win?(pocket)
-        lock_funds(user.id) { funds_set[user.id] += bet.winnings }
-        "#{user.mention} bet #{bet} and wins #{bet.winnings.format_currency}!"
-      else
-        "#{user.mention} bet #{bet} and loses."
-      end
-    end.join("\n")
-
-    end_roulette
-    ret_str
-  end
-
-  def enter_roulette_bet(event, bet_str, wager)
-    return 'There are no active roulette games.' unless server_redis.exists('roulette')
-    return 'You have already bet on this game.' if roulette_bets.has_bet?(@user.id)
-
-    ensure_funds(event.message)
-    bet = RouletteBet.create(bet_str)
-    return "Invalid bet: #{bet}" unless bet.valid?
-
-    lock_funds(@user.id) do
-      wager_result = wager_for_gambling(wager)
-      wager_amt = wager_result.value
-      return wager_result.error if wager_result.failure?
-
-      funds_set[@user.id] -= wager_amt
-      roulette_bets.add_bet(@user.id, bet.with_wager(wager_amt))
-    end
-
-    "Bet entered for #{@user.display_name}: #{bet}"
-  end
-
-  def show_roulette_paytable(_event)
-    roulette_wheel.paytable_str
-  end
-
-  # TODO: Show wheel?
-
   private
 
   ONE_DAY = 24 * 60 * 60 unless defined? ONE_DAY
@@ -238,19 +94,6 @@ class GamblingHandler < CommandHandler
 
   def funds_set
     @funds_set ||= FundsSet.new(server_redis)
-  end
-
-  def slot_machine
-    @slot_machine ||= SlotMachine.new(config.slots.symbols,
-                                      config.slots.paytable)
-  end
-
-  def roulette_wheel
-    @roulette_wheel ||= RouletteWheel.new
-  end
-
-  def roulette_bets
-    @roulette_bets ||= RouletteBetsSet.new(server_redis)
   end
 
   def payout_str(payout, wager)
@@ -301,36 +144,6 @@ class GamblingHandler < CommandHandler
     "claims:#{@user.id}"
   end
 
-  def duel(opponent, wager)
-    my_rolls = roll(3, 6)
-    opp_rolls = roll(3, 6)
-    duel_str = "You each roll 3d6...\n"
-    duel_str += "#{format_rolls(@user, my_rolls)}, #{format_rolls(opponent, opp_rolls)}"
-
-    duel_str + case my_rolls.sum <=> opp_rolls.sum
-               when 1
-                 complete_duel(wager, @user, opponent)
-               when -1
-                 complete_duel(wager, opponent, @user)
-               else
-                 "\nThe duel was a draw! Money has been returned."
-               end
-  end
-
-  def complete_duel(wager, winner, loser)
-    update_funds(wager, 2, winner.id)
-    update_funds(wager, 0, loser.id)
-    "\n#{winner.display_name} **wins** #{(wager * 2).format_currency}!"
-  end
-
-  def roll(num_dice, dice_rank)
-    Array.new(num_dice) { rand(1..dice_rank) }
-  end
-
-  def format_rolls(user, rolls)
-    "#{user.display_name} rolled [#{rolls.join(' + ')}] = #{rolls.sum}"
-  end
-
   def show_money_other_user(message, player_str)
     found_user = find_user(player_str)
     return found_user.error if found_user.failure?
@@ -341,15 +154,6 @@ class GamblingHandler < CommandHandler
     ensure_funds(message)
     user_funds_str = user_funds(user.id).format_currency
     "#{user.display_name} has #{user_funds_str} and is rank #{user_rank_str(user.id)} on the leaderboard!"
-  end
-
-  def find_user_for_duel(opponent)
-    found_user = find_user(opponent)
-    return found_user if found_user.failure?
-
-    found_user.error = 'You cannot challenge yourself.' if found_user.value.id == @user.id
-    found_user.error = 'Bots cannot gamble!' if found_user.value.bot_account?
-    found_user
   end
 
   def wager_from_str(wager)
@@ -377,28 +181,5 @@ class GamblingHandler < CommandHandler
       result.error = "You don't have enough money for that!" if wager_amt > user_funds
       result.value = wager_amt
     end
-  end
-
-  def wager_for_duel(wager, opp_user)
-    result = wager_for_gambling(wager)
-    return result if result.failure?
-
-    result.error = 'Your opponent does not have sufficient funds.' if result.value > user_funds(opp_user.id)
-    result
-  end
-
-  def challenge_duel(message, opp_user, wager_amt)
-    message.reply("#{opp_user.mention}, #{@user.display_name} has challenged you to a duel for #{wager_amt.format_currency}! Do you accept? [Y/N]")
-    answer = opp_user.await!(timeout: 120, start_with: /yes|no|[yn]$/i)&.text
-    is_declined = answer.nil? || %w[n no].include?(answer.downcase)
-    return "#{@user.mention}, your opponent declined the challenge." if is_declined
-
-    message.reply('Challenge accepted!')
-    duel(opp_user, wager_amt)
-  end
-
-  def end_roulette
-    server_redis.del('roulette')
-    roulette_bets.clear_bets
   end
 end
