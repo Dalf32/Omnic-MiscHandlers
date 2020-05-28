@@ -9,7 +9,7 @@ require_relative 'roulette_bets_set'
 module RoulettePlugin
   def self.included(klass)
     klass.command(:roulette, :start_roulette)
-      .feature(:gambling).max_args(0).usage('roulette')
+      .feature(:gambling).no_args.usage('roulette')
       .description('Starts a game of roulette.')
 
     klass.command(:roulettebet, :enter_roulette_bet)
@@ -17,7 +17,7 @@ module RoulettePlugin
       .description('Enters your bet for the active roulette game.')
 
     klass.command(:roulettepaytable, :show_roulette_paytable)
-      .feature(:gambling).max_args(0).usage('roulettepaytable')
+      .feature(:gambling).no_args.usage('roulettepaytable')
       .description('Shows the paytable for the roulette game.')
   end
 

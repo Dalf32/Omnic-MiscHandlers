@@ -12,7 +12,7 @@ class OwcHandler < CommandHandler
                 description: 'Provides access to data from the Overwatch Contenders official API.'
 
   command(:owcregions, :list_regions)
-    .feature(:owc).max_args(0).usage('owcregions')
+    .feature(:owc).no_args.usage('owcregions')
     .description('Lists each of the OWC regions and their abbreviation.')
 
   command(:owcteam, :show_team)
@@ -28,11 +28,11 @@ class OwcHandler < CommandHandler
     .description('Shows upcoming OWC matches.')
 
   command(:owclive, :show_live_state)
-    .feature(:owc).max_args(0).usage('owclive')
+    .feature(:owc).no_args.usage('owclive')
     .description('Details the currently live match, or the next match if OWC is not yet live.')
 
   command(:owcscore, :show_score)
-    .feature(:owc).max_args(0).usage('owcscore')
+    .feature(:owc).no_args.usage('owcscore')
     .description('Shows the score of the currently live match in a spoiler-free manner.')
 
   def config_name

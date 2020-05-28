@@ -17,15 +17,15 @@ class GamblingHandler < CommandHandler
     .description('Shows how much money you have and your rank on the leaderboard.')
 
   command(:dailymoney, :claim_daily_money)
-    .feature(:gambling).max_args(0).usage('dailymoney').pm_enabled(false)
+    .feature(:gambling).no_args.usage('dailymoney').pm_enabled(false)
     .description('Claims daily money, building up a streak grants bonus money!')
 
   command(:moneyleaders, :show_money_leaders)
-    .feature(:gambling).max_args(0).usage('moneyleaders').pm_enabled(false)
+    .feature(:gambling).no_args.usage('moneyleaders').pm_enabled(false)
     .description('Shows the top ranking players.')
 
   command(:housemoney, :show_house_money)
-    .feature(:gambling).max_args(0).usage('housemoney').pm_enabled(false)
+    .feature(:gambling).no_args.usage('housemoney').pm_enabled(false)
     .description('Shows the amount of money the House has earned.')
 
   include DuelPlugin

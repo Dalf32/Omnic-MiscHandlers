@@ -16,11 +16,11 @@ module SlotsPlugin
       .pm_enabled(false).description('Bet some money and spin the slots for a chance to win big!')
 
     klass.command(:slotspaytable, :show_slots_paytable)
-      .feature(:gambling).max_args(0).usage('slotspaytable')
+      .feature(:gambling).no_args.usage('slotspaytable')
       .description('Shows the paytable for the slots game.')
 
     klass.command(:slotsymbols, :show_symbols)
-      .feature(:gambling).max_args(0).usage('slotsymbols')
+      .feature(:gambling).no_args.usage('slotsymbols')
       .description('Shows the possible symbols for the slots game.')
   end
 

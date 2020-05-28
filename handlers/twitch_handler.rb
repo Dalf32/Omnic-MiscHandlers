@@ -13,11 +13,11 @@ class TwitchHandler < CommandHandler
                    description: 'Announce when streams are live.'
 
   command(:live, :live)
-    .feature(:twitch).max_args(0).usage('live')
+    .feature(:twitch).no_args.usage('live')
     .description("Announces that you're live and links your stream.")
 
   command(:whoslive, :show_live_users)
-    .feature(:twitch).max_args(0).pm_enabled(false).usage('whoslive')
+    .feature(:twitch).no_args.pm_enabled(false).usage('whoslive')
     .description('Lists which users in this server are live.')
 
   command(:twitch, :link_twitch)

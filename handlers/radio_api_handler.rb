@@ -21,22 +21,22 @@ class RadioApiHandler < CommandHandler
     .description('Displays information about the currently playing track on WLTM radio.')
 
   command(:listeners, :show_current_listeners)
-    .feature(:radio).max_args(0).limit(delay: 10, action: :on_limit)
+    .feature(:radio).no_args.limit(delay: 10, action: :on_limit)
     .usage('listeners')
     .description('Shows the number of people listening to WLTM radio.')
 
   command(:history, :show_recent_history)
-    .feature(:radio).max_args(0).limit(delay: 10, action: :on_limit)
+    .feature(:radio).no_args.limit(delay: 10, action: :on_limit)
     .usage('history')
     .description('Shows the tracks that have played in the last hour')
 
   command(:restart, :restart_now_playing_thread)
-    .feature(:radio).max_args(0).owner_only(true).usage('restart')
+    .feature(:radio).no_args.owner_only(true).usage('restart')
     .limit(delay: 60, action: :on_limit)
     .description('Restarts the thread that updates the Now Playing thread.')
 
   command(:skip, :skip_track)
-    .feature(:radio).max_args(0).usage('skip')
+    .feature(:radio).no_args.usage('skip')
     .limit(delay: 5, action: :on_limit)
     .description('Votes to skip the track currently playing on WLTM radio.')
 
@@ -51,7 +51,7 @@ class RadioApiHandler < CommandHandler
     .description('Enqueues an entire album to be played on WLTM radio or returns a list of all the folders matching your criteria.')
 
   command(:queuelike, :enqueue_like)
-    .args_range(0, 0).feature(:radio).limit(delay: 10, action: :on_limit)
+    .no_args.feature(:radio).limit(delay: 10, action: :on_limit)
     .usage('queuelike')
     .description('Enqueues a track from your likes to be played on WLTM radio.')
 
@@ -60,11 +60,11 @@ class RadioApiHandler < CommandHandler
     .description('Adds the track currently playing on WLTM radio to your likes.')
 
   command(:likes, :show_likes)
-    .max_args(0).feature(:radio).usage('likes')
+    .no_args.feature(:radio).usage('likes')
     .description("Lists the tracks you've liked from WLTM radio.")
 
   command(:clrlikes, :clear_likes)
-    .max_args(0).feature(:radio).usage('clrlikes')
+    .no_args.feature(:radio).usage('clrlikes')
     .description('Clears all of your liked Tracks.')
 
   event :ready, :start_now_playing_thread

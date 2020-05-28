@@ -16,15 +16,15 @@ class OwlHandler < CommandHandler
     .description('Shows details of the given OWL team.')
 
   command(:owlstandings, :show_standings)
-    .feature(:owl).max_args(0).usage('owlstandings')
+    .feature(:owl).no_args.usage('owlstandings')
     .description('Shows the standings for the current OWL season.')
 
   command(:owlschedule, :show_schedule)
-    .feature(:owl).max_args(0).usage('owlschedule')
+    .feature(:owl).no_args.usage('owlschedule')
     .description('Shows upcoming OWL matches.')
 
   command(:owllive, :show_live_state)
-    .feature(:owl).max_args(0).usage('owllive')
+    .feature(:owl).no_args.usage('owllive')
     .description('Details the currently live match, or the next match if OWL is not yet live.')
 
   command(:owlstage, :show_stage_rank)
@@ -32,7 +32,7 @@ class OwlHandler < CommandHandler
     .description('Shows the standings for the current OWL stage.')
 
   command(:owlscore, :show_score)
-    .feature(:owl).max_args(0).usage('owlscore')
+    .feature(:owl).no_args.usage('owlscore')
     .description('Shows the score of the currently live match in a spoiler-free manner.')
 
   command(:owlplayer, :show_player)
@@ -40,7 +40,7 @@ class OwlHandler < CommandHandler
     .description('Shows details of the given OWL player and optionally, detailed stats for the given hero.')
 
   command(:owlday, :show_day)
-    .feature(:owl).max_args(0).usage('owlday')
+    .feature(:owl).no_args.usage('owlday')
     .description('Shows the OWL matches happening today.')
 
   def config_name

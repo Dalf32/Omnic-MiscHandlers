@@ -8,7 +8,7 @@ class WeatherHandler < CommandHandler
   feature :weather, default_enabled: true
 
   command(:locations, :locations)
-    .feature(:weather).max_args(0).usage('locations')
+    .feature(:weather).no_args.usage('locations')
     .description('Lists all registered weather locations.')
 
   command(:addlocation, :add_location)
