@@ -7,6 +7,7 @@ require_relative 'gambling/funds_set'
 require_relative 'gambling/duel_plugin'
 require_relative 'gambling/slots_plugin'
 require_relative 'gambling/roulette_plugin'
+require_relative 'gambling/blackjack_plugin'
 
 class GamblingHandler < CommandHandler
   feature :gambling, default_enabled: false,
@@ -31,6 +32,7 @@ class GamblingHandler < CommandHandler
   include DuelPlugin
   include SlotsPlugin
   include RoulettePlugin
+  include BlackjackPlugin
 
   def config_name
     :gambling
