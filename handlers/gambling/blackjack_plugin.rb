@@ -35,6 +35,8 @@ module BlackjackPlugin
     event.message.reply('**The deck is being shuffled, last call for bets!**')
     sleep(30)
 
+    server_redis.set(BLACKJACK_KEY, 1)
+    server_redis.expire(BLACKJACK_KEY, 60 * 10) # Set the key to expire in case of error
     ret_str = blackjack_bets.empty? ? 'No bets were placed.' : play_game(event.message)
     end_game
     ret_str
@@ -43,6 +45,7 @@ module BlackjackPlugin
   def enter_blackjack_bet(event, wager)
     return 'There are no active blackjack games.' unless server_redis.exists(BLACKJACK_KEY)
     return 'You have already bet on this game.' if blackjack_bets.has_bet?(@user.id)
+    return 'The game has already started.' if server_redis.get(BLACKJACK_KEY) == 1
 
     ensure_funds(event.message)
     lock_funds(@user.id) do
@@ -110,19 +113,7 @@ module BlackjackPlugin
     game_finish_str += final_hands_str(game_table)
 
     # Determine payouts
-    dealer_value = game_table.dealer_best_hand_value
-    did_dealer_bust = game_table.dealer_busted?
-    (all_players - payouts.keys).each do |player|
-      if game_table.player_busted?(player)
-        payouts[player] = 0
-      elsif did_dealer_bust
-        payouts[player] = 2
-      else
-        player_value = game_table.player_best_hand_value(player)
-        payouts[player] = (player_value <=> dealer_value) + 1
-      end
-    end
-
+    determine_payouts(game_table)
     game_finish_str + payout_players
   end
 
@@ -219,6 +210,21 @@ module BlackjackPlugin
     end
 
     dealer_text
+  end
+
+  def determine_payouts(game_table)
+    dealer_value = game_table.dealer_best_hand_value
+    did_dealer_bust = game_table.dealer_busted?
+    (all_players - payouts.keys).each do |player|
+      if game_table.player_busted?(player)
+        payouts[player] = 0
+      elsif did_dealer_bust
+        payouts[player] = 2
+      else
+        player_value = game_table.player_best_hand_value(player)
+        payouts[player] = (player_value <=> dealer_value) + 1
+      end
+    end
   end
 
   def payout_players
