@@ -14,6 +14,10 @@ class RouletteBetsSet
     @bets_set.count
   end
 
+  def empty?
+    total_bets.zero?
+  end
+
   def include?(user_id)
     @bets_set.key?(user_id)
   end

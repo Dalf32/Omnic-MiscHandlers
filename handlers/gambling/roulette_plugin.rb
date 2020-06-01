@@ -22,40 +22,26 @@ module RoulettePlugin
   end
 
   def start_roulette(event)
-    return 'A roulette game is already in progress.' if server_redis.exists('roulette')
+    return 'A roulette game is already in progress.' if server_redis.exists(ROULETTE_KEY)
 
     event.message.reply('A game of roulette is about to start, get your bets in!')
-    server_redis.set('roulette', 0)
+    server_redis.set(ROULETTE_KEY, 0)
 
-    unless @user.await!(timeout: 90, start_with: /cancel$/i)&.text.nil?
-      end_roulette
+    unless @user.await!(timeout: 45, start_with: /cancel$/i)&.text.nil?
+      end_game
       return 'The game has been cancelled.'
     end
 
     event.message.reply('**The wheel has been spun, last call for bets!**')
     sleep(30)
 
-    pocket = roulette_wheel.spin
-    ret_str = "The ball lands on #{pocket}!\n"
-
-    # TODO: Table: Player | Bet | Result (w/l + payout)
-    ret_str += roulette_bets.all_bets.map do |user_id, bet|
-      user = @server.member(user_id)
-      if bet.win?(pocket)
-        lock_funds(user.id) { funds_set[user.id] += bet.winnings }
-        update_house_funds(-bet.winnings)
-        "#{user.mention} bet #{bet} and wins #{bet.winnings.format_currency}!"
-      else
-        "#{user.mention} bet #{bet} and loses."
-      end
-    end.join("\n")
-
-    end_roulette
+    ret_str = roulette_bets.empty? ? 'No bets were placed.' : resolve_game
+    end_game
     ret_str
   end
 
   def enter_roulette_bet(event, bet_str, wager)
-    return 'There are no active roulette games.' unless server_redis.exists('roulette')
+    return 'There are no active roulette games.' unless server_redis.exists(ROULETTE_KEY)
     return 'You have already bet on this game.' if roulette_bets.has_bet?(@user.id)
 
     ensure_funds(event.message)
@@ -83,6 +69,8 @@ module RoulettePlugin
 
   private
 
+  ROULETTE_KEY = 'roulette'
+
   def roulette_wheel
     @roulette_wheel ||= RouletteWheel.new
   end
@@ -91,8 +79,25 @@ module RoulettePlugin
     @roulette_bets ||= RouletteBetsSet.new(server_redis)
   end
 
-  def end_roulette
-    server_redis.del('roulette')
+  def resolve_game
+    pocket = roulette_wheel.spin
+    ret_str = "The ball lands on #{pocket}!\n"
+
+    # TODO: Table: Player | Bet | Result (w/l + payout)
+    ret_str + roulette_bets.all_bets.map do |user_id, bet|
+      user = @server.member(user_id)
+      if bet.win?(pocket)
+        lock_funds(user.id) { funds_set[user.id] += bet.winnings }
+        update_house_funds(-bet.winnings)
+        "#{user.mention} bet #{bet} and wins #{bet.winnings.format_currency}!"
+      else
+        "#{user.mention} bet #{bet} and loses."
+      end
+    end.join("\n")
+  end
+
+  def end_game
+    server_redis.del(ROULETTE_KEY)
     roulette_bets.clear_bets
   end
 end
