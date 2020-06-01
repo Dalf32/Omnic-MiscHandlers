@@ -45,7 +45,7 @@ module RoulettePlugin
   def enter_roulette_bet(event, bet_str, wager)
     return 'There are no active roulette games.' unless server_redis.exists(ROULETTE_KEY)
     return 'You have already bet on this game.' if roulette_bets.has_bet?(@user.id)
-    return 'The game has already started.' if server_redis.get(ROULETTE_KEY) == 1
+    return 'The game has already started.' if server_redis.get(ROULETTE_KEY) == '1'
 
     ensure_funds(event.message)
     bet = RouletteBet.create(bet_str)

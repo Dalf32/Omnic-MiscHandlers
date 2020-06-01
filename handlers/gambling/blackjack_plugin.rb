@@ -45,7 +45,7 @@ module BlackjackPlugin
   def enter_blackjack_bet(event, wager)
     return 'There are no active blackjack games.' unless server_redis.exists(BLACKJACK_KEY)
     return 'You have already bet on this game.' if blackjack_bets.has_bet?(@user.id)
-    return 'The game has already started.' if server_redis.get(BLACKJACK_KEY) == 1
+    return 'The game has already started.' if server_redis.get(BLACKJACK_KEY) == '1'
 
     ensure_funds(event.message)
     lock_funds(@user.id) do
