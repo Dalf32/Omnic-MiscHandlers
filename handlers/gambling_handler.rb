@@ -3,13 +3,11 @@
 # AUTHOR::  Kyle Mullins
 
 require 'tabulo'
-require_relative 'gambling/funds_set'
-require_relative 'gambling/duel_plugin'
-require_relative 'gambling/slots_plugin'
-require_relative 'gambling/roulette_plugin'
-require_relative 'gambling/blackjack_plugin'
+require_relative 'gambling/gambling_helper'
 
 class GamblingHandler < CommandHandler
+  include GamblingHelper
+
   feature :gambling, default_enabled: false,
                      description: 'Allows users to wager currency in games of chance.'
 
@@ -28,11 +26,6 @@ class GamblingHandler < CommandHandler
   command(:housemoney, :show_house_money)
     .feature(:gambling).no_args.usage('housemoney').pm_enabled(false)
     .description('Shows the amount of money the House has earned.')
-
-  include DuelPlugin
-  include SlotsPlugin
-  include RoulettePlugin
-  include BlackjackPlugin
 
   def config_name
     :gambling
@@ -88,52 +81,6 @@ class GamblingHandler < CommandHandler
   private
 
   ONE_DAY = 24 * 60 * 60 unless defined? ONE_DAY
-  HOUSE_MONEY_KEY = 'house' unless defined? HOUSE_MONEY_KEY
-
-  def lock_funds(user_id)
-    retval = nil
-
-    Omnic.mutex("gambling:#{@server.id}:#{user_id}").tap do |mutex|
-      mutex.acquire
-      retval = yield
-    ensure
-      mutex.release
-    end
-
-    retval
-  end
-
-  def funds_set
-    @funds_set ||= FundsSet.new(server_redis)
-  end
-
-  def payout_str(payout, wager)
-    win_amt = (wager * payout).to_i
-
-    case payout
-    when 0
-      "*lost* your #{wager.format_currency}!"
-    when 1
-      "**won back** your #{wager.format_currency}!"
-    when 0..1
-      "*only lost* #{(wager - win_amt).format_currency}!"
-    else
-      if win_amt == wager
-        "**won back** your #{wager.format_currency}!"
-      else
-        "**won** #{win_amt.format_currency}!"
-      end
-    end
-  end
-
-  def user_funds(user_id = @user.id)
-    funds_set[user_id]
-  end
-
-  def update_funds(wager, payout, user_id = @user.id)
-    win_amt = (wager * payout).to_i
-    funds_set[user_id] += win_amt - wager
-  end
 
   def user_rank(user_id = @user.id)
     funds_set.rank(user_id)
@@ -141,14 +88,6 @@ class GamblingHandler < CommandHandler
 
   def user_rank_str(user_id = @user.id)
     funds_set.rank_str(user_id)
-  end
-
-  def ensure_funds(message, user = @user)
-    return if funds_set.include?(user.id)
-
-    lock_funds(@user.id) { funds_set[user.id] = config.start_funds }
-    funds_str = config.start_funds.format_currency
-    message.reply("#{user.mention} you've been granted #{funds_str} to start off, don't lose it all too quick!")
   end
 
   def claim_key
@@ -165,50 +104,5 @@ class GamblingHandler < CommandHandler
     ensure_funds(message)
     user_funds_str = user_funds(user.id).format_currency
     "#{user.display_name} has #{user_funds_str} and is rank #{user_rank_str(user.id)} on the leaderboard!"
-  end
-
-  def wager_from_str(wager)
-    return user_funds if wager.casecmp('all').zero?
-    return user_funds / 2 if wager.casecmp('half').zero?
-    return rand(user_funds) + 1 if wager.casecmp('random').zero?
-
-    wager = wager.gsub(',', '')
-
-    if wager =~ /\A\d+\.?\d*[km]?\Z/i
-      wager_amt = wager.to_f
-      wager_amt *= 1000 if wager.end_with?('k')
-      wager_amt *= 1_000_000 if wager.end_with?('m')
-      return wager_amt.to_i
-    end
-
-    0
-  end
-
-  def wager_for_gambling(wager)
-    wager_amt = wager_from_str(wager)
-
-    Result.new.tap do |result|
-      result.error = 'Invalid wager.' if wager_amt.zero?
-      result.error = "You don't have enough money for that!" if wager_amt > user_funds
-      result.value = wager_amt
-    end
-  end
-
-  def ensure_house_funds
-    return if server_redis.exists(HOUSE_MONEY_KEY)
-
-    lock_funds(HOUSE_MONEY_KEY) { server_redis.set(HOUSE_MONEY_KEY, 0) }
-  end
-
-  def house_funds
-    ensure_house_funds
-    server_redis.get(HOUSE_MONEY_KEY).to_i
-  end
-
-  def update_house_funds(amount)
-    ensure_house_funds
-    lock_funds(HOUSE_MONEY_KEY) do
-      server_redis.set(HOUSE_MONEY_KEY, house_funds + amount)
-    end
   end
 end

@@ -4,25 +4,29 @@
 
 require_relative 'slot_machine'
 
-module SlotsPlugin
-  def self.included(klass)
-    klass.command(:slotspar, :calc_slots_par)
-      .feature(:gambling).args_range(0, 2).owner_only(true)
-      .usage('slotspar [num_runs] [wager_amt]')
-      .description('Calculates the PAR for the slots game.')
+class SlotsPlugin < HandlerPlugin
+  include GamblingHelper
 
-    klass.command(:slots, :play_slots)
-      .feature(:gambling).args_range(1, 1).usage('slots <wager>')
-      .pm_enabled(false).description('Bet some money and spin the slots for a chance to win big!')
-
-    klass.command(:slotspaytable, :show_slots_paytable)
-      .feature(:gambling).no_args.usage('slotspaytable')
-      .description('Shows the paytable for the slots game.')
-
-    klass.command(:slotsymbols, :show_symbols)
-      .feature(:gambling).no_args.usage('slotsymbols')
-      .description('Shows the possible symbols for the slots game.')
+  def self.plugin_target
+    GamblingHandler
   end
+
+  command(:slotspar, :calc_slots_par)
+    .feature(:gambling).args_range(0, 2).owner_only(true)
+    .usage('slotspar [num_runs] [wager_amt]')
+    .description('Calculates the PAR for the slots game.')
+
+  command(:slots, :play_slots)
+    .feature(:gambling).args_range(1, 1).usage('slots <wager>')
+    .pm_enabled(false).description('Bet some money and spin the slots for a chance to win big!')
+
+  command(:slotspaytable, :show_slots_paytable)
+    .feature(:gambling).no_args.usage('slotspaytable')
+    .description('Shows the paytable for the slots game.')
+
+  command(:slotsymbols, :show_symbols)
+    .feature(:gambling).no_args.usage('slotsymbols')
+    .description('Shows the possible symbols for the slots game.')
 
   def calc_slots_par(event, num_runs = 1_000_000, wager_amt = 5)
     event.channel.start_typing

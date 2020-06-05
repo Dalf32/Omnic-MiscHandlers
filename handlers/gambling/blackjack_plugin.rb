@@ -6,20 +6,24 @@ require_relative 'card_deck'
 require_relative 'blackjack_bets_set'
 require_relative 'blackjack_table'
 
-module BlackjackPlugin
-  def self.included(klass)
-    klass.command(:blackjack, :start_blackjack)
-      .feature(:gambling).no_args.usage('blackjack')
-      .description('Starts a game of blackjack.')
+class BlackjackPlugin < HandlerPlugin
+  include GamblingHelper
 
-    klass.command(:blackjackbet, :enter_blackjack_bet)
-      .feature(:gambling).args_range(1, 1).usage('blackjackbet <wager>')
-      .description('Enters your bet for an active blackjack game.')
-
-    klass.command(:blackjackpaytable, :show_blackjack_paytable)
-      .feature(:gambling).no_args.usage('blackjackpaytable')
-      .description('Shows the paytable for the blackjack game.')
+  def self.plugin_target
+    GamblingHandler
   end
+
+  command(:blackjack, :start_blackjack)
+    .feature(:gambling).no_args.usage('blackjack')
+    .description('Starts a game of blackjack.')
+
+  command(:blackjackbet, :enter_blackjack_bet)
+    .feature(:gambling).args_range(1, 1).usage('blackjackbet <wager>')
+    .description('Enters your bet for an active blackjack game.')
+
+  command(:blackjackpaytable, :show_blackjack_paytable)
+    .feature(:gambling).no_args.usage('blackjackpaytable')
+    .description('Shows the paytable for the blackjack game.')
 
   def start_blackjack(event)
     return 'A blackjack game is already in progress.' if server_redis.exists(BLACKJACK_KEY)

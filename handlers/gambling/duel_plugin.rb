@@ -2,12 +2,16 @@
 #
 # AUTHOR::  Kyle Mullins
 
-module DuelPlugin
-  def self.included(klass)
-    klass.command(:duel, :start_duel)
-      .feature(:gambling).args_range(2, 2).usage('duel <opponent> <wager>')
-      .pm_enabled(false).description('Challenges the given player to a duel. Should they accept, both users put up the wagered amount and the winner claims the sum!')
+class DuelPlugin < HandlerPlugin
+  include GamblingHelper
+
+  def self.plugin_target
+    GamblingHandler
   end
+
+  command(:duel, :start_duel)
+    .feature(:gambling).args_range(2, 2).usage('duel <opponent> <wager>')
+    .pm_enabled(false).description('Challenges the given player to a duel. Should they accept, both users put up the wagered amount and the winner claims the sum!')
 
   def start_duel(event, opponent, wager)
     ensure_funds(event.message)

@@ -6,20 +6,24 @@ require_relative 'roulette_wheel'
 require_relative 'roulette_bet'
 require_relative 'roulette_bets_set'
 
-module RoulettePlugin
-  def self.included(klass)
-    klass.command(:roulette, :start_roulette)
-      .feature(:gambling).no_args.usage('roulette')
-      .description('Starts a game of roulette.')
+class RoulettePlugin < HandlerPlugin
+  include GamblingHelper
 
-    klass.command(:roulettebet, :enter_roulette_bet)
-      .feature(:gambling).args_range(2, 2).usage('roulettebet <bet> <wager>')
-      .description('Enters your bet for the active roulette game.')
-
-    klass.command(:roulettepaytable, :show_roulette_paytable)
-      .feature(:gambling).no_args.usage('roulettepaytable')
-      .description('Shows the paytable for the roulette game.')
+  def self.plugin_target
+    GamblingHandler
   end
+
+  command(:roulette, :start_roulette)
+    .feature(:gambling).no_args.usage('roulette')
+    .description('Starts a game of roulette.')
+
+  command(:roulettebet, :enter_roulette_bet)
+    .feature(:gambling).args_range(2, 2).usage('roulettebet <bet> <wager>')
+    .description('Enters your bet for the active roulette game.')
+
+  command(:roulettepaytable, :show_roulette_paytable)
+    .feature(:gambling).no_args.usage('roulettepaytable')
+    .description('Shows the paytable for the roulette game.')
 
   def start_roulette(event)
     return 'A roulette game is already in progress.' if server_redis.exists(ROULETTE_KEY)
