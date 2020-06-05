@@ -2,7 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require_relative 'card_table'
+require_relative '../card_table'
 
 class BlackjackTable < CardTable
   BLACKJACK = 21

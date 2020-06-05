@@ -2,7 +2,7 @@
 #
 # AUTHOR::  Kyle Mullins
 
-require_relative 'card_deck'
+require_relative '../card_deck'
 require_relative 'blackjack_bets_set'
 require_relative 'blackjack_table'
 
