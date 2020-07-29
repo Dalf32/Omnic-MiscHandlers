@@ -26,7 +26,7 @@ GEM
       domain_name (~> 0.5)
     http-form_data (1.0.3)
     http_parser.rb (0.6.0)
-    json (2.1.0)
+    json (2.3.1)
     multi_json (1.13.1)
     multipart-post (2.0.0)
     oga (2.15)
@@ -59,7 +59,7 @@ PLATFORMS
 DEPENDENCIES
   concurrent-ruby (~> 1.0)
   forecast_io (~> 2.0)
-  json (>= 1.8)
+  json (>= 2.3)
   oga (~> 2.0)
   redd (= 0.8.1)
   tabulo (~> 2.2)
