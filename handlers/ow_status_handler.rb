@@ -81,7 +81,7 @@ class OwStatusHandler < CommandHandler
   def clear_status
     return unless bot.connected?
 
-    bot.update_status('online', nil, nil, 0, false, 0)
+    clear_bot_status
   end
 
   def set_match_status(live_data, stream_url)
@@ -93,7 +93,7 @@ class OwStatusHandler < CommandHandler
 
     status_str = match.to_s(include_abbrev: false)
     status_str = live_data.live_match_bracket_title if match.teams_blank? && live_data.live_match_has_bracket?
-    bot.update_status('online', status_str, stream_url)
+    update_bot_status('online', status_str, stream_url)
   end
 
   def sleep_thread(sleep_duration)
