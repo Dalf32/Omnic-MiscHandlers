@@ -2,6 +2,8 @@
 #
 # AUTHOR::  Kyle Mullins
 
+require 'googleauth'
+require 'google/apis/youtube_v3'
 require_relative 'ow/owl_api_client'
 require_relative 'ow/owc_api_client'
 
@@ -30,13 +32,29 @@ class OwStatusHandler < CommandHandler
                                          locale: config.locale)
   end
 
+  def youtube_client
+    @youtube_client ||= create_youtube_client
+  end
+
+  def create_youtube_client
+    credentials = Google::Auth::ServiceAccountCredentials.make_creds(
+        json_key_io: File.open(config.credentials_file),
+        scope: Google::Apis::YoutubeV3::AUTH_YOUTUBE_READONLY
+    )
+
+    Google::Apis::YoutubeV3::YouTubeService.new.tap do |youtube_service|
+      youtube_service.client_options.application_name = config.app_name
+      youtube_service.authorization = credentials
+    end
+  end
+
   def check_ow_status
     loop do
       live_data = owl_api_client.get_live_match
 
       if live_data.success? && live_data.live?
         log.debug('ow_status: OWL is live.')
-        set_match_status(live_data, config.owl_stream)
+        set_match_status(live_data, owl_stream_url)
 
         sleep_duration = wait_time(live_data)
       else
@@ -45,7 +63,7 @@ class OwStatusHandler < CommandHandler
 
         if live_data.success? && live_data.live?
           log.debug('ow_status: OWC is live.')
-          set_match_status(live_data, config.owc_stream)
+          set_match_status(live_data, owc_stream_url)
 
           sleep_duration = wait_time(live_data)
         else
@@ -57,7 +75,6 @@ class OwStatusHandler < CommandHandler
 
       sleep_duration = sleep_duration.clamp(config.min_sleep_time,
                                             config.max_sleep_time)
-
       sleep_thread(sleep_duration)
     rescue StandardError => err
       log.error(err)
@@ -99,5 +116,27 @@ class OwStatusHandler < CommandHandler
   def sleep_thread(sleep_duration)
     log.debug("Sleeping ow_status thread for #{sleep_duration}s.")
     sleep(sleep_duration)
+  end
+
+  def owc_stream_url
+    return config.owc_stream if config.key?(:owc_stream)
+
+    youtube_stream_url(config.owc_channel_id)
+  end
+
+  def owl_stream_url
+    return config.owl_stream if config.key?(:owl_stream)
+
+    youtube_stream_url(config.owl_channel_id)
+  end
+
+  def youtube_stream_url(channel_id)
+    results = youtube_client.list_searches(
+        'id', channel_id: channel_id, event_type: 'live', type: 'video')
+    video_id = results.items.first.id.video_id
+    "https://youtube.com/watch?v=#{video_id}"
+  rescue Google::Apis::Error => err
+    log.error(err)
+    nil
   end
 end

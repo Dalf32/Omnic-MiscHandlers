@@ -2,6 +2,8 @@ source 'https://rubygems.org'
 
 gem 'concurrent-ruby', '~>1.0'
 gem 'forecast_io', '~>2.0'
+gem 'googleauth', '~>0.10'
+gem 'google-api-client', '~>0.37'
 gem 'json', '>=2.3'
 gem 'oga', '~>2.0'
 gem 'redd', '=0.8.1'
