@@ -8,7 +8,7 @@ class AnnounceStore
   end
 
   def enabled?
-    @redis.exists?(:announce_channel)
+    @redis.exists(:announce_channel)
   end
 
   def enabled_for_user?(user)

@@ -12,7 +12,7 @@ class UserStreamStore
   end
 
   def title_cached?
-    @redis.exists?(:stream_title)
+    @redis.exists(:stream_title)
   end
 
   def cache_stream_title(title)

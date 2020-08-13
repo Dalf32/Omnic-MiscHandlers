@@ -26,7 +26,7 @@ class BlackjackPlugin < HandlerPlugin
     .description('Shows the paytable for the blackjack game.')
 
   def start_blackjack(event)
-    return 'A blackjack game is already in progress.' if server_redis.exists?(BLACKJACK_KEY)
+    return 'A blackjack game is already in progress.' if server_redis.exists(BLACKJACK_KEY)
 
     event.message.reply('A game of blackjack is about to start, get your bets in!')
     server_redis.set(BLACKJACK_KEY, 0)
@@ -47,7 +47,7 @@ class BlackjackPlugin < HandlerPlugin
   end
 
   def enter_blackjack_bet(event, wager)
-    return 'There are no active blackjack games.' unless server_redis.exists?(BLACKJACK_KEY)
+    return 'There are no active blackjack games.' unless server_redis.exists(BLACKJACK_KEY)
     return 'You have already bet on this game.' if blackjack_bets.has_bet?(@user.id)
     return 'The game has already started.' if server_redis.get(BLACKJACK_KEY) == '1'
 
