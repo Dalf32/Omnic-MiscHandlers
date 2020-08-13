@@ -26,7 +26,7 @@ class GdqSchedule
   end
 
   def current_run
-    cur_index = current_or_next_run_index
+    cur_index = @runs.find_index(&:in_progress?)
     return nil if cur_index.nil?
 
     @runs[cur_index]

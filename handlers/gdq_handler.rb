@@ -29,6 +29,8 @@ class GdqHandler < CommandHandler
     .feature(:gdq).no_args.pm_enabled(true).usage('gdqschedule')
     .description('Posts a snippet of the GDQ schedule.')
 
+  event :ready, :start_status_thread
+
   def config_name
     :gdq
   end
@@ -83,6 +85,10 @@ class GdqHandler < CommandHandler
     "__**#{schedule.event_name.upcase}**__```#{table.pack}```"
   end
 
+  def start_status_thread(_event)
+    thread(:gdq_status_thread, &method(:check_gdq_status))
+  end
+
   private
 
   def get_schedule
@@ -93,8 +99,8 @@ class GdqHandler < CommandHandler
                   .text.split.first
 
     run_table = gdq_doc.at_xpath("//*[@id='runTable']")
-    runs =     run_table.xpath("tbody/tr[@class='second-row' or not(@class)]")
-                   .each_slice(2).map do |(row1, row2)|
+    runs = run_table.xpath("tbody/tr[@class='second-row' or not(@class)]")
+                    .each_slice(2).map do |(row1, row2)|
       GdqRun.from_rows(columns_in_row(row1), columns_in_row(row2))
     end.to_a
 
@@ -121,5 +127,50 @@ class GdqHandler < CommandHandler
     else
       run.time_to_start_str
     end
+  end
+
+  def check_gdq_status
+    loop do
+      schedule = get_schedule
+      run = schedule.current_run
+
+      if run.nil?
+        clear_bot_status
+        run = schedule.next.first
+
+        if run.nil?
+          log.debug('gdq_status: GDQ is not live.')
+          sleep_duration = config.max_sleep_time
+        else
+          log.debug("gdq_status: GDQ is either not live yet or in-between runs.")
+          sleep_duration = wait_time(run)
+        end
+      else
+        log.debug("gdq_status: GDQ is live.")
+        set_run_status(run)
+        sleep_duration = wait_time(run)
+      end
+
+      sleep_duration = sleep_duration.clamp(config.min_sleep_time,
+                                            config.max_sleep_time)
+      sleep_thread(sleep_duration)
+    rescue StandardError => err
+      log.error(err)
+      sleep_thread(config.max_sleep_time)
+    end
+  end
+
+  def set_run_status(run)
+    update_bot_status('online', run.to_s_short, config.stream_url)
+  end
+
+  def sleep_thread(sleep_duration)
+    log.debug("Sleeping gdq_status thread for #{sleep_duration}s.")
+    sleep(sleep_duration)
+  end
+
+  def wait_time(run)
+    time_left = run.in_progress? ? run.time_to_end : run.time_to_start
+    time_left / 2.5
   end
 end

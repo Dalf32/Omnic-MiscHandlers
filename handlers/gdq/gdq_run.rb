@@ -38,6 +38,10 @@ class GdqRun
     @time + (@length / SECONDS_PER_DAY)
   end
 
+  def time_to_end
+    (end_time - DateTime.now) * SECONDS_PER_DAY
+  end
+
   def time_to_start
     (@time - DateTime.now) * SECONDS_PER_DAY
   end
@@ -75,6 +79,11 @@ class GdqRun
     start_time_str = in_progress? ? 'Live now' : "Starting in #{time_to_start_str}"
     "**#{runners_str}** running #{game_category} #{run_length_deco} #{length_str}" +
         "\n  #{start_time_deco}#{start_time_str}#{host_str}"
+  end
+
+  def to_s_short(run_length_deco: 'in')
+    game_category = game_category_str(formatting: false, category_sep: ' - ')
+    "#{game_category} #{run_length_deco} #{length_str}"
   end
 
   def game_category_str(formatting:, category_sep: "\n")
