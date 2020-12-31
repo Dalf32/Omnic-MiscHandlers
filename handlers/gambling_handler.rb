@@ -53,10 +53,10 @@ class GamblingHandler < CommandHandler
     end
 
     server_redis.setex(claim_key, ONE_DAY * 2, streak)
-    claim_amt = 50 + (25 * [18, streak - 1].min)
+    claim_amt = daily_money_claim_amt(streak)
     lock_funds(@user.id) { funds_set[@user.id] += claim_amt }
 
-    streak_str = streak > 1 ? ". You're on a #{streak} day streak" : ''
+    streak_str = daily_money_streak_str(streak)
     "#{@user.display_name}, you've claimed your daily bonus of #{claim_amt.format_currency}#{streak_str}!"
   end
 
@@ -104,5 +104,28 @@ class GamblingHandler < CommandHandler
     ensure_funds(message)
     user_funds_str = user_funds(user.id).format_currency
     "#{user.display_name} has #{user_funds_str} and is rank #{user_rank_str(user.id)} on the leaderboard!"
+  end
+
+  def daily_money_claim_amt(streak)
+    claim_amt = 50 + (25 * [18, streak - 1].min)
+    claim_amt *= 10 * (streak / 365) if (streak % 365).zero?
+
+    claim_amt
+  end
+
+  def daily_money_streak_str(streak)
+    years = streak / 365
+    days = streak % 365
+
+    case
+    when years.positive? && days.zero?
+      ". **Congrats!** You're on a #{years} year streak"
+    when years.positive?
+      ". You're on a #{years} year #{days} day streak"
+    when days.positive?
+      ". You're on a #{days} day streak"
+    else
+      ''
+    end
   end
 end
