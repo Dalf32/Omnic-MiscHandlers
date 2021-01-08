@@ -46,8 +46,16 @@ class GdqRun
     (@time - DateTime.now) * SECONDS_PER_DAY
   end
 
+  def time_since_start
+    (DateTime.now - @time) * SECONDS_PER_DAY
+  end
+
   def time_to_start_str
     format_time(time_to_start)
+  end
+
+  def time_since_start_str
+    format_time(time_since_start)
   end
 
   def upcoming?
@@ -70,6 +78,11 @@ class GdqRun
     !@platform.nil? && @platform.length.positive?
   end
 
+  def matches_game?(game_name, full_match: false)
+    @game.casecmp(game_name).zero? ||
+      (!full_match && @game.downcase.start_with?(game_name.downcase))
+  end
+
   def to_s(run_length_deco: 'in', start_time_deco: '')
     game_category = game_category_str(formatting: true, category_sep: ' - ')
 
@@ -84,6 +97,18 @@ class GdqRun
   def to_s_short(run_length_deco: 'in')
     game_category = game_category_str(formatting: false, category_sep: ' - ')
     "#{game_category} #{run_length_deco} #{length_str}"
+  end
+
+  def to_s_when
+    game_category = game_category_str(formatting: false, category_sep: ' - ')
+    start_time_str = if in_progress?
+                       'is live now!'
+                     elsif upcoming?
+                       "starts in #{time_to_start_str}"
+                     else
+                       "was #{time_since_start_str} ago"
+                     end
+    "#{game_category} run by **#{runners_str}** #{start_time_str}"
   end
 
   def game_category_str(formatting:, category_sep: "\n")

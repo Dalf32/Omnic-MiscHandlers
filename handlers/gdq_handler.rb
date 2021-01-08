@@ -29,6 +29,10 @@ class GdqHandler < CommandHandler
     .feature(:gdq).no_args.pm_enabled(true).usage('gdqschedule')
     .description('Posts a snippet of the GDQ schedule.')
 
+  command(:gdqwhen, :find_run)
+    .feature(:gdq).min_args(1).pm_enabled(true).usage('gdqwhen <game>')
+    .description('Finds when the given game will be/was run in the current marathon.')
+
   event :ready, :start_status_thread
 
   def config_name
@@ -39,7 +43,7 @@ class GdqHandler < CommandHandler
     schedule = get_schedule
 
     if schedule.live?
-      "**#{schedule.event_name}** is live now!\n"
+      "**#{schedule.event_name}** is live now! #{config.stream_url}\n"
     elsif schedule.upcoming?
       event_start = schedule.next.first.time_to_start.to_i
       event_start_str = ChronicDuration.output(event_start,
@@ -83,6 +87,17 @@ class GdqHandler < CommandHandler
     end
 
     "__**#{schedule.event_name.upcase}**__```#{table.pack}```"
+  end
+
+  def find_run(_event, *game)
+    schedule = get_schedule
+    return "Looks like there's no marathon live now." unless schedule&.live? || schedule &.upcoming?
+
+    game_name = game.join(' ')
+    found_run = schedule.find(game_name)
+    return "Couldn't find any matches for #{game_name}." if found_run.nil?
+
+    found_run.to_s_when
   end
 
   def start_status_thread(_event)

@@ -41,6 +41,11 @@ class GdqSchedule
     @runs[start_index..(cur_index - 1)]
   end
 
+  def find(game_name)
+    @runs.find { |r| r.matches_game?(game_name, full_match: true) } ||
+      @runs.find { |r| r.matches_game?(game_name, full_match: false) }
+  end
+
   private
 
   def current_or_next_run_index
