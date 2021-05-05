@@ -181,11 +181,11 @@ class StarboardHandler < CommandHandler
     embed.color = message.author.color.combined
     embed.timestamp = message.edited_timestamp || message.timestamp
     embed.author = { name: message.author.display_name, icon_url: message.author.avatar_url }
-    embed.add_field(name: 'Channel', value: message.channel.mention, inline: true)
-    embed.add_field(name: starboard.emoji, value: count_reactions(message), inline: true)
 
     add_message_attachment(embed, message.attachments.first)
     add_message_embed(embed, message.embeds.first)
+    embed.add_field(name: 'Channel', value: message.channel.mention, inline: true)
+    embed.add_field(name: starboard.emoji, value: count_reactions(message), inline: true)
   end
 
   def manage_starboard_summary
@@ -282,6 +282,28 @@ class StarboardHandler < CommandHandler
   def add_message_embed(embed, msg_embed)
     return if msg_embed.nil?
 
-    embed.description += "\n\n*<additional content embedded>*"
+    has_attachment = false
+
+    if !msg_embed.image.nil?
+      embed.image = { url: msg_embed.image.url }
+      has_attachment = true
+    elsif !msg_embed.video.nil?
+      embed.image = { url: msg_embed.thumbnail.url }
+      has_attachment = true
+    elsif !(msg_embed.title.nil? || msg_embed.description.nil?)
+      embed.add_field(name: msg_embed.title, value: msg_embed.description, inline: false)
+    elsif !msg_embed.url.nil?
+      url_extension = msg_embed.url.split('.').last.downcase
+      if config.image_extensions.include?(url_extension)
+        embed.image = { url: msg_embed.url }
+        has_attachment = true
+      end
+    end
+
+    if !(msg_embed.author.nil? || msg_embed.description.nil?)
+      embed.add_field(name: msg_embed.author.name, value: msg_embed.description, inline: false)
+    elsif !has_attachment
+      embed.description += "\n\n*<additional content embedded>*"
+    end
   end
 end
