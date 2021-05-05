@@ -62,16 +62,19 @@ class StarboardHandler < CommandHandler
 
   def on_reaction_change(event)
     return unless starboard.enabled? && starboard_emoji?(event.emoji)
-    return self_star_message(event) if self_star_event?(event)
 
-    if starboard.on_board?(event.message.id)
-      if starboard_eligible?(event.message)
-        edit_starboard_message(event.message)
-      else
-        remove_from_starboard(event.message.id)
+    lock_message(event.message.id) do
+      return self_star_message(event) if self_star_event?(event)
+
+      if starboard.on_board?(event.message.id)
+        if starboard_eligible?(event.message)
+          edit_starboard_message(event.message)
+        else
+          remove_from_starboard(event.message.id)
+        end
+      elsif starboard_eligible?(event.message)
+        add_to_starboard(event.message)
       end
-    elsif starboard_eligible?(event.message)
-      add_to_starboard(event.message)
     end
   end
 
@@ -79,19 +82,26 @@ class StarboardHandler < CommandHandler
     return unless starboard.enabled?
 
     msg_id = event.message.id
-    remove_from_starboard(msg_id) if starboard.on_board?(msg_id)
+
+    lock_message(msg_id) do
+      remove_from_starboard(msg_id) if starboard.on_board?(msg_id)
+    end
   end
 
   def on_message_delete(event)
     return unless starboard.enabled?
 
-    remove_from_starboard(event.id) if starboard.on_board?(event.id)
+    lock_message(event.id) do
+      remove_from_starboard(event.id) if starboard.on_board?(event.id)
+    end
   end
 
   def on_message_edit(event)
-    return unless starboard.enabled? && starboard.on_board?(event.message.id)
+    return unless starboard.enabled?
 
-    edit_starboard_message(event.message)
+    lock_message(event.message.id) do
+      edit_starboard_message(event.message) if starboard.on_board?(event.message.id)
+    end
   end
 
   private
@@ -124,6 +134,19 @@ class StarboardHandler < CommandHandler
 
   def count_reactions(message)
     (message.reacted_with(starboard_emoji) - [message.author]).count
+  end
+
+  def lock_message(message_id)
+    retval = nil
+
+    Omnic.mutex("starboard:#{message_id}").tap do |mutex|
+      mutex.acquire
+      retval = yield
+    ensure
+      mutex.release
+    end
+
+    retval
   end
 
   def add_to_starboard(message)
