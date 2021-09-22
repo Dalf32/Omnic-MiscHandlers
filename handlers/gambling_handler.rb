@@ -27,6 +27,15 @@ class GamblingHandler < CommandHandler
     .feature(:gambling).no_args.usage('housemoney').pm_enabled(false)
     .description('Shows the amount of money the House has earned.')
 
+  command(:addmoney, :add_money)
+    .feature(:gambling).args_range(2, 2).usage('addmoney <user> <amount>')
+    .pm_enabled(false).permissions(:manage_server)
+    .description('Gives some of your money to another player.')
+
+  command(:givemoney, :give_money)
+    .feature(:gambling).args_range(2, 2).usage('givemoney <user> <amount>').pm_enabled(false)
+    .description('Gives some of your money to another player.')
+
   def config_name
     :gambling
   end
@@ -76,6 +85,45 @@ class GamblingHandler < CommandHandler
 
   def show_house_money(_event)
     "The House has #{house_funds.format_currency} in the bank."
+  end
+
+  def add_money(event, player, amount)
+    found_user = find_user(player)
+    return found_user.error if found_user.failure?
+
+    user = found_user.value
+    return 'Bots cannot gamble!' if user.bot_account?
+
+    ensure_funds(event.message, user)
+    add_amount = amount_from_str(amount)
+    return 'Invalid amount.' if add_amount.zero?
+
+    lock_funds(user.id) { funds_set[user.id] += add_amount }
+    "#{add_amount.format_currency} has been added to #{user.display_name}'s account."
+  end
+
+  def give_money(event, player, amount)
+    ensure_funds(event.message)
+    found_user = find_user(player)
+    return found_user.error if found_user.failure?
+
+    recv_user = found_user.value
+    return 'Bots cannot gamble!' if recv_user.bot_account?
+    return 'You cannot give money to yourself!' if recv_user.id == @user.id
+
+    ensure_funds(event.message, recv_user)
+    give_amt_result = wager_for_gambling(amount)
+    give_amount = give_amt_result.value
+    return give_amt_result.error if give_amt_result.failure?
+
+    lock_funds(@user.id) do
+      lock_funds(recv_user.id) do
+        funds_set[@user.id] -= give_amount
+        funds_set[recv_user] += give_amount
+      end
+    end
+
+    "#{give_amount.format_currency} has been transferred from #{@user.display_name} to #{recv_user.display_name}."
   end
 
   private

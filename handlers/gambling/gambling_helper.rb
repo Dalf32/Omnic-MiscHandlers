@@ -60,21 +60,25 @@ module GamblingHelper
     message.reply("#{user.mention} you've been granted #{funds_str} to start off, don't lose it all too quick!")
   end
 
+  def amount_from_str(amount)
+    amount = amount.gsub(',', '')
+
+    if amount =~ /\A\d+\.?\d*[km]?\Z/i
+      amt_num = amount.to_f
+      amt_num *= 1_000 if amount.downcase.end_with?('k')
+      amt_num *= 1_000_000 if amount.downcase.end_with?('m')
+      return amt_num.to_i
+    end
+
+    0
+  end
+
   def wager_from_str(wager)
     return user_funds if wager.casecmp('all').zero?
     return user_funds / 2 if wager.casecmp('half').zero?
     return rand(user_funds) + 1 if wager.casecmp('random').zero?
 
-    wager = wager.gsub(',', '')
-
-    if wager =~ /\A\d+\.?\d*[km]?\Z/i
-      wager_amt = wager.to_f
-      wager_amt *= 1000 if wager.end_with?('k')
-      wager_amt *= 1_000_000 if wager.end_with?('m')
-      return wager_amt.to_i
-    end
-
-    0
+    amount_from_str(wager)
   end
 
   def wager_for_gambling(wager)
