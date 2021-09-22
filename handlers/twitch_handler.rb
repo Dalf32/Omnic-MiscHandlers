@@ -244,6 +244,8 @@ class TwitchHandler < CommandHandler
   end
 
   def get_basic_stream_data(channel_name)
+    return nil if channel_name.nil?
+
     user_result = twitch_client.get_users(login: channel_name)
     return nil if user_result.data.empty?
 
