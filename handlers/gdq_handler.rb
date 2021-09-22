@@ -151,7 +151,7 @@ class GdqHandler < CommandHandler
 
       if run.nil?
         clear_bot_status
-        run = schedule.next.first
+        run = schedule.next&.first
 
         if run.nil?
           log.debug('gdq_status: GDQ is not live.')
