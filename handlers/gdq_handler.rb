@@ -110,11 +110,10 @@ class GdqHandler < CommandHandler
     gdq_html = open(config.schedule_url)
     gdq_doc = Oga.parse_html(gdq_html)
 
-    name = gdq_doc.at_xpath("//*[@class='text-gdq-red extra-spacing']")
-                  .text.split.first
+    name = gdq_doc.at_xpath('//h1').text.split[0..-2].join(' ')
 
     run_table = gdq_doc.at_xpath("//*[@id='runTable']")
-    runs = run_table.xpath("tbody/tr[@class='second-row' or not(@class)]")
+    runs = run_table.xpath("tbody/tr[@class!='day-split']")
                     .each_slice(2).map do |(row1, row2)|
       GdqRun.from_rows(columns_in_row(row1), columns_in_row(row2))
     end.to_a
