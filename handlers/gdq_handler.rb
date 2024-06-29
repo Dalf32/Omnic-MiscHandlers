@@ -2,6 +2,8 @@
 #
 # AUTHOR::  Kyle Mullins
 
+require 'json'
+require 'net/https'
 require 'oga'
 require 'open-uri'
 require 'tabulo'
@@ -51,7 +53,7 @@ class GdqHandler < CommandHandler
       "**#{schedule.event_name}** starts in #{event_start_str}!\n"
     else
       ''
-    end + "<#{config.schedule_url}>"
+    end + "<#{config.base_url + config.schedule_url}>"
   end
 
   def show_next_runs(_event, num_runs = 3)
@@ -79,7 +81,7 @@ class GdqHandler < CommandHandler
 
     table = Tabulo::Table.new(runs, border: :modern,
                               row_divider_frequency: 1) do |table|
-      table.add_column('Time to Start') { |run| start_time_str(run) }
+      table.add_column('Starts') { |run| start_time_str(run) }
       table.add_column('Length', &:length_str)
       table.add_column('Run') { |run| run.game_category_str(formatting: false) }
       table.add_column('Runners', &:runners_str)
@@ -95,9 +97,12 @@ class GdqHandler < CommandHandler
 
     game_name = game.join(' ')
     found_run = schedule.find(game_name)
-    return "Couldn't find any matches for #{game_name}." if found_run.nil?
+    return found_run.to_s_when unless found_run.nil?
 
-    found_run.to_s_when
+    found_runs = schedule.find_all(game_name)
+    return "Couldn't find any matches for #{game_name}." if found_runs.empty?
+
+    found_runs.map(&:to_s_when).join("\n")
   end
 
   def start_status_thread(_event)
@@ -106,8 +111,24 @@ class GdqHandler < CommandHandler
 
   private
 
+  def get_schedule_via_api
+    base_uri = URI(config.base_url)
+    client = Net::HTTP.new(base_uri.host, base_uri.port)
+    client.use_ssl = true
+
+    response = client.request_get(config.schedule_url)
+    response = client.request_get(config.api_url + response['location'].split('/').last)
+    schedule_hash = JSON.parse(response.body)
+
+    runs = schedule_hash['schedule'].select { |run_hash| run_hash['type'] == 'speedrun' }
+                                    .map { |run_hash| GdqRun.from_hash(run_hash) }
+    GdqSchedule.new(schedule_hash.dig('event', 'name'), runs)
+  end
+
   def get_schedule
-    gdq_html = open(config.schedule_url)
+    return get_schedule_via_api if config.key?(:api_url)
+
+    gdq_html = URI.open(config.base_url + config.schedule_url)
     gdq_doc = Oga.parse_html(gdq_html)
 
     name = gdq_doc.at_xpath('//h1').text.split[0..-2].join(' ')

@@ -6,7 +6,7 @@ require 'chronic_duration'
 require 'date'
 
 class GdqRun
-  attr_reader :time, :game, :runners, :length, :category, :platform, :host
+  attr_reader :time, :game, :runners, :length, :category, :platform, :host, :end_time
 
   def self.from_rows(row1, row2)
     category, platform = row2[1].split(' — ')
@@ -16,7 +16,16 @@ class GdqRun
             category: category, platform: platform, host: row2[2])
   end
 
-  def initialize(time:, game:, runners:, length:, category:, platform:, host:)
+  def self.from_hash(run_hash)
+    runners = run_hash['runners'].map { |runner_hash| runner_hash['name'] }
+    host = run_hash.dig('hosts', 0, name)
+
+    GdqRun.new(time: run_hash['starttime'], game: run_hash['name'], runners: runners,
+               length: run_hash['run_time'], category: run_hash['category'],
+               platform: run_hash['console'], host: host, end_time: run_hash['endtime'])
+  end
+
+  def initialize(time:, game:, runners:, length:, category:, platform:, host:, end_time: nil)
     @time = time.is_a?(String) ? DateTime.parse(time) : time
     @game = game
     @runners = runners
@@ -24,6 +33,10 @@ class GdqRun
     @category = category
     @platform = platform
     @host = host
+    @end_time = end_time.is_a?(String) ? DateTime.parse(end_time) : end_time
+
+    @end_time ||= @time + (@length / SECONDS_PER_DAY) unless @length.nil?
+    @length ||= (@end_time - @time) * SECONDS_PER_DAY unless @end_time.nil?
   end
 
   def length_str
@@ -34,12 +47,8 @@ class GdqRun
     @runners.join(', ')
   end
 
-  def end_time
-    @time + (@length / SECONDS_PER_DAY)
-  end
-
   def time_to_end
-    (end_time - DateTime.now) * SECONDS_PER_DAY
+    (@end_time - DateTime.now) * SECONDS_PER_DAY
   end
 
   def time_to_start
@@ -67,7 +76,7 @@ class GdqRun
   end
 
   def finished?
-    (end_time - DateTime.now).negative?
+    (@end_time - DateTime.now).negative?
   end
 
   def hosted?
@@ -123,6 +132,6 @@ class GdqRun
   SECONDS_PER_DAY = 24.0 * 60 * 60 unless defined?(SECONDS_PER_DAY)
 
   def format_time(time)
-    ChronicDuration.output(time.to_i, format: :short, units: 3)
+    ChronicDuration.output(time.to_i, format: :short, units: 2)
   end
 end

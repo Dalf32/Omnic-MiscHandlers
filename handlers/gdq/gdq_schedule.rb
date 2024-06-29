@@ -42,8 +42,11 @@ class GdqSchedule
   end
 
   def find(game_name)
-    @runs.find { |r| r.matches_game?(game_name, full_match: true) } ||
-      @runs.find { |r| r.matches_game?(game_name, full_match: false) }
+    @runs.find { |r| r.matches_game?(game_name, full_match: true) }
+  end
+
+  def find_all(game_name)
+    @runs.find_all { |r| r.matches_game?(game_name, full_match: false) }
   end
 
   private
