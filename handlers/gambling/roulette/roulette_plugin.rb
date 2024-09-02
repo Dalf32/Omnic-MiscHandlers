@@ -26,7 +26,7 @@ class RoulettePlugin < HandlerPlugin
     .description('Shows the paytable for the roulette game.')
 
   def start_roulette(event)
-    return 'A roulette game is already in progress.' if server_redis.exists(ROULETTE_KEY)
+    return 'A roulette game is already in progress.' if server_redis.exists?(ROULETTE_KEY)
 
     event.message.reply('A game of roulette is about to start, get your bets in!')
     server_redis.set(ROULETTE_KEY, 0)
@@ -47,7 +47,7 @@ class RoulettePlugin < HandlerPlugin
   end
 
   def enter_roulette_bet(event, bet_str, wager)
-    return 'There are no active roulette games.' unless server_redis.exists(ROULETTE_KEY)
+    return 'There are no active roulette games.' unless server_redis.exists?(ROULETTE_KEY)
     return 'You have already bet on this game.' if roulette_bets.has_bet?(@user.id)
     return 'The game has already started.' if server_redis.get(ROULETTE_KEY) == '1'
 

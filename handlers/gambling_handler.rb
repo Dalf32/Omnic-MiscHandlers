@@ -55,7 +55,7 @@ class GamblingHandler < CommandHandler
     ensure_funds(event.message)
     streak = 1
 
-    if server_redis.exists(claim_key)
+    if server_redis.exists?(claim_key)
       streak = server_redis.get(claim_key).to_i + 1
       ttl = server_redis.ttl(claim_key)
       return 'You can only claim money once a day.' if ttl > ONE_DAY

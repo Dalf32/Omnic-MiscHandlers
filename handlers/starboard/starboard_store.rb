@@ -12,7 +12,7 @@ class StarboardStore
   end
 
   def enabled?
-    @redis.exists(:channel)
+    @redis.exists?(:channel)
   end
 
   def disable
@@ -28,7 +28,7 @@ class StarboardStore
   end
 
   def threshold
-    return 5 unless @redis.exists(:threshold)
+    return 5 unless @redis.exists?(:threshold)
 
     @redis.get(:threshold).to_i
   end
@@ -38,7 +38,7 @@ class StarboardStore
   end
 
   def emoji
-    return '⭐' unless @redis.exists(:emoji)
+    return '⭐' unless @redis.exists?(:emoji)
 
     # Pulling unicode emoji out of redis is a challenge...
     @redis.get(:emoji).encode('utf-8-hfs', 'utf-8').force_encoding('utf-8')

@@ -92,7 +92,7 @@ module GamblingHelper
   end
 
   def ensure_house_funds
-    return if server_redis.exists(HOUSE_MONEY_KEY)
+    return if server_redis.exists?(HOUSE_MONEY_KEY)
 
     lock_funds(HOUSE_MONEY_KEY) { server_redis.set(HOUSE_MONEY_KEY, 0) }
   end
