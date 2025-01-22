@@ -20,7 +20,7 @@ class RssHandler < CommandHandler
 
   command(:showrssfeeds, :show_feeds)
     .feature(:rss).max_args(1).pm_enabled(false).permissions(:manage_channels)
-    .usage('showrssfeeds [verbose]')
+    .usage('showrssfeeds [verbose|detail]')
     .description('Lists all RSS feeds being monitored.')
 
   command(:removerss, :remove_feed)
@@ -79,16 +79,19 @@ class RssHandler < CommandHandler
     feeds = feed_store.server_feeds(@server.id)
     return 'No RSS feeds configured.' if feeds.empty?
 
-    is_verbose = opt.first&.casecmp?('verbose')
+    is_verbose = opt.first&.casecmp?('verbose') ||
+      opt.first&.casecmp?('detail') || opt.first&.casecmp?('details')
 
     feeds.map do |feed|
+      formatted_time = feed.last_updated_at.nil? ? '' : "<t:#{feed.last_updated_at&.to_i}:f>"
+
       <<~FEED
-        #{feed.name.capitalize} - #{feed.feed}
-          Posted to #{bot.channel(feed.channel_id)&.name}
+        #{capitalize_words(feed.name)} - #{feed.feed}
+          Posting to #{bot.channel(feed.channel_id)&.mention}
           Updating every #{ChronicDuration.output(feed.frequency)}
           #{is_verbose ? "Filter: #{feed.filter_str}" : ''}
           #{is_verbose ? "Last post ID: #{feed.last_post_id}" : ''}
-          #{is_verbose ? "Last updated: #{feed.last_updated_at}" : ''}
+          #{is_verbose ? "Last updated: #{formatted_time}" : ''}
       FEED
     end.map(&:strip).join("\n\n")
   end
@@ -192,12 +195,12 @@ class RssHandler < CommandHandler
     log.debug("Posting RSS update for #{feed_name}")
 
     feed_links = format_feed_items(feed_items)
-    message = "New posts for #{feed_name.capitalize}:"
+    message = "New posts for #{capitalize_words(feed_name)}:"
 
     feed_links.each do |link|
       if message.length + link.length > 2_000
         bot.send_message(channel, message)
-        message = "New posts for #{feed_name.capitalize} (continued):"
+        message = "New posts for #{capitalize_words(feed_name)} (continued):"
       end
 
       message += link
@@ -276,5 +279,9 @@ class RssHandler < CommandHandler
     end
 
     Result.new(value: frequency)
+  end
+
+  def capitalize_words(text)
+    text.split(' ').map(&:capitalize).join(' ')
   end
 end
