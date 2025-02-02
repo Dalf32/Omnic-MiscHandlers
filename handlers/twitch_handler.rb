@@ -41,22 +41,20 @@ class TwitchHandler < CommandHandler
 
   def live(event)
     user = event.author
-
     return "Doesn't look like you're live... Make sure you've linked your Twitch account to Discord." unless streaming?(user)
 
-    get_stream_data(stream_username(user)).format_message
+    get_stream_data(stream_username(user))&.format_message
   end
 
   def show_live_users(event)
     live_users_list = live_users(event.server)
-
     return 'No one is live at the moment.' if live_users_list.empty?
 
     preamble_str = "There are currently #{live_users_list.length} users live"
     preamble_str = 'There is currently 1 user live' if live_users_list.length == 1
 
     preamble_str + "\n" +
-      live_users_list.map { |user| "#{user.display_name}: <#{user.stream_url}>" }
+      live_users_list.map { |user| "#{user.display_name}: <#{stream_url(user)}>" }
                      .join("\n")
   end
 
@@ -64,7 +62,6 @@ class TwitchHandler < CommandHandler
     handle_errors(event) do
       event.channel.start_typing
       stream_data = get_stream_data(twitch_name)
-
       return "There is no channel called #{twitch_name}" if stream_data.nil?
 
       stream_data.format_message
@@ -104,11 +101,10 @@ class TwitchHandler < CommandHandler
       return
     end
 
-    return if event.user.stream_url.nil?
+    return if stream_url(event.user).nil?
 
     is_reannounce = user_stream_store.title_cached?
     stream_data = handle_playing_status_change(event)
-
     return if stream_data.nil?
 
     @bot.servers.values.each do |server|
@@ -145,10 +141,7 @@ class TwitchHandler < CommandHandler
   end
 
   def streaming?(user)
-    stream_type = user.stream_type.nil? ? 0 : user.stream_type
-    stream_type = stream_type.is_a?(String) ? stream_type.to_i : stream_type
-
-    stream_type == 1 # This is the type used for Twitch streams
+    !user.activities.streaming.empty?
   end
 
   def live_users(server)
@@ -160,13 +153,20 @@ class TwitchHandler < CommandHandler
     bot.channel(announcements.channel, @server)
   end
 
+  def stream_url(user)
+    user.activities.streaming.first&.url
+  end
+
+  def stream_title(user)
+    user.activities.streaming.first&.name
+  end
+
   def stream_username(user)
-    user&.stream_url&.split('/')&.last
+    stream_url(user)&.split('/')&.last
   end
 
   def manage_stream_user(user, action)
     found_user = find_user(user)
-
     return found_user.error if found_user.failure?
 
     if action == :add
@@ -179,8 +179,8 @@ class TwitchHandler < CommandHandler
   end
 
   def handle_playing_status_change(event)
-    return nil if user_stream_store.cached_title == event.user.game
-    return nil if event.user.stream_url.nil?
+    return nil if user_stream_store.cached_title == stream_title(event.user)
+    return nil if stream_url(event.user).nil?
 
     count = 0
     stream_data = loop do
@@ -189,25 +189,24 @@ class TwitchHandler < CommandHandler
 
         count += 1
         stream_data = get_stream_data(stream_username(event.user))
-        break stream_data if stream_data.live?
+        break stream_data if stream_data&.live?
 
         log.debug("Twitch doesn't think the stream is live yet, sleeping for a bit then retrying.")
         sleep(30)
       rescue StandardError => e
         log.error(e.full_message)
-        log.debug("Event Type: #{event.type}; User: #{event.user.distinct}; Game: #{event.user.game}; Stream Username: #{event.user.stream_url}")
+        log.debug("Event Type: #{event.type}; User: #{event.user.distinct}; Game: #{stream_title(event.user)}; Stream Username: #{stream_url(event.user)}")
       end
     end
 
     return nil if user_stream_store.cached_title == stream_data.title
 
-    user_stream_store.cache_stream_title(event.user.game)
+    user_stream_store.cache_stream_title(stream_title(event.user))
     stream_data
   end
 
   def post_announcement(user, current_redis, stream_data, is_reannounce)
     announcements = AnnounceStore.new(current_redis)
-
     return unless announcements.enabled?
     return unless announcements.enabled_for_user?(user)
 
@@ -255,7 +254,6 @@ class TwitchHandler < CommandHandler
   def get_full_stream_data(stream_data)
     streams_result = twitch_client.get_streams(user_login: stream_data.login)
     stream_data.populate(streams_result.data)
-
     return unless stream_data.playing_game?
 
     stream_data.game = get_twitch_game(stream_data.game_id)
@@ -307,7 +305,6 @@ class TwitchHandler < CommandHandler
 
   def update_stream_announce_channel(channel)
     found_channel = find_channel(channel)
-
     return found_channel.error if found_channel.failure?
 
     announce_store.channel = found_channel.value
