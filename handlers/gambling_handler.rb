@@ -12,7 +12,7 @@ class GamblingHandler < CommandHandler
                      description: 'Allows users to wager currency in games of chance.'
 
   command(:money, :show_money)
-    .feature(:gambling).args_range(0, 1).usage('money [user]').pm_enabled(false)
+    .feature(:gambling).usage('money [user]').pm_enabled(false)
     .description('Shows how much money you have and your rank on the leaderboard.')
 
   command(:dailymoney, :claim_daily_money)
@@ -44,11 +44,11 @@ class GamblingHandler < CommandHandler
     :gambling
   end
 
-  def show_money(event, player = nil)
-    return show_money_other_user(event.message, player) unless player.nil?
+  def show_money(event, *player)
+    return show_money_other_user(event.message, player.join(' ')) unless player.empty?
 
     ensure_funds(event.message)
-    "#{@user.display_name}, you have #{user_funds.format_currency} and are rank #{user_rank_str} on the leaderboard!"
+    "#{@user.display_name}, you have #{user_funds.format_currency} and are #{user_rank_str} on the leaderboard!"
   end
 
   def claim_daily_money(event)
@@ -74,7 +74,7 @@ class GamblingHandler < CommandHandler
       table.add_column('Rank', formatter: -> (r) { '%03i' % r }) do |leader|
         user_rank(leader)
       end
-      table.add_column('Name') { |leader| @server.member(leader).display_name }
+      table.add_column('Name') { |leader| format_moneyleader_name(leader) }
       table.add_column('Money', formatter: :format_currency.to_proc) do |leader|
         user_funds(leader)
       end
@@ -135,7 +135,10 @@ class GamblingHandler < CommandHandler
   end
 
   def user_rank_str(user_id = @user.id)
-    funds_set.rank_str(user_id)
+    rank_str = funds_set.rank_str(user_id)
+    return 'unranked' if rank_str.nil?
+
+    "rank #{rank_str}"
   end
 
   def claim_key
@@ -151,7 +154,7 @@ class GamblingHandler < CommandHandler
 
     ensure_funds(message)
     user_funds_str = user_funds(user.id).format_currency
-    "#{user.display_name} has #{user_funds_str} and is rank #{user_rank_str(user.id)} on the leaderboard!"
+    "#{user.display_name} has #{user_funds_str} and is #{user_rank_str(user.id)} on the leaderboard!"
   end
 
   def daily_money_claim_amt(streak)
@@ -175,5 +178,12 @@ class GamblingHandler < CommandHandler
     else
       ''
     end
+  end
+
+  def format_moneyleader_name(user)
+    member = @server.member(user)
+    return '*missing user*' if member.nil?
+
+    member.display_name
   end
 end

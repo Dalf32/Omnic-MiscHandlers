@@ -28,11 +28,17 @@ class FundsSet
   alias_method :update_funds, :[]=
 
   def rank(user_id)
-    total_users - @funds_set.rank(user_id)
+    set_rank = @funds_set.rank(user_id)
+    return nil if set_rank.nil?
+
+    total_users - set_rank
   end
 
   def rank_str(user_id)
-    "#{rank(user_id)}/#{total_users}"
+    rank_num = rank(user_id)
+    return nil if rank_num.nil?
+
+    "#{rank_num}/#{total_users}"
   end
 
   def leaders(num = 10)
