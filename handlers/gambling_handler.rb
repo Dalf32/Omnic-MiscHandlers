@@ -119,7 +119,7 @@ class GamblingHandler < CommandHandler
     lock_funds(@user.id) do
       lock_funds(recv_user.id) do
         funds_set[@user.id] -= give_amount
-        funds_set[recv_user] += give_amount
+        funds_set[recv_user.id] += give_amount
       end
     end
 
