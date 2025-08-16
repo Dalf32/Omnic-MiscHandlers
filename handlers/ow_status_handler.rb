@@ -110,7 +110,7 @@ class OwStatusHandler < CommandHandler
 
     status_str = match.to_s(include_abbrev: false)
     status_str = live_data.live_match_bracket_title if match.teams_blank? && live_data.live_match_has_bracket?
-    update_bot_status('online', status_str, stream_url)
+    update_bot_status(activity: status_str, url: stream_url)
   end
 
   def sleep_thread(sleep_duration)

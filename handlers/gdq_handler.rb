@@ -196,7 +196,7 @@ class GdqHandler < CommandHandler
   end
 
   def set_run_status(run)
-    update_bot_status('online', run.to_s_short, config.stream_url)
+    update_bot_status(activity: run.to_s_short, url: config.stream_url)
   end
 
   def sleep_thread(sleep_duration)
