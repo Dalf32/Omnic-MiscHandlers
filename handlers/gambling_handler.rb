@@ -36,30 +36,6 @@ class GamblingHandler < CommandHandler
     .feature(:gambling).args_range(2, 2).usage('givemoney <user> <amount>').pm_enabled(false)
     .description('Gives some of your money to another player.')
 
-  command(:finduser, :finduser)
-
-  def finduser(event, *user_text)
-    user_text = user_text.join(' ')
-    event.message.reply("Input: '#{user_text}'")
-
-    found_user = find_user(user_text)
-    event.message.reply(found_user.failure? ? "Error: #{found_user.error}" : "Found user: #{found_user.value.display_name}")
-
-    found_members = @server.members.find_all { |m| m.distinct.casecmp?(user_text) }
-    event.message.reply("By distinct: #{found_members.map(&:display_name).join(', ')}")
-
-    found_members = @server.members.find_all { |m| m.nick&.casecmp?(user_text) }
-    event.message.reply("By nick: #{found_members.map(&:display_name).join(', ')}")
-
-    found_members = @server.members.find_all { |m| m.username.casecmp?(user_text) }
-    event.message.reply("By username: #{found_members.map(&:display_name).join(', ')}")
-
-    found_members = @server.members.find_all { |m| m.global_name&.casecmp?(user_text) }
-    event.message.reply("By global name: #{found_members.map(&:display_name).join(', ')}")
-
-    nil
-  end
-
   def config_name
     :gambling
   end
