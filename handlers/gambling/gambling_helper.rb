@@ -7,10 +7,10 @@ require_relative 'funds_set'
 module GamblingHelper
   HOUSE_MONEY_KEY = 'house' unless defined? HOUSE_MONEY_KEY
 
-  def lock_funds(user_id)
+  def lock_funds(user_id, server_id = @server.id)
     retval = nil
 
-    Omnic.mutex("gambling:#{@server.id}:#{user_id}").tap do |mutex|
+    Omnic.mutex("gambling:#{server_id}:#{user_id}").tap do |mutex|
       mutex.acquire
       retval = yield
     ensure
@@ -20,8 +20,8 @@ module GamblingHelper
     retval
   end
 
-  def funds_set
-    @funds_set ||= FundsSet.new(server_redis)
+  def funds_set(redis = server_redis)
+    @funds_set ||= FundsSet.new(redis)
   end
 
   def payout_str(payout, wager)

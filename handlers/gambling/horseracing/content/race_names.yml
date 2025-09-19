@@ -1,0 +1,75 @@
+prefixes:
+  - name: Barrowholm
+  - name: Dirty Fields
+  - name: Nine Pines
+  - name: Seven Pines
+  - name: Five Pines
+  - name: Three Pines
+  - name: Hundred Pines
+  - name: Silver
+  - name: Green Grass
+  - name: Golden Sun
+  - name: Hot Hoofs
+  - name: Big State
+  - name: Platinum
+  - name: Diamond
+  - name: Faust's Field
+  - name: Great Old One's
+  - name: Frozen Wasteland
+  - name: Rattlin' Bones Bay
+  - name: Mouse House
+  - name: Volcano
+  - name: Redline
+  - name: Fancy Fenceposts
+  - name: Gravelmunch
+  - name: Stonewash
+  - name: Cavern River
+  - name: Cobalt
+  - name: Vash's Vault
+  - name: Labyrinthine
+  - name: Mistland
+  - name: Crystal Cove
+  - name: Radiant Reef
+  - name: City of Twilight
+  - name: Cursed
+  - name: Moldy Track
+  - name: Gray Country
+  - name: Merry Mountain Mines
+  - name: Mister Strong's Big Top
+  - name: Little Infinity
+  - name: Fortuna Circus
+  - name: Titan Trees
+
+suffixes:
+  - name: Sprint
+    length: 2
+  - name: Handicap
+    length: 2
+  - name: Cup
+    length: 3
+  - name: Stakes
+    length: 3
+  - name: Oaks
+    length: 4
+  - name: Mile
+    length: 4
+  - name: Derby
+    length: 5
+  - name: Race
+    length: 5
+  - name: Downs
+    length: 6
+  - name: Classic
+    length: 6
+
+championship_suffixes:
+  - name: Trophy
+    length: 4
+  - name: Championship
+    length: 4
+  - name: International
+    length: 6
+  - name: World Cup
+    length: 8
+  - name: Grand Prix
+    length: 10

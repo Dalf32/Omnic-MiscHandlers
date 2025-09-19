@@ -1,0 +1,360 @@
+prefixes:
+  - name: Gold
+  - name: Silver
+  - name: Liquid
+  - name: Lazy
+  - name: Grass
+  - name: Solid
+  - name: Golden
+    repeatable: true
+  - name: Silvered
+    repeatable: true
+  - name: Gilded
+    repeatable: true
+  - name: Diamond
+  - name: Little
+    repeatable: true
+  - name: Big
+    repeatable: true
+  - name: Macho
+  - name: Lord
+  - name: Lady
+  - name: Shining
+  - name: Dull
+  - name: Dirty
+  - name: Queen
+  - name: King
+  - name: Brown
+  - name: Black
+  - name: Blonde
+  - name: Pale
+  - name: Tan
+  - name: Dark
+  - name: Bright
+  - name: Hoof
+  - name: Farrier
+  - name: Wonderful
+  - name: Vaulting
+  - name: Harrying
+  - name: Rude
+    repeatable: true
+  - name: Polite
+    repeatable: true
+  - name: Country
+  - name: Farrier Harrier
+    singular: true
+  - name: Tall Hat
+  - name: Small Hat
+  - name: Hearty
+    repeatable: true
+  - name: Lightning
+  - name: Brutish
+    repeatable: true
+  - name: Captain
+    repeatable: true
+  - name: General
+    repeatable: true
+  - name: Prototype
+    repeatable: true
+  - name: Light
+  - name: Star
+  - name: Starry
+    repeatable: true
+  - name: Moonshine
+    repeatable: true
+  - name: Lazy Susan
+    singular: true
+  - name: Free
+  - name: Bolting
+  - name: Frosty
+    repeatable: true
+  - name: Bony
+    repeatable: true
+  - name: Mister
+    repeatable: true
+  - name: Miss
+    repeatable: true
+  - name: Fancy
+    repeatable: true
+  - name: Frenzied
+    repeatable: true
+  - name: Quick
+    repeatable: true
+  - name: Slow
+    repeatable: true
+  - name: Red
+  - name: Phantom
+  - name: Jumbo
+    repeatable: true
+  - name: Lil'
+  - name: Whirlwind
+  - name: Blazing
+    repeatable: true
+  - name: Galloping
+    repeatable: true
+  - name: Serenity
+  - name: Hustling
+    repeatable: true
+  - name: Radiant
+  - name: Crimson
+  - name: Sprinting
+    repeatable: true
+  - name: Stormy
+    repeatable: true
+  - name: Strong
+  - name: Weak
+  - name: Lucky
+    repeatable: true
+  - name: Solar
+  - name: Lunar
+  - name: Cosmic
+  - name: Heroic
+    repeatable: true
+  - name: Flashy
+  - name: Sapphire
+  - name: Emerald
+  - name: Topaz
+  - name: Amethyst
+  - name: Ruby
+  - name: Citrine
+  - name: Aquamarine
+  - name: Opal
+  - name: Garnet
+  - name: Onyx
+  - name: Agate
+  - name: Apatite
+  - name: Spinel
+  - name: Jade
+  - name: Speedy
+    repeatable: true
+  - name: Duke
+    repeatable: true
+  - name: Duchess
+    repeatable: true
+  - name: Silent
+    repeatable: true
+  - name: Serenading
+  - name: Majestic
+    repeatable: true
+  - name: Harmonic
+    repeatable: true
+  - name: Dazzling
+    repeatable: true
+  - name: Dashing
+    repeatable: true
+  - name: Striding
+    repeatable: true
+  - name: Canter Banter
+    singular: true
+  - name: Giddy Up Giggles
+    singular: true
+  - name: Foal Play
+    singular: true
+  - name: Neigh Sayer
+    singular: true
+  - name: Jockey's
+    repeatable: true
+  - name: Harmony's
+    repeatable: true
+  - name: Hero's
+    repeatable: true
+  - name: Phantom's
+    repeatable: true
+  - name: Lord's
+    repeatable: true
+  - name: Lady's
+    repeatable: true
+  - name: Queen's
+    repeatable: true
+  - name: King's
+    repeatable: true
+  - name: Duke's
+    repeatable: true
+  - name: Duchess's
+    repeatable: true
+  - name: Captain's
+    repeatable: true
+  - name: General's
+    repeatable: true
+  - name: Hoofmaster 3000
+    singular: true
+  - name: Chardonneigh
+    singular: true
+  - name: Unstable
+    repeatable: true
+  - name: Blackjack
+    singular: true
+  - name: Man About Town
+    singular: true
+  - name: Chancellor
+  - name: First Place
+    singular: true
+  - name: Last Place
+    singular: true
+  - name: Go For Home
+    singular: true
+  - name: Neighbulous
+    singular: true
+  - name: Saddle Sores
+    singular: true
+  - name: Trot-tastic
+    singular: true
+  - name: Saddlebration
+    singular: true
+  - name: Canter Believe It
+    singular: true
+  - name: Hoofin' It
+    singular: true
+  - name: Trotally Radical
+    singular: true
+
+suffixes:
+  - name: Ship
+  - name: Galloper
+  - name: Wonder
+  - name: Vaulter
+  - name: Harrier
+  - name: Farrier
+    repeatable: true
+  - name: Queen
+  - name: King
+  - name: Country
+  - name: Hearted
+    repeatable: true
+  - name: Hoof
+  - name: Hoofed
+    repeatable: true
+  - name: Soldier
+  - name: General
+  - name: Shadow
+    repeatable: true
+  - name: Lord
+  - name: Lady
+  - name: Johnny
+  - name: Bumpkin
+  - name: Lightning
+  - name: Brute
+  - name: Captain
+  - name: Pants
+    repeatable: true
+  - name: Star
+  - name: Sun
+  - name: Moon
+  - name: Maverick
+  - name: Smoke
+  - name: Devil
+  - name: Smoky
+    repeatable: true
+  - name: Bolter
+  - name: Frosty
+  - name: Bones
+  - name: Mouse
+  - name: Glacier
+  - name: Railer
+  - name: Snail
+  - name: Viper
+  - name: Red
+    repeatable: true
+  - name: Hunter
+  - name: Huntress
+  - name: Killer
+  - name: Lover
+  - name: Blondie
+  - name: River
+  - name: Screamer
+  - name: Scourge
+  - name: Phantom
+  - name: Tumbler
+  - name: Baba Ghanoush
+  - name: Hummus
+  - name: Warrior
+  - name: Streaker
+  - name: Mischief
+  - name: Victory
+  - name: Streak
+  - name: Serenity
+  - name: Nova
+  - name: Nebula
+  - name: Hustle
+  - name: Hustler
+  - name: Comet
+  - name: Chaser
+  - name: Crimson
+    repeatable: true
+  - name: Radiance
+  - name: Echo
+  - name: Dawn
+    repeatable: true
+  - name: Dusk
+    repeatable: true
+  - name: Twilight
+    repeatable: true
+  - name: Honey
+  - name: Walker
+  - name: Sprinter
+  - name: Storm
+  - name: Flier
+  - name: Fire
+  - name: Water
+  - name: Ice
+  - name: Thunder
+  - name: Paragon
+  - name: Luck
+  - name: Messenger
+  - name: Express
+    repeatable: true
+  - name: Arrow
+  - name: Song
+  - name: Sonata
+  - name: Charger
+  - name: Trotter
+  - name: Hero
+  - name: Ace
+    repeatable: true
+  - name: Sapphire
+    repeatable: true
+  - name: Emerald
+    repeatable: true
+  - name: Topaz
+    repeatable: true
+  - name: Amethyst
+    repeatable: true
+  - name: Ruby
+    repeatable: true
+  - name: Citrine
+    repeatable: true
+  - name: Aquamarine
+    repeatable: true
+  - name: Opal
+    repeatable: true
+  - name: Garnet
+    repeatable: true
+  - name: Onyx
+    repeatable: true
+  - name: Agate
+    repeatable: true
+  - name: Apatite
+    repeatable: true
+  - name: Spinel
+    repeatable: true
+  - name: Jade
+    repeatable: true
+  - name: Appetite
+  - name: Speedy
+  - name: Duke
+  - name: Duchess
+  - name: Pacer
+  - name: Serenade
+  - name: Rhapsody
+  - name: Dasher
+  - name: Dancer
+  - name: Dance
+  - name: Stride
+  - name: Strider
+  - name: Solstice
+  - name: Affirmation
+  - name: Saddle
+    repeatable: true
+  - name: Folly
+  - name: Chancellor
+  - name: Merlot
