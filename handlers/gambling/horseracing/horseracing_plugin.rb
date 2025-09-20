@@ -5,6 +5,7 @@ require_relative 'naming_registrar'
 require_relative 'data/horse'
 require_relative 'data/race_bet'
 require_relative 'data_storage/horse_data_store'
+require_relative 'data_storage/news_data_store'
 require_relative 'data_storage/race_data_store'
 require_relative 'output/race_processor'
 require_relative 'output/standings_sorter'
@@ -24,7 +25,7 @@ class HorseracingPlugin < HandlerPlugin
 
   command(:raceday, :show_race_schedule)
     .feature(:horseracing).no_args.usage('raceday')
-    .description('Shows upcoming races that can be bet on.')
+    .description('Shows races coming up in the next 24 hours that can be bet on.')
 
   command(:racecard, :show_race_info)
     .feature(:horseracing).min_args(1).usage('racecard <race name/number>')
@@ -40,13 +41,17 @@ class HorseracingPlugin < HandlerPlugin
     .pm_enabled(false)
     .description('Enters a bet on the given race and ensures that race run is output in this channel.')
 
-  command(:racebethelp, :bet_help)
+  command(:racehelp, :show_help)
     .feature(:horseracing).no_args.usage('racebethelp')
-    .description('Displays help for placing horse racing bets.')
+    .description('Displays an explainer on how horse racing works.')
 
   command(:horseinfo, :show_horse_info)
     .feature(:horseracing).usage('horseinfo [horse name]')
     .description('Lists all currently active race horses or shows more detailed information about the given race horse.')
+
+  command(:racingnews, :show_race_news)
+    .feature(:horseracing).no_args.usage('racingnews')
+    .description('Shows horse racing events from the last 24 hours that you may have missed.')
 
   event(:ready, :init_horseracing)
 
@@ -143,12 +148,20 @@ class HorseracingPlugin < HandlerPlugin
     end
   end
 
-  def bet_help(_event)
+  def show_help(_event)
     <<~HELP
-      Three types of bets can be made:
-        Win - The horse must place first, max payout
-        Show - The horse must place first or second, moderate payout
-        Place - The horse must place first, second, or third, minimum payout
+      Races are scheduled to run on the hour and will be run silently by default. Entering a Bet or using the watchrace command will output that Race to the current channel.
+      You can see upcoming Races with the raceday command, and view the details of a single Race using the racecard command.
+      Bets are entered with the racebet command. You enter Bets one Horse at a time with the format <bet type> <wager amount>.
+
+      Three types of Bets can be made:
+        Win - The Horse must place first; max payout
+        Show - The Horse must place first or second; moderate payout
+        Place - The Horse must place first, second, or third; minimum payout
+
+      Horses are displayed with their stat rankings (S-F) in parenthesis, in the following order Speed-Power-Stamina. Their record is listed after as Races won/Races run, followed by their average placement (APl). Additional information on Horses can be shown with the horseinfo command.
+
+      The results of recent Races as well as other significant events in the past 24 hours can be seen with the racingnews command.
     HELP
   end
 
@@ -164,6 +177,12 @@ class HorseracingPlugin < HandlerPlugin
     return 'There is no record of a race horse by that name.' unless horse_data_store.exists?(horse_name)
 
     horse_data_store.horse(horse_name).to_s_detail
+  end
+
+  def show_race_news(_event)
+    news_data_store.get_news.to_a.map do |time, news_items|
+      "<t:#{time}:t>\n  #{news_items.join("\n  ")}"
+    end.join("\n")
   end
 
   private
@@ -191,6 +210,10 @@ class HorseracingPlugin < HandlerPlugin
 
   def race_data_store
     @race_data_store ||= RaceDataStore.new(global_redis, horse_data_store)
+  end
+
+  def news_data_store
+    @news_data_store ||= NewsDataStore.new(global_redis)
   end
 
   def find_upcoming_race(race_name_num)
@@ -224,16 +247,13 @@ class HorseracingPlugin < HandlerPlugin
       race = race_data_store.pop_next_race
 
       # run next race
-      announcer = race.bets.any? ? build_announcer : SilentAnnouncer.new
-      race_results = race.run(announcer)
+      race_results = race.run(build_announcer(race))
 
       ## report race to channels as needed
       post_race_results(race, race_results)
 
       # record results
-      race.record_results(race_results)
-      race_data_store.save_race(race.race)
-      horse_data_store.save_horses(race.horses)
+      record_results(race, race_results)
 
       # payout bets
       handle_and_post_payouts(race, race_results)
@@ -260,6 +280,7 @@ class HorseracingPlugin < HandlerPlugin
     active_horses.select(&:retired?).tap do |retired_horses|
       retired_horses.each do |retired_horse|
         horse_data_store.remove_active_horse(retired_horse)
+        news_data_store << "#{retired_horse.name} retired after #{retired_horse.record.races_run} races."
       end
     end
   end
@@ -271,6 +292,7 @@ class HorseracingPlugin < HandlerPlugin
         retired_horse.breed(horse_name).tap do |horse|
           horse_data_store.save_horse(horse)
           horse_data_store.add_active_horse(horse)
+          news_data_store << "#{horse.name}, bred from #{retired_horse.name}, is ready to race!"
         end
       end
     end
@@ -282,6 +304,7 @@ class HorseracingPlugin < HandlerPlugin
       Horse.breed(horse_name).tap do |horse|
         horse_data_store.save_horse(horse)
         horse_data_store.add_active_horse(horse)
+        news_data_store << "#{horse.name} was registered and is ready to race!"
       end
     end
   end
@@ -303,7 +326,9 @@ class HorseracingPlugin < HandlerPlugin
     end
   end
 
-  def build_announcer
+  def build_announcer(race)
+    return SilentAnnouncer.new if race.bets.empty?
+
     StandingsSorter.new
                    .then(StandingsClusterer.new)
                    .then(BasicAnnouncer.new)
@@ -338,6 +363,13 @@ class HorseracingPlugin < HandlerPlugin
       channel.send_message(message_text)
       channel.start_typing if start_typing
     end
+  end
+
+  def record_results(race, race_results)
+    race.record_results(race_results)
+    race_data_store.save_race(race.race)
+    horse_data_store.save_horses(race.horses)
+    news_data_store << "#{race_results.winner.name} won the #{race.name}"
   end
 
   def handle_and_post_payouts(race, race_results)

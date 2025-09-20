@@ -48,6 +48,10 @@ class RaceResults
     @leg_standings[-1] = leg_standings
   end
 
+  def winner
+    complete? ? standings.flatten.first : nil
+  end
+
   def add_cast(cast_text)
     @leg_casts.last << cast_text
   end
