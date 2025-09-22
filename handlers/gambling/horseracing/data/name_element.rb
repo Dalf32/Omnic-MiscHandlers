@@ -3,10 +3,10 @@
 class NameElement
   attr_reader :name, :length
 
-  def initialize(name:, singular: false, repeatable: false, length: 0)
+  def initialize(name:, singular: false, chainable: false, length: 0)
     @name = name
     @singular = singular
-    @repeatable = repeatable
+    @chainable = chainable
     @length = length
   end
 
@@ -14,8 +14,8 @@ class NameElement
     @singular
   end
 
-  def repeatable?
-    @repeatable
+  def chainable?
+    @chainable
   end
 
   def +(other_name)

@@ -6,16 +6,16 @@ prefixes:
   - name: Grass
   - name: Solid
   - name: Golden
-    repeatable: true
+    chainable: true
   - name: Silvered
-    repeatable: true
+    chainable: true
   - name: Gilded
-    repeatable: true
+    chainable: true
   - name: Diamond
   - name: Little
-    repeatable: true
+    chainable: true
   - name: Big
-    repeatable: true
+    chainable: true
   - name: Macho
   - name: Lord
   - name: Lady
@@ -37,79 +37,81 @@ prefixes:
   - name: Vaulting
   - name: Harrying
   - name: Rude
-    repeatable: true
+    chainable: true
   - name: Polite
-    repeatable: true
+    chainable: true
   - name: Country
   - name: Farrier Harrier
     singular: true
   - name: Tall Hat
   - name: Small Hat
   - name: Hearty
-    repeatable: true
+    chainable: true
   - name: Lightning
   - name: Brutish
-    repeatable: true
+    chainable: true
   - name: Captain
-    repeatable: true
+    chainable: true
   - name: General
-    repeatable: true
+    chainable: true
   - name: Prototype
-    repeatable: true
+    chainable: true
   - name: Light
   - name: Star
   - name: Starry
-    repeatable: true
+    chainable: true
   - name: Moonshine
-    repeatable: true
+    chainable: true
   - name: Lazy Susan
     singular: true
   - name: Free
   - name: Bolting
   - name: Frosty
-    repeatable: true
+    chainable: true
   - name: Bony
-    repeatable: true
+    chainable: true
   - name: Mister
-    repeatable: true
+    chainable: true
   - name: Miss
-    repeatable: true
+    chainable: true
+  - name: Missus
+    chainable: true
   - name: Fancy
-    repeatable: true
+    chainable: true
   - name: Frenzied
-    repeatable: true
+    chainable: true
   - name: Quick
-    repeatable: true
+    chainable: true
   - name: Slow
-    repeatable: true
+    chainable: true
   - name: Red
   - name: Phantom
   - name: Jumbo
-    repeatable: true
+    chainable: true
   - name: Lil'
   - name: Whirlwind
   - name: Blazing
-    repeatable: true
+    chainable: true
   - name: Galloping
-    repeatable: true
+    chainable: true
   - name: Serenity
   - name: Hustling
-    repeatable: true
+    chainable: true
   - name: Radiant
   - name: Crimson
   - name: Sprinting
-    repeatable: true
+    chainable: true
   - name: Stormy
-    repeatable: true
+    chainable: true
   - name: Strong
   - name: Weak
   - name: Lucky
-    repeatable: true
+    chainable: true
   - name: Solar
   - name: Lunar
   - name: Cosmic
   - name: Heroic
-    repeatable: true
+    chainable: true
   - name: Flashy
   - name: Sapphire
   - name: Emerald
@@ -125,25 +127,26 @@ prefixes:
   - name: Apatite
   - name: Spinel
   - name: Jade
+  - name: Pearl
   - name: Speedy
-    repeatable: true
+    chainable: true
   - name: Duke
-    repeatable: true
+    chainable: true
   - name: Duchess
-    repeatable: true
+    chainable: true
   - name: Silent
-    repeatable: true
+    chainable: true
   - name: Serenading
   - name: Majestic
-    repeatable: true
+    chainable: true
   - name: Harmonic
-    repeatable: true
+    chainable: true
   - name: Dazzling
-    repeatable: true
+    chainable: true
   - name: Dashing
-    repeatable: true
+    chainable: true
   - name: Striding
-    repeatable: true
+    chainable: true
   - name: Canter Banter
     singular: true
   - name: Giddy Up Giggles
@@ -153,35 +156,35 @@ prefixes:
   - name: Neigh Sayer
     singular: true
   - name: Jockey's
-    repeatable: true
+    chainable: true
   - name: Harmony's
-    repeatable: true
+    chainable: true
   - name: Hero's
-    repeatable: true
+    chainable: true
   - name: Phantom's
-    repeatable: true
+    chainable: true
   - name: Lord's
-    repeatable: true
+    chainable: true
   - name: Lady's
-    repeatable: true
+    chainable: true
   - name: Queen's
-    repeatable: true
+    chainable: true
   - name: King's
-    repeatable: true
+    chainable: true
   - name: Duke's
-    repeatable: true
+    chainable: true
   - name: Duchess's
-    repeatable: true
+    chainable: true
   - name: Captain's
-    repeatable: true
+    chainable: true
   - name: General's
-    repeatable: true
+    chainable: true
   - name: Hoofmaster 3000
     singular: true
   - name: Chardonneigh
     singular: true
   - name: Unstable
-    repeatable: true
+    chainable: true
   - name: Blackjack
     singular: true
   - name: Man About Town
@@ -207,6 +210,86 @@ prefixes:
     singular: true
   - name: Trotally Radical
     singular: true
+  - name: Tachyon
+  - name: Admirable
+    chainable: true
+  - name: Memory
+  - name: Bamboo
+  - name: Helios
+  - name: Hell's
+    chainable: true
+  - name: Bubble Gum
+    chainable: true
+  - name: Tactical
+    chainable: true
+  - name: Miraculous
+    chainable: true
+  - name: H.M.S.
+    chainable: true
+  - name: U.S.S.
+    chainable: true
+  - name: Sunday Morning
+  - name: Sunday Best
+    singular: true
+  - name: Bourbon
+  - name: Vodka
+  - name: Mr.
+    chainable: true
+  - name: Ms.
+    chainable: true
+  - name: Mrs.
+    chainable: true
+  - name: Mx.
+    chainable: true
+  - name: Crowned
+  - name: Uncrowned
+  - name: Windy
+    chainable: true
+  - name: Special
+    chainable: true
+  - name: Symbolic
+    chainable: true
+  - name: Smart
+    chainable: true
+  - name: Seeking the
+  - name: Hunting the
+  - name: Watching the
+  - name: Following the
+  - name: Leading the
+  - name: Beating the
+  - name: Racing the
+  - name: Losing to the
+  - name: Reaching the
+  - name: Jumping the
+  - name: Eating the
+  - name: Breaking the
+  - name: Fixing the
+  - name: Feeding the
+  - name: Kicking the
+  - name: Biting the
+  - name: Clearing the
+  - name: Tracking the
+  - name: Crossing the
+  - name: Topping the
+  - name: Bottoming the
+  - name: Doctor Whomst
+    singular: true
+  - name: Dr.
+    chainable: true
+  - name: Doctor
+    chainable: true
+  - name: Winning
+    chainable: true
+  - name: Losing
+    chainable: true
+  - name: 'No'
+    chainable: true
+  - name: 'False'
+    chainable: true
+  - name: 'True'
+    chainable: true
+  - name: One
+    chainable: true
 
 suffixes:
   - name: Ship
@@ -215,19 +298,19 @@ suffixes:
   - name: Vaulter
   - name: Harrier
   - name: Farrier
-    repeatable: true
+    chainable: true
   - name: Queen
   - name: King
   - name: Country
   - name: Hearted
-    repeatable: true
+    chainable: true
   - name: Hoof
   - name: Hoofed
-    repeatable: true
+    chainable: true
   - name: Soldier
   - name: General
   - name: Shadow
-    repeatable: true
+    chainable: true
   - name: Lord
   - name: Lady
   - name: Johnny
@@ -236,7 +319,7 @@ suffixes:
   - name: Brute
   - name: Captain
   - name: Pants
-    repeatable: true
+    chainable: true
   - name: Star
   - name: Sun
   - name: Moon
@@ -244,7 +327,7 @@ suffixes:
   - name: Smoke
   - name: Devil
   - name: Smoky
-    repeatable: true
+    chainable: true
   - name: Bolter
   - name: Frosty
   - name: Bones
@@ -254,7 +337,7 @@ suffixes:
   - name: Snail
   - name: Viper
   - name: Red
-    repeatable: true
+    chainable: true
   - name: Hunter
   - name: Huntress
   - name: Killer
@@ -280,15 +363,15 @@ suffixes:
   - name: Comet
   - name: Chaser
   - name: Crimson
-    repeatable: true
+    chainable: true
   - name: Radiance
   - name: Echo
   - name: Dawn
-    repeatable: true
+    chainable: true
   - name: Dusk
-    repeatable: true
+    chainable: true
   - name: Twilight
-    repeatable: true
+    chainable: true
   - name: Honey
   - name: Walker
   - name: Sprinter
@@ -302,7 +385,7 @@ suffixes:
   - name: Luck
   - name: Messenger
   - name: Express
-    repeatable: true
+    chainable: true
   - name: Arrow
   - name: Song
   - name: Sonata
@@ -310,35 +393,37 @@ suffixes:
   - name: Trotter
   - name: Hero
   - name: Ace
-    repeatable: true
+    chainable: true
   - name: Sapphire
-    repeatable: true
+    chainable: true
   - name: Emerald
-    repeatable: true
+    chainable: true
   - name: Topaz
-    repeatable: true
+    chainable: true
   - name: Amethyst
-    repeatable: true
+    chainable: true
   - name: Ruby
-    repeatable: true
+    chainable: true
   - name: Citrine
-    repeatable: true
+    chainable: true
   - name: Aquamarine
-    repeatable: true
+    chainable: true
   - name: Opal
-    repeatable: true
+    chainable: true
   - name: Garnet
-    repeatable: true
+    chainable: true
   - name: Onyx
-    repeatable: true
+    chainable: true
   - name: Agate
-    repeatable: true
+    chainable: true
   - name: Apatite
-    repeatable: true
+    chainable: true
   - name: Spinel
-    repeatable: true
+    chainable: true
   - name: Jade
-    repeatable: true
+    chainable: true
+  - name: Pearl
+    chainable: true
   - name: Appetite
   - name: Speedy
   - name: Duke
@@ -349,12 +434,109 @@ suffixes:
   - name: Dasher
   - name: Dancer
   - name: Dance
+  - name: Tap Dance
   - name: Stride
   - name: Strider
   - name: Solstice
   - name: Affirmation
   - name: Saddle
-    repeatable: true
+    chainable: true
   - name: Folly
   - name: Chancellor
   - name: Merlot
+  - name: Tachyon
+  - name: Avenger
+  - name: Groove
+  - name: Messiah
+  - name: Memory
+  - name: Belief
+  - name: San
+  - name: Kun
+  - name: Chan
+  - name: Senapi
+  - name: Sensei
+  - name: Sama
+  - name: Helios
+  - name: Bubble Gum
+  - name: Heart
+    chainable: true
+  - name: Tack
+  - name: Tactics
+  - name: Flash
+  - name: Barb
+  - name: Amazon
+    chainable: true
+  - name: Miracle
+  - name: Halo
+  - name: Jumper
+  - name: Sunday
+    chainable: true
+  - name: Monday
+    chainable: true
+  - name: Tuesday
+    chainable: true
+  - name: Wednesday
+    chainable: true
+  - name: Thursday
+    chainable: true
+  - name: Friday
+    chainable: true
+  - name: Saturday
+    chainable: true
+  - name: Bourbon
+    chainable: true
+  - name: Vodka
+    chainable: true
+  - name: Street
+  - name: Avenue
+  - name: Boulevard
+  - name: Lane
+  - name: Drive
+  - name: Road
+  - name: Fiesta
+  - name: Universe
+  - name: Flower
+    chainable: true
+  - name: Festival
+  - name: Fest
+  - name: Laurel
+  - name: Crown
+  - name: Tiara
+  - name: Headdress
+  - name: Sky
+  - name: Wind
+  - name: Windy
+    chainable: true
+  - name: Day
+  - name: Week
+  - name: Month
+  - name: Year
+  - name: Symbol
+  - name: Falcon
+    chainable: true
+  - name: Eagle
+    chainable: true
+  - name: Hawk
+    chainable: true
+  - name: Eye
+  - name: Smarts
+  - name: Pinnacle
+  - name: Shark
+    chainable: true
+  - name: Whale
+    chainable: true
+  - name: Opera
+  - name: Shuttle
+  - name: Plane
+  - name: Vessel
+  - name: City
+  - name: Town
+  - name: Winner
+  - name: Loser
+  - name: Ticket
+  - name: Turbo
+    chainable: true
+  - name: Twin
+    chainable: true
+  - name: Cross
+  - name: One

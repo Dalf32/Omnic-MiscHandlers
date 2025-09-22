@@ -24,12 +24,12 @@ class NamingRegistrar
   def total_combinations
     singular_horse_names = @horse_prefixes.count(&:singular?)
     combo_horse_prefixes = @horse_prefixes.size - singular_horse_names
-    repeatable_horse_prefixes = @horse_prefixes.count(&:repeatable?)
-    repeatable_horse_suffixes = @horse_suffixes.count(&:repeatable?)
+    chainable_horse_prefixes = @horse_prefixes.count(&:chainable?)
+    chainable_horse_suffixes = @horse_suffixes.count(&:chainable?)
 
     horse_name_combos = singular_horse_names +
-                        repeatable_horse_prefixes * combo_horse_prefixes * @horse_suffixes.size +
-                        repeatable_horse_suffixes * @horse_suffixes.size * combo_horse_prefixes
+                        chainable_horse_prefixes * combo_horse_prefixes * @horse_suffixes.size +
+                        chainable_horse_suffixes * @horse_suffixes.size * combo_horse_prefixes
     race_name_combos = @race_prefixes.size * @race_suffixes.size +
                        @race_prefixes.size * @race_champ_suffixes.size
 
@@ -42,9 +42,9 @@ class NamingRegistrar
 
     suffix = @horse_suffixes.sample
 
-    if prefix.repeatable? && rand > 0.5
+    if prefix.chainable? && rand > 0.5
       prefix += @horse_prefixes.sample
-    elsif suffix.repeatable? && rand > 0.5
+    elsif suffix.chainable? && rand > 0.5
       suffix += @horse_suffixes.sample
     end
 

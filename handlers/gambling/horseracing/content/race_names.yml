@@ -7,6 +7,7 @@ prefixes:
   - name: Three Pines
   - name: Hundred Pines
   - name: Silver
+  - name: Gold
   - name: Green Grass
   - name: Golden Sun
   - name: Hot Hoofs
@@ -39,6 +40,65 @@ prefixes:
   - name: Little Infinity
   - name: Fortuna Circus
   - name: Titan Trees
+  - name: Grand Canal
+  - name: Dry River Harbor
+  - name: Boslo
+  - name: Gaulterre Point
+  - name: Great Kingsland's Green Field Landing
+  - name: Willy's Wharf
+  - name: Appleton Shallows
+  - name: Bum Basin
+  - name: Rum Raisin
+  - name: Momma's
+  - name: Shallow Depths
+  - name: Swallow's Spit
+  - name: Ephemeris
+  - name: Great Clock
+  - name: Solana Galaxy
+  - name: Grimilsholt
+  - name: Camp Boulderfist
+  - name: Entropic
+  - name: Lost Island
+  - name: Atoll of Whispers
+  - name: Uncrowned King's
+  - name: Rat Sores Racetrack
+  - name: Fiery Eye
+  - name: Weeping Winter
+  - name: Null Reference
+  - name: Mossycup
+  - name: Bristly Needle
+  - name: Northern Pigeon
+  - name: Pale Horse
+  - name: Ape Together
+  - name: Pin Canoe
+  - name: Big Corn Cob
+  - name: Twin Hill Climb
+  - name: Carrot Bushel
+  - name: Blue Hot Victory
+  - name: Running Twins'
+  - name: Pinnacle
+  - name: Pro Junior
+  - name: Accomplished Beast League
+  - name: Kenhall
+  - name: Freecard
+  - name: Blacktomb
+  - name: Goldwell
+  - name: Sweetbeard
+  - name: Thickbrew Lite
+  - name: Orange Sheep
+  - name: Winner Winner Chicken Dinner
+  - name: Wheatmill
+  - name: Contrapositive
+  - name: Jolly Jank
+  - name: Astra Astralis
+  - name: Large Ring Track
+  - name: Gnarly Onions
+  - name: Western Petal
+  - name: Malachite Frog
+  - name: Ribbon Accolade
+  - name: Velvet's Pride
+  - name: Laughing Pony
+  - name: Stingy Stampede
 
 suffixes:
   - name: Sprint
