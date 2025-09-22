@@ -33,3 +33,12 @@ HorseracingRules.a_rank_range = 0.8..0.9
 HorseracingRules.b_rank_range = 0.65..0.8
 HorseracingRules.c_rank_range = 0.5..0.65
 HorseracingRules.d_rank_range = 0.35..0.5
+HorseracingRules.injury_chance = 0.05
+HorseracingRules.injury_speed = 10
+HorseracingRules.injury_map = [[1, 'career-ending'], [0.4, 'severe'],
+                               [0.25, 'serious'], [0.25, 'serious'],
+                               [0.2, 'major'], [0.2, 'major'], [0.2, 'major'],
+                               [0.1, 'moderate'], [0.1, 'moderate'],
+                               [0.1, 'moderate'], [0.1, 'moderate'],
+                               [0.05, 'minor'], [0.05, 'minor'], [0.05, 'minor'],
+                               [0.05, 'minor']]

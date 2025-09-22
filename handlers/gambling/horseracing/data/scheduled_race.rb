@@ -43,11 +43,12 @@ class ScheduledRace < SimpleDelegator
 
   def run(processor)
     race_results = RaceResults.new(length)
+    injury_leg = rand < HorseracingRules.injury_chance ? rand(length) : -1
 
-    length.times.each do
-      2.times do
-        @entrants.each { |horse| horse.run_furlong }
-      end
+    length.times.each do |leg|
+      @entrants.each { |horse| horse.run_furlong }
+      injure_horse if leg == injury_leg
+      @entrants.each { |horse| horse.run_furlong }
 
       race_results << @entrants
       processor.process_leg(race_results)
@@ -71,5 +72,13 @@ class ScheduledRace < SimpleDelegator
   def self.from_hash(sched_race_hash)
     sched_race_hash[:bets] = sched_race_hash[:bets].map { |bet_hash| RaceBet.from_hash(bet_hash) }
     ScheduledRace.new(**sched_race_hash)
+  end
+
+  private
+
+  def injure_horse
+    injured_horse = @entrants.sample
+    injury = HorseracingRules.injury_map.sample
+    injured_horse.injure(*injury)
   end
 end

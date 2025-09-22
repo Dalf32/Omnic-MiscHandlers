@@ -37,6 +37,10 @@ class Horse
     @record.races_run >= @career_length
   end
 
+  def injure(impact)
+    @career_length -= (@career_length * impact).to_i
+  end
+
   def should_breed?
     @record.average_placement <= HorseracingRules.breeding_apl_requirement
   end
@@ -98,15 +102,19 @@ class Horse
   private
 
   def speed_percent
-    @speed / (HorseracingRules.speed_range.min + HorseracingRules.speed_range.max).to_f
+    calc_percent(@speed, HorseracingRules.speed_range)
   end
 
   def power_percent
-    @power / (HorseracingRules.power_range.min + HorseracingRules.power_range.max).to_f
+    calc_percent(@power, HorseracingRules.power_range)
   end
 
   def stamina_percent
-    @stamina / (HorseracingRules.stamina_range.min + HorseracingRules.stamina_range.max).to_f
+    calc_percent(@stamina, HorseracingRules.stamina_range)
+  end
+
+  def calc_percent(stat, stat_range)
+    (stat - stat_range.min) / (stat_range.max - stat_range.min).to_f
   end
 
   def rank_str(rank_percent)

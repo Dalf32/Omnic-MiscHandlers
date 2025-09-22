@@ -8,9 +8,10 @@ class NewsDataStore < DataStore
   end
 
   def push_news(news_item)
-    time = Time.now.to_i
-    @redis.rpush(time, news_item)
-    @redis.expireat(time, time + news_lifetime)
+    this_minute = Time.new(Time.now.year, Time.now.month, Time.now.day,
+                           Time.now.hour, Time.now.min).to_i
+    @redis.rpush(this_minute, news_item)
+    @redis.expireat(this_minute, this_minute + news_lifetime)
   end
   alias << push_news
 

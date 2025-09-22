@@ -3,7 +3,7 @@
 require 'delegate'
 
 class RacingHorse < SimpleDelegator
-  attr_reader :distance
+  attr_reader :distance, :injury
   attr_accessor :odds
 
   def self.stable(horse)
@@ -44,10 +44,20 @@ class RacingHorse < SimpleDelegator
     (horse.stamina * @stamina_adjust).to_i
   end
 
+  def injure(impact, severity = nil)
+    horse.injure(impact)
+    @injury = severity
+  end
+
+  def injured?
+    !@injury.nil?
+  end
+
   def run_furlong
     prev_speed = @current_speed
     @current_speed = @remaining_stamina.zero? ? @current_speed - (power / 2) : @current_speed + power
     @current_speed = @current_speed.clamp(power, speed)
+    @current_speed = HorseracingRules.injury_speed if injured?
     @distance += (prev_speed + @current_speed) / 2
     @remaining_stamina = (@remaining_stamina - 1).clamp(0, stamina)
     @distance

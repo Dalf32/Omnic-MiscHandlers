@@ -8,10 +8,11 @@ require_relative 'data_storage/horse_data_store'
 require_relative 'data_storage/news_data_store'
 require_relative 'data_storage/race_data_store'
 require_relative 'output/race_processor'
+require_relative 'output/basic_announcer'
+require_relative 'output/injury_announcer'
+require_relative 'output/podium_announcer'
 require_relative 'output/standings_sorter'
 require_relative 'output/standings_clusterer'
-require_relative 'output/basic_announcer'
-require_relative 'output/podium_announcer'
 
 class HorseracingPlugin < HandlerPlugin
   include GamblingHelper
@@ -91,7 +92,7 @@ class HorseracingPlugin < HandlerPlugin
     found_race << watch
     race_data_store.save_scheduled_race(race_index, found_race)
 
-    "OK, #{found_race.name} will be announced here <t:#{found_race.time}:R>"
+    "OK, the #{found_race.name} will be announced here <t:#{found_race.time}:R>"
   end
 
   def bet_on_race(event, *race_name_num)
@@ -144,7 +145,7 @@ class HorseracingPlugin < HandlerPlugin
       race_data_store.save_scheduled_race(race_index, found_race)
       funds_set[event.message.author.id] -= wager_amt
 
-      "#{bet} entered for #{found_race.name}"
+      "#{bet} entered for the #{found_race.name}"
     end
   end
 
@@ -170,7 +171,8 @@ class HorseracingPlugin < HandlerPlugin
       event.channel.start_typing
 
       active_horses = horse_data_store.active_horses
-      return "Active Horses:\n  #{active_horses.join("\n  ")}"
+                                      .sort_by { |horse| [horse.record.races_run * -1, horse.name] }
+      return "Active Horses (#{active_horses.count} total):\n  #{active_horses.join("\n  ")}"
     end
 
     horse_name = horse_name.join(' ')
@@ -180,7 +182,7 @@ class HorseracingPlugin < HandlerPlugin
   end
 
   def show_race_news(_event)
-    news_data_store.get_news.to_a.map do |time, news_items|
+    news_data_store.get_news.to_a.sort_by(&:first).map do |time, news_items|
       "<t:#{time}:t>\n  #{news_items.join("\n  ")}"
     end.join("\n")
   end
@@ -221,7 +223,13 @@ class HorseracingPlugin < HandlerPlugin
     race_num = race_name.to_i
     upcoming_races = race_data_store.schedule.upcoming_races
 
-    found_race = race_num.zero? ? upcoming_races.find { |race| race.name.casecmp?(race_name) } : upcoming_races[race_num - 1]
+    if race_num.zero?
+      found_race = upcoming_races.find { |race| race.name.casecmp?(race_name) }
+      similar_races = upcoming_races.select { |race| race.name.downcase.start_with?(race_name.downcase) }
+      found_race = similar_races.first if found_race.nil? && similar_races.count == 1
+    else
+      found_race = upcoming_races[race_num - 1]
+    end
     return nil if found_race.nil?
 
     [found_race, race_num.zero? ? upcoming_races.index(found_race) : race_num - 1]
@@ -269,6 +277,7 @@ class HorseracingPlugin < HandlerPlugin
   def get_and_manage_horses
     active_horses = horse_data_store.active_horses
     ## retire and breed as needed
+    injure_horses(active_horses)
     retired_horses = retire_horses(active_horses)
     active_horses -= retired_horses
     active_horses += breed_retired_horses(retired_horses)
@@ -276,11 +285,21 @@ class HorseracingPlugin < HandlerPlugin
     active_horses + breed_new_horses(active_horses.size)
   end
 
+  def injure_horses(active_horses)
+    return unless rand < HorseracingRules.injury_chance
+
+    injury = HorseracingRules.injury_map.sample
+    injured_horse = active_horses.sample
+    injured_horse.injure(injury.first)
+    horse_data_store.save_horse(injured_horse)
+    news_data_store << "#{injured_horse.name} suffered a #{injury.last} injury during training."
+  end
+
   def retire_horses(active_horses)
     active_horses.select(&:retired?).tap do |retired_horses|
       retired_horses.each do |retired_horse|
         horse_data_store.remove_active_horse(retired_horse)
-        news_data_store << "#{retired_horse.name} retired after #{retired_horse.record.races_run} races."
+        news_data_store << "#{retired_horse.name} retired after competing in #{retired_horse.record.races_run} races."
       end
     end
   end
@@ -332,13 +351,14 @@ class HorseracingPlugin < HandlerPlugin
     StandingsSorter.new
                    .then(StandingsClusterer.new)
                    .then(BasicAnnouncer.new)
+                   .then(InjuryAnnouncer.new)
                    .then(PodiumAnnouncer.new)
   end
 
   def post_race_results(race, race_results)
     return unless race.bets?
 
-    race_preamble = "The horses are going down to the gates, ready to start the **#{race.name}**..."
+    race_preamble = "The horses are going down to the gates, ready to start the **#{race.to_s_short}**..."
     post_to_race_channels(race, race_preamble, start_typing: true)
     sleep_thread(config.horseracing.leg_delay)
 
@@ -369,7 +389,11 @@ class HorseracingPlugin < HandlerPlugin
     race.record_results(race_results)
     race_data_store.save_race(race.race)
     horse_data_store.save_horses(race.horses)
-    news_data_store << "#{race_results.winner.name} won the #{race.name}"
+    news_data_store << "#{race_results.winner.name} won the #{race.to_s_short}"
+
+    race_results.injuries.each do |injured_horse|
+      news_data_store << "#{injured_horse.name} suffered a #{injured_horse.injury} injury during the #{race.to_s_short}"
+    end
   end
 
   def handle_and_post_payouts(race, race_results)
@@ -406,7 +430,7 @@ class HorseracingPlugin < HandlerPlugin
 
     # warn race is about to start unless it is set to 0
     unless race_warning.zero? || sleep_time <= 0
-      post_to_race_channels(next_race, "#{next_race.name} is starting soon!")
+      post_to_race_channels(next_race, "The #{next_race.to_s_short} is starting soon!")
       sleep_thread(race_warning)
     end
   end

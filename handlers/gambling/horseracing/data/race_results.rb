@@ -59,4 +59,12 @@ class RaceResults
   def casts
     @leg_casts
   end
+
+  def injury?
+    standings.flatten.any?(&:injured?)
+  end
+
+  def injuries
+    standings.flatten.select(&:injured?)
+  end
 end
