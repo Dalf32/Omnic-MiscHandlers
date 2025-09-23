@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'chronic_duration'
+require 'pathname'
 require_relative 'naming_registrar'
 require_relative 'data/horse'
 require_relative 'data/race_bet'
