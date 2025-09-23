@@ -74,9 +74,10 @@ module GamblingHelper
   end
 
   def wager_from_str(wager)
-    return user_funds if wager.casecmp('all').zero?
-    return user_funds / 2 if wager.casecmp('half').zero?
-    return rand(user_funds) + 1 if wager.casecmp('random').zero?
+    return 0 if wager.nil? || wager.empty?
+    return user_funds if wager.casecmp?('all')
+    return user_funds / 2 if wager.casecmp?('half')
+    return rand(user_funds) + 1 if wager.casecmp?('random')
 
     amount_from_str(wager)
   end
