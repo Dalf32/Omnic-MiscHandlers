@@ -182,10 +182,21 @@ class HorseracingPlugin < HandlerPlugin
     horse_data_store.horse(horse_name).to_s_detail
   end
 
-  def show_race_news(_event)
+  def show_race_news(event)
+    news_str = ''
+
     news_data_store.get_news.to_a.sort_by(&:first).map do |time, news_items|
       "<t:#{time}:t>\n  #{news_items.join("\n  ")}"
-    end.join("\n")
+    end.each do |news_block|
+      if news_str.length + news_block.length + 2 >= 2000
+        event.message.reply(news_str)
+        news_str = ''
+      end
+
+      news_str += "\n#{news_block}"
+    end
+
+    news_str.empty? ? nil : news_str
   end
 
   private
