@@ -199,7 +199,7 @@ class HorseracingPlugin < HandlerPlugin
   end
 
   def load_naming_data
-    yaml_opts = { permitted_classes: [Symbol, Range], symbolize_names: true, freeze: true }
+    yaml_opts = { symbolize_names: true, freeze: true }
     horse_name_data = YAML.load_file(content_folder + 'horse_names.yml', **yaml_opts)
     race_name_data = YAML.load_file(content_folder + 'race_names.yml', **yaml_opts)
 
