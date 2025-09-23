@@ -19,7 +19,7 @@ class NameElement
   end
 
   def +(other_name)
-    "#{self} #{other_name}"
+    CompoundNameElement.new(self, other_name)
   end
   alias combine +
 
@@ -28,11 +28,18 @@ class NameElement
   end
 end
 
-module StringExt
-  def +(other_name)
-    return "#{self} #{other_name}" if other_name.is_a?(NameElement)
+class CompoundNameElement < NameElement
+  def initialize(*name_elements)
+    @name_elements = name_elements
+  end
 
-    super(other_name)
+  def +(other_name)
+    @name_elements << other_name
+    self
+  end
+  alias combine +
+
+  def to_s
+    @name_elements.join(' ')
   end
 end
-String.prepend(StringExt)

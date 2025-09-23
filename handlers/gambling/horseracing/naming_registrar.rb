@@ -48,7 +48,7 @@ class NamingRegistrar
       suffix += @horse_suffixes.sample
     end
 
-    prefix + suffix
+    (prefix + suffix).to_s
   end
 
   def valid_horse_name?(name, horse_data_store)
@@ -75,7 +75,7 @@ class NamingRegistrar
   def generate_race_name(is_championship)
     prefix = @race_prefixes.sample
     suffix = is_championship ? @race_champ_suffixes.sample : @race_suffixes.sample
-    [prefix + suffix, suffix.length]
+    [(prefix + suffix).to_s, suffix.length]
   end
 
   def valid_race_name?(name, scheduled_races)
