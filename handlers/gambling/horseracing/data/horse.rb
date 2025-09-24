@@ -71,7 +71,9 @@ class Horse
 
   def to_s_detail
     [
-      to_s,
+      "**#{@name}**",
+      "Speed: #{speed_rank}; Power: #{power_rank}; Stamina: #{stamina_rank}",
+      @record.to_s_detail('  '),
       "Status: #{retired? ? 'Retired' : 'Active'}",
       "Parentage: #{@parent.nil? ? '*New Breed*' : @parent}"
     ].join("\n  ")

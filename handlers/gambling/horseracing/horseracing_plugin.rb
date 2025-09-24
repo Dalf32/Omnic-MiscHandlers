@@ -249,7 +249,8 @@ class HorseracingPlugin < HandlerPlugin
 
   def format_race_for_sched(race, event)
     is_watched = race.bets.any? { |bet| bet.server == event.message.server && bet.channel == event.message.channel }
-    "#{race.to_s_short} @<t:#{race.time}:f> #{is_watched ? '\👁' : ''}"
+    annotations = "#{race.championship? ? '\🏆' : ''} #{is_watched ? '\👁' : ''}"
+    "#{race.to_s_short} @<t:#{race.time}:f> #{annotations}"
   end
 
   def run_races

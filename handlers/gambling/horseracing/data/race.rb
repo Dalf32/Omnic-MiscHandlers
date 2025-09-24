@@ -33,7 +33,7 @@ class Race
     sorted_horses = []
     results.standings.flatten.each.with_index do |entrant, placement|
       horse = @horses.find { |h| h.eql?(entrant) }
-      horse.record.add_result(placement + 1)
+      horse.record.add_result(self, placement + 1)
       sorted_horses << horse
     end
 
