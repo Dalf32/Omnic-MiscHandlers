@@ -88,6 +88,8 @@ class GamblingHandler < CommandHandler
   end
 
   def add_money(event, player, amount)
+    return add_house_money(amount) if player.casecmp?('house')
+
     found_user = find_user(player)
     return found_user.error if found_user.failure?
 
@@ -185,5 +187,13 @@ class GamblingHandler < CommandHandler
     return '*missing user*' if member.nil?
 
     member.display_name
+  end
+
+  def add_house_money(amount)
+    add_amount = amount_from_str(amount)
+    return 'Invalid amount.' if add_amount.zero?
+
+    update_house_funds(add_amount)
+    "#{add_amount.format_currency} has been added to the House."
   end
 end
