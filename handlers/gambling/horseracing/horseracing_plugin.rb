@@ -30,17 +30,15 @@ class HorseracingPlugin < HandlerPlugin
     .description('Shows races coming up in the next 24 hours that can be bet on.')
 
   command(:racecard, :show_race_info)
-    .feature(:horseracing).min_args(1).usage('racecard <race name/number>')
+    .feature(:horseracing).usage('racecard [race name/number]')
     .description('Shows detailed information about an upcoming race.')
 
   command(:watchrace, :watch_race)
-    .feature(:horseracing).min_args(1).usage('watchrace <race name/number>')
-    .pm_enabled(false)
+    .feature(:horseracing).usage('watchrace [race name/number]').pm_enabled(false)
     .description('Ensures that the given race run is output in this channel, even if there are no bets.')
 
   command(:racebet, :bet_on_race)
-    .feature(:horseracing).min_args(1).usage('racebet <race name/number>')
-    .pm_enabled(false)
+    .feature(:horseracing).usage('racebet [race name/number]').pm_enabled(false)
     .description('Enters a bet on the given race and ensures that race run is output in this channel.')
 
   command(:racehelp, :show_help)
@@ -232,8 +230,8 @@ class HorseracingPlugin < HandlerPlugin
   end
 
   def find_upcoming_race(race_name_num)
-    race_name = race_name_num.join(' ')
-    race_num = race_name.to_i
+    race_name = race_name_num.join(' ') unless race_name_num.empty?
+    race_num = race_name_num.empty? ? 1 : race_name.to_i
     upcoming_races = race_data_store.schedule.upcoming_races
 
     if race_num.zero?
