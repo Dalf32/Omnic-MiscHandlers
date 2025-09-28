@@ -102,14 +102,14 @@ class HorseracingPlugin < HandlerPlugin
     return 'No matching race on the schedule' if found_race.nil?
 
     # prompt for horse
-    event.message.reply('Which horse would you like to bet on?')
+    event.message.reply("Which horse in the #{found_race.name} would you like to bet on?")
     horse_name = event.message.author.await!(timeout: 30)&.text
     found_horse = found_race.horses.find { |horse| horse.name.casecmp?(horse_name) }
     return 'Bet cancelled.' if horse_name.nil? || horse_name.empty?
     return 'No horse by that name is running in this race.' if found_horse.nil?
 
     # prompt for bet
-    event.message.reply('What is your wager?')
+    event.message.reply("What is your wager on #{found_horse.name}?")
     wager = event.message.author.await!(timeout: 30)&.text
     return 'Bet cancelled.' if wager.nil? || wager.empty?
 
