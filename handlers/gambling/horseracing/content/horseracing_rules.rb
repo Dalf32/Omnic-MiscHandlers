@@ -10,7 +10,7 @@ HorseracingRules.stamina_range = 2..12
 HorseracingRules.career_length_range = 10..60 # num races
 HorseracingRules.race_entrant_range = 6..12
 HorseracingRules.championship_entrant_range = 12..20
-HorseracingRules.race_day_variance = 0.85..1.15
+HorseracingRules.race_day_variance = 0.8..1.2
 HorseracingRules.schedule_display_window = 24 # in hours
 HorseracingRules.schedule_time_range = 3..12 # in hours
 HorseracingRules.championship_frequency = 10 # num races between championships
@@ -43,3 +43,4 @@ HorseracingRules.injury_map = [[1, 'career-ending'], [0.4, 'severe'],
                                [0.05, 'minor'], [0.05, 'minor'], [0.05, 'minor'],
                                [0.05, 'minor']]
 HorseracingRules.house_take = 15 # % of wagered funds
+HorseracingRules.morning_line_opinion = 6 # odds adjusted up by double this, and down by this amt

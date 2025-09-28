@@ -77,8 +77,8 @@ class RacingSchedule
     num_opinions = race.horses.count / 4
 
     num_opinions.times do
-      top_half.sample.odds += 6
-      bottom_half.sample.odds -= 6
+      top_half.sample.odds += HorseracingRules.morning_line_opinion * 2
+      bottom_half.sample.odds -= HorseracingRules.morning_line_opinion
     end
 
     race.entrants.sort_by!(&:odds).reverse!
