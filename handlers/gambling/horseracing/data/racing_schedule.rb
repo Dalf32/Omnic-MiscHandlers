@@ -67,7 +67,7 @@ class RacingSchedule
   end
 
   def create_morning_line(race)
-    line_cap = 115 + race.horses.count
+    line_cap = 100 + race.horses.count + HorseracingRules.house_take
     race_score = race.horses.map(&:score).sum
     race.entrants.each { |horse| horse.odds = horse.score / race_score * line_cap }
     race.entrants.sort_by!(&:odds).reverse!

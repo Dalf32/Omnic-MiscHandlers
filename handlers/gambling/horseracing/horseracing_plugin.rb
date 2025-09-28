@@ -145,6 +145,7 @@ class HorseracingPlugin < HandlerPlugin
       found_race << bet
       race_data_store.save_scheduled_race(race_index, found_race)
       funds_set[event.message.author.id] -= wager_amt
+      update_house_funds(wager_amt)
 
       "#{bet} entered for the #{found_race.name}"
     end
@@ -412,6 +413,7 @@ class HorseracingPlugin < HandlerPlugin
   def handle_and_post_payouts(race, race_results)
     return unless race.bets?
 
+    house_take_factor = 1 - (HorseracingRules.house_take / 100.0)
     filtered_bets = race.bets.filter { |bet| bet.win?(race_results) }
     filtered_bets.group_by { |bet| "#{bet.server}.#{bet.channel}" }.each do |_, bets|
       server = Omnic.bot.server(bets.first.server)
@@ -425,8 +427,9 @@ class HorseracingPlugin < HandlerPlugin
         next if user.nil?
 
         horse = race.entrants.find { |horse| horse.name == bet.horse }
-        payout = bet.payout(horse.odds_float)
+        payout = bet.payout(horse.odds_float * house_take_factor)
         lock_funds(user.id, server.id) { funds_set(server_redis(server))[user.id] += payout }
+        update_house_funds(-payout)
 
         "#{user.mention} won #{payout.format_currency} from a #{bet}"
       end.compact.join("\n")

@@ -42,3 +42,4 @@ HorseracingRules.injury_map = [[1, 'career-ending'], [0.4, 'severe'],
                                [0.1, 'moderate'], [0.1, 'moderate'],
                                [0.05, 'minor'], [0.05, 'minor'], [0.05, 'minor'],
                                [0.05, 'minor']]
+HorseracingRules.house_take = 15 # % of wagered funds
