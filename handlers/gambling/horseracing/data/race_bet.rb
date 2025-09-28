@@ -15,8 +15,12 @@ class RaceBet
     ((1 + (odds * payout_adjust)) * @wager).to_i
   end
 
+  def for_channel?(channel)
+    @server == channel.server.id && @channel == channel.id
+  end
+
   def to_s
-    "#{@wager.format_currency} bet on #{@horse} to #{type}"
+    "#{@wager&.format_currency} bet on #{@horse} to #{type}"
   end
 
   def to_hash

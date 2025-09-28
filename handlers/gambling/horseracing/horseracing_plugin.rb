@@ -77,7 +77,11 @@ class HorseracingPlugin < HandlerPlugin
     found_race, _race_index = find_upcoming_race(race_name_num)
     return 'No matching race on the schedule' if found_race.nil?
 
-    "```#{found_race}```"
+    local_bets = found_race.bets.reject { |bet| bet.is_a?(WatchBet) }
+                           .reverse.take(5)
+    bets_str = local_bets.any? ? "Recent Bets:\n  #{local_bets.join("\n  ")}" : ''
+
+    "```#{found_race}```#{bets_str}"
   end
 
   def watch_race(event, *race_name_num)
@@ -247,7 +251,7 @@ class HorseracingPlugin < HandlerPlugin
   end
 
   def format_race_for_sched(race, event)
-    is_watched = race.bets.any? { |bet| bet.server == event.message.server && bet.channel == event.message.channel }
+    is_watched = race.bets.any? { |bet| bet.for_channel?(event.message.channel) }
     annotations = "#{race.championship? ? '\🏆' : ''} #{is_watched ? '\👁' : ''}"
     "#{race.to_s_short} @<t:#{race.time}:f> #{annotations}"
   end
