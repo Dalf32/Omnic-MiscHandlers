@@ -92,21 +92,21 @@ module GamblingHelper
     end
   end
 
-  def ensure_house_funds
-    return if server_redis.exists?(HOUSE_MONEY_KEY)
+  def ensure_house_funds(server_id = @server.id)
+    return if server_redis(server_id).exists?(HOUSE_MONEY_KEY)
 
-    lock_funds(HOUSE_MONEY_KEY) { server_redis.set(HOUSE_MONEY_KEY, 0) }
+    lock_funds(HOUSE_MONEY_KEY, server_id) { server_redis(server_id).set(HOUSE_MONEY_KEY, 0) }
   end
 
-  def house_funds
-    ensure_house_funds
-    server_redis.get(HOUSE_MONEY_KEY).to_i
+  def house_funds(server_id = @server.id)
+    ensure_house_funds(server_id)
+    server_redis(server_id).get(HOUSE_MONEY_KEY).to_i
   end
 
-  def update_house_funds(amount)
-    ensure_house_funds
-    lock_funds(HOUSE_MONEY_KEY) do
-      server_redis.set(HOUSE_MONEY_KEY, house_funds + amount)
+  def update_house_funds(amount, server_id = @server.id)
+    ensure_house_funds(server_id)
+    lock_funds(HOUSE_MONEY_KEY, server_id) do
+      server_redis(server_id).set(HOUSE_MONEY_KEY, house_funds(server_id) + amount)
     end
   end
 end

@@ -431,7 +431,7 @@ class HorseracingPlugin < HandlerPlugin
         horse = race.entrants.find { |horse| horse.name == bet.horse }
         payout = bet.payout(horse.odds_float * house_take_factor)
         lock_funds(user.id, server.id) { funds_set(server_redis(server))[user.id] += payout }
-        update_house_funds(-payout)
+        update_house_funds(-payout, server.id)
 
         "#{user.mention} won #{payout.format_currency} from a #{bet}"
       end.compact.join("\n")
