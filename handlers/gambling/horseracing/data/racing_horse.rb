@@ -44,8 +44,7 @@ class RacingHorse < SimpleDelegator
     (horse.stamina * @stamina_adjust).to_i
   end
 
-  def injure(impact, severity = nil)
-    horse.injure(impact)
+  def injure(severity = nil)
     @injury = severity
   end
 

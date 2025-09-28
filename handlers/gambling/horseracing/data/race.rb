@@ -29,6 +29,10 @@ class Race
   end
   alias << add_horse
 
+  def injure_horse(horse, impact)
+    @horses.find { |h| h.name == horse.name }.injure(impact)
+  end
+
   def record_results(results)
     sorted_horses = []
     results.standings.flatten.each.with_index do |entrant, placement|

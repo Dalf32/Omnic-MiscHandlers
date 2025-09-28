@@ -79,6 +79,7 @@ class ScheduledRace < SimpleDelegator
   def injure_horse
     injured_horse = @entrants.sample
     injury = HorseracingRules.injury_map.sample
-    injured_horse.injure(*injury)
+    injured_horse.injure(injury.last)
+    race.injure_horse(injured_horse, injury.first)
   end
 end
