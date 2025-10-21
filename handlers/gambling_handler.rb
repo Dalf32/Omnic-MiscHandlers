@@ -48,7 +48,8 @@ class GamblingHandler < CommandHandler
     return show_money_other_user(event.message, player.join(' ')) unless player.empty?
 
     ensure_funds(event.message)
-    "#{@user.display_name}, you have #{user_funds.format_currency} and are #{user_rank_str} on the leaderboard!"
+    currency = user_funds.format_currency(simplify_large: false)
+    "#{@user.display_name}, you have #{currency} and are #{user_rank_str} on the leaderboard!"
   end
 
   def claim_daily_money(event)
@@ -84,7 +85,8 @@ class GamblingHandler < CommandHandler
   end
 
   def show_house_money(_event)
-    "The House has #{house_funds.format_currency} in the bank."
+    currency = house_funds.format_currency(simplify_large: false)
+    "The House has #{currency} in the bank."
   end
 
   def add_money(event, player, amount)
@@ -155,7 +157,7 @@ class GamblingHandler < CommandHandler
     return 'Bots cannot gamble!' if user.bot_account?
 
     ensure_funds(message)
-    user_funds_str = user_funds(user.id).format_currency
+    user_funds_str = user_funds(user.id).format_currency(simplify_large: false)
     "#{user.display_name} has #{user_funds_str} and is #{user_rank_str(user.id)} on the leaderboard!"
   end
 
