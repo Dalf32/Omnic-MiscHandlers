@@ -175,8 +175,18 @@ class HorseracingPlugin < HandlerPlugin
       event.channel.start_typing
 
       active_horses = horse_data_store.active_horses
-                                      .sort_by { |horse| [horse.record.races_run * -1, horse.name] }
-      return "Active Horses (#{active_horses.count} total):\n  #{active_horses.join("\n  ")}"
+                                      .sort_by { |horse| horse_sort_by(horse) }
+      horses_str = "Active Horses (#{active_horses.count} total):"
+      active_horses.each do |horse|
+        if horses_str.length + horse.to_s.length + 4 >= 2000
+          event.message.reply(horses_str)
+          horses_str = 'Active Horses (cont):'
+        end
+
+        horses_str += "\n  #{horse}"
+      end
+
+      return horses_str
     end
 
     horse_name = horse_name.join(' ')
@@ -458,5 +468,9 @@ class HorseracingPlugin < HandlerPlugin
 
     log.debug("Sleeping Horseracing thread for #{duration}s")
     sleep(duration)
+  end
+
+  def horse_sort_by(horse)
+    [horse.record.average_placement, horse.record.races_run * -1, horse.name]
   end
 end
