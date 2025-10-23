@@ -166,7 +166,7 @@ class GamblingHandler < CommandHandler
 
     claim_amt = 50
     claim_amt += (5.0 * (2 ** exp).round).to_i unless exp.zero?
-    claim_amt.round(2 - claim_amt.to_s.length)
+    claim_amt = claim_amt.round(2 - claim_amt.to_s.length)
     claim_amt *= 100 * (streak / 365) if (streak % 365).zero?
     claim_amt
   end
