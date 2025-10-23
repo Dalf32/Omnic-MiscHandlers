@@ -162,22 +162,24 @@ class GamblingHandler < CommandHandler
   end
 
   def daily_money_claim_amt(streak)
-    claim_amt = 50 + (25 * [18, streak - 1].min)
-    claim_amt *= 10 * (streak / 365) if (streak % 365).zero?
+    exp = [streak - 1, 23].min / 2.0
 
+    claim_amt = 50
+    claim_amt += (5.0 * (2 ** exp).round).to_i unless exp.zero?
+    claim_amt.round(2 - claim_amt.to_s.length)
+    claim_amt *= 100 * (streak / 365) if (streak % 365).zero?
     claim_amt
   end
 
   def daily_money_streak_str(streak)
-    years = streak / 365
-    days = streak % 365
+    years, days = streak.divmod(365)
 
     case
     when years.positive? && days.zero?
       ". **Congrats!** You're on a #{years} year streak"
     when years.positive?
       ". You're on a #{years} year #{days} day streak"
-    when days.positive?
+    when days > 1
       ". You're on a #{days} day streak"
     else
       ''
