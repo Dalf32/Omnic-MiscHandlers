@@ -63,7 +63,7 @@ module GamblingHelper
   def amount_from_str(amount)
     amount = amount.gsub(',', '')
 
-    if amount =~ /\A\d+\.?\d*[kmbtq]?\Z/i
+    if amount =~ /\A\d+(\.\d+)?([kmbtq]|e\d+)?\Z/i
       amt_num = amount.to_f
       amt_num *= 1_000 if amount.downcase.end_with?('k')
       amt_num *= 1_000_000 if amount.downcase.end_with?('m')
