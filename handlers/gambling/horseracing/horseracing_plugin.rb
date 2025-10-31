@@ -80,8 +80,9 @@ class HorseracingPlugin < HandlerPlugin
     local_bets = found_race.bets.reject { |bet| bet.is_a?(WatchBet) }
                            .reverse.take(5)
     bets_str = local_bets.any? ? "Recent Bets:\n  #{local_bets.join("\n  ")}" : ''
+    time_str = "Race upcoming <t:#{found_race.time}:R>:"
 
-    "```#{found_race}```#{bets_str}"
+    "#{time_str}```#{found_race}```#{bets_str}"
   end
 
   def watch_race(event, *race_name_num)
