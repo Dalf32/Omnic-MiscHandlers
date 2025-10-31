@@ -26,7 +26,7 @@ class RacingRecord
     if @average_placement.nil?
       @average_placement = placement
     else
-      @average_placement = ((@average_placement * (@races_run - 1) + placement) / @races_run)
+      @average_placement = ((@average_placement.to_f * (@races_run - 1) + placement) / @races_run)
     end
 
     if race.championship? && placement == 1
