@@ -47,7 +47,9 @@ class DuelPlugin < HandlerPlugin
     result = wager_for_gambling(wager)
     return result if result.failure?
 
-    result.error = 'Your opponent does not have sufficient funds.' if result.value > user_funds(opp_user.id)
+    opp_funds = user_funds(opp_user.id)
+    result.error = 'Your opponent does not have sufficient funds.' if result.value > opp_funds
+    result.error = "Amount too small for your opponent's current funds." if opp_funds.to_f == opp_funds.to_f - result.value
     result
   end
 
