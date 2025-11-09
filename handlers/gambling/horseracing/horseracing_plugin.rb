@@ -53,6 +53,10 @@ class HorseracingPlugin < HandlerPlugin
     .feature(:horseracing).no_args.usage('racingnews')
     .description('Shows horse racing events from the last 24 hours that you may have missed.')
 
+  command(:halloffame, :show_hall_of_fame)
+    .feature(:horseracing).no_args.usage('halloffame')
+    .description('Celebrates the winningest horses in history.')
+
   event(:ready, :init_horseracing)
 
   def init_horseracing(_event)
@@ -211,6 +215,23 @@ class HorseracingPlugin < HandlerPlugin
     end
 
     news_str.empty? ? nil : news_str
+  end
+
+  def show_hall_of_fame(event)
+    hall_of_fame = horse_data_store.hall_of_fame_horses
+    return 'There are no Horses in the Hall of Fame yet.' if hall_of_fame.empty?
+
+    hof_str = "Hall of Fame:"
+    hall_of_fame.each do |horse|
+      if hof_str.length + horse.to_s.length + 4 >= 2000
+        event.message.reply(hof_str)
+        hof_str = 'Hall of Fame (cont):'
+      end
+
+      hof_str += "\n  #{horse}"
+    end
+
+    hof_str
   end
 
   private

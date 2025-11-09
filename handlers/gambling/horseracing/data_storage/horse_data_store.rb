@@ -73,6 +73,14 @@ class HorseDataStore < DataStore
     @redis.srem(:active, horse.downcase)
   end
 
+  def hall_of_fame_horses
+    horse_names = @redis.keys('*').reject { |n| n.start_with?('race') }
+    horse_names -= ['active'] + @redis.smembers(:active)
+
+    retired_horses = horses(horse_names)
+    retired_horses.select { |h| h.record.races_won >= HorseracingRules.hall_of_fame_requirement }
+  end
+
   private
 
   def race_key(race_id)

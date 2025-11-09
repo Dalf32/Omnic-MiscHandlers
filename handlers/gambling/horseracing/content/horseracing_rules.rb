@@ -44,3 +44,4 @@ HorseracingRules.injury_map = [[1, 'career-ending'], [0.4, 'severe'],
                                [0.05, 'minor']]
 HorseracingRules.house_take = 15 # % of wagered funds
 HorseracingRules.morning_line_opinion = 6 # odds adjusted up by double this, and down by this amt
+HorseracingRules.hall_of_fame_requirement = 25 # number of race wins required to be inducted into the hall of fame
