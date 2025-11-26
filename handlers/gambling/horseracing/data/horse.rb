@@ -65,6 +65,10 @@ class Horse
               career_length: rand(HorseracingRules.career_length_range))
   end
 
+  def to_table_cols
+    [@name, speed_rank, power_rank, stamina_rank] + @record.to_table_cols
+  end
+
   def to_s
     "#{@name} (#{speed_rank}-#{power_rank}-#{stamina_rank}), #{@record}"
   end

@@ -34,6 +34,12 @@ class RacingRecord
     end
   end
 
+  def to_table_cols
+    return %w[0 0 -] if first_starter?
+
+    [@races_won, @races_run, @average_placement.round]
+  end
+
   def to_s
     return 'First Starter' if first_starter?
 

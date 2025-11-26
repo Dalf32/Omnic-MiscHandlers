@@ -2,6 +2,7 @@
 
 require 'chronic_duration'
 require 'pathname'
+require 'tabulo'
 require_relative 'naming_registrar'
 require_relative 'data/horse'
 require_relative 'data/race_bet'
@@ -181,17 +182,8 @@ class HorseracingPlugin < HandlerPlugin
 
       active_horses = horse_data_store.active_horses
                                       .sort_by { |horse| horse_sort_by(horse) }
-      horses_str = "Active Horses (#{active_horses.count} total):"
-      active_horses.each do |horse|
-        if horses_str.length + horse.to_s.length + 4 >= 2000
-          event.message.reply(horses_str)
-          horses_str = 'Active Horses (cont):'
-        end
-
-        horses_str += "\n  #{horse}"
-      end
-
-      return horses_str
+      horses_table = build_horses_table(active_horses)
+      return post_horses_table(event.message, horses_table)
     end
 
     horse_name = horse_name.join(' ')
@@ -494,5 +486,38 @@ class HorseracingPlugin < HandlerPlugin
 
   def horse_sort_by(horse)
     [horse.record.average_placement, horse.record.races_run * -1, horse.name]
+  end
+
+  def build_horses_table(horses)
+    title = "Active Horses (#{horses.count} total)"
+    Tabulo::Table.new(horses.map(&:to_table_cols),
+                      border: :modern, title: title) do |table|
+      table.add_column('Name') { |h| h[0] }
+      table.add_column('Spd') { |h| h[1] }
+      table.add_column('Pow') { |h| h[2] }
+      table.add_column('Stm') { |h| h[3] }
+      table.add_column('Won') { |h| h[4] }
+      table.add_column('Run') { |h| h[5] }
+      table.add_column('APl') { |h| h[6] }
+    end.pack
+  end
+
+  def post_horses_table(message, horses_table)
+    horses_str = ''
+    bottom_border = "\n#{horses_table.horizontal_rule(:bottom)}"
+    extra_length = bottom_border.length + 6
+
+    horses_table.to_enum.each do |next_line|
+      if horses_str.length + next_line.to_s.length + extra_length >= 2000
+        message.reply("```#{horses_str}#{bottom_border}```")
+        horses_str = [horses_table.horizontal_rule(:top),
+                      horses_table.formatted_header,
+                      horses_table.horizontal_rule(:middle)].join("\n")
+      end
+
+      horses_str += "\n#{next_line}"
+    end
+
+    "```#{horses_str}#{bottom_border}```"
   end
 end
