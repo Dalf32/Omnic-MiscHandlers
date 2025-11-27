@@ -35,7 +35,7 @@ class RacingRecord
   end
 
   def to_table_cols
-    return %w[0 0 -] if first_starter?
+    return [0, 0, 0] if first_starter?
 
     [@races_won, @races_run, @average_placement.round]
   end
