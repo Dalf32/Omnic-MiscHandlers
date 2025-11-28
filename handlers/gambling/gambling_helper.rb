@@ -89,9 +89,9 @@ module GamblingHelper
     wager_amt = wager_from_str(wager)
 
     Result.new.tap do |result|
-      result.error = 'Invalid wager.' if wager_amt.zero?
       result.error = "You don't have enough money for that!" if wager_amt > user_funds
       result.error = 'Amount too small for your current funds.' if user_funds.to_f == user_funds.to_f - wager_amt
+      result.error = 'Invalid wager.' if wager_amt.zero?
       result.value = wager_amt
     end
   end
