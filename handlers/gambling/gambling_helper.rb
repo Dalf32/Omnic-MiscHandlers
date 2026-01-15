@@ -81,6 +81,7 @@ module GamblingHelper
     return user_funds if wager.casecmp?('all')
     return user_funds / 2 if wager.casecmp?('half')
     return rand(user_funds) + 1 if wager.casecmp?('random')
+    return (user_funds * (wager.to_i / 100.0)).to_i if /^\d+%$/.match?(wager)
 
     amount_from_str(wager)
   end
