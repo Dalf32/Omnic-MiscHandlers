@@ -42,7 +42,8 @@ class Horse
   end
 
   def should_breed?
-    @record.average_placement <= HorseracingRules.breeding_apl_requirement
+    @record.apl <= HorseracingRules.breeding_apl_requirement ||
+      @record.championships_won >= HorseracingRules.breeding_champ_requirement
   end
 
   def stable

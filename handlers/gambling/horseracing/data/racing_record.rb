@@ -19,6 +19,14 @@ class RacingRecord
     @average_placement.nil? ? HorseracingRules.championship_entrant_range.max : @average_placement
   end
 
+  def apl
+    @average_placement.round
+  end
+
+  def championships_won
+    @championships.count
+  end
+
   def add_result(race, placement)
     @races_run += 1
     @races_won += 1 if placement == 1
@@ -37,13 +45,13 @@ class RacingRecord
   def to_table_cols
     return [0, 0, 0] if first_starter?
 
-    [@races_won, @races_run, @average_placement.round]
+    [@races_won, @races_run, apl]
   end
 
   def to_s
     return 'First Starter' if first_starter?
 
-    "#{@races_won}/#{@races_run}, #{@average_placement.round} APl"
+    "#{@races_won}/#{@races_run}, #{apl} APl"
   end
 
   def to_s_detail(newline_indent = '')
@@ -51,7 +59,7 @@ class RacingRecord
 
     race_plural = @races_won == 1 ? 'race' : 'races'
     champ_str = "#{newline_indent}Championships won: #{@championships.empty? ? '*None*' : @championships.join(', ')}"
-    "Won #{@races_won} #{race_plural} out of #{@races_run} run, with an average placement of #{@average_placement.round}\n#{champ_str}"
+    "Won #{@races_won} #{race_plural} out of #{@races_run} run, with an average placement of #{apl}\n#{champ_str}"
   end
 
   def to_hash

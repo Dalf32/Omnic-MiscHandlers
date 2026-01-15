@@ -17,6 +17,7 @@ HorseracingRules.championship_frequency = 10 # num races between championships
 HorseracingRules.breeding_variance = 0.75..1.25
 HorseracingRules.offspring_range = 1..4
 HorseracingRules.breeding_apl_requirement = 3
+HorseracingRules.breeding_champ_requirement = 1
 HorseracingRules.max_horse_name_length = 18 # includes spaces
 HorseracingRules.min_active_horses = 35
 HorseracingRules.odds_map = [['4-5', 4 / 5.0, 55], ['1-1', 1, 50],
