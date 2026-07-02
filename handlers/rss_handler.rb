@@ -153,6 +153,8 @@ class RssHandler < CommandHandler
         return if channel.nil?
 
         rss_feed = get_rss_feed(feed_conf)
+        next if rss_feed.nil? # RSS feed failed to load or parse for some reason
+
         filtered_items = feed_conf.remove_posted(
           feed_conf.apply_filter(rss_feed.items))
 
@@ -189,6 +191,9 @@ class RssHandler < CommandHandler
     rss_uri = URI.parse(feed_conf.feed)
     raw_content = Net::HTTP.get(rss_uri)
     RSS::Parser.parse(raw_content)
+  rescue StandardError => err
+    log.warn(err)
+    return nil
   end
 
   def post_feed_update(channel, feed_name, feed_items)
