@@ -59,8 +59,8 @@ class LandmineHandler < CommandHandler
 
   private
 
-  DENSITY_KEY = :density
-  DAMAGE_KEY = :damage
+  DENSITY_KEY = :density unless defined? DENSITY_KEY
+  DAMAGE_KEY = :damage unless defined? DAMAGE_KEY
 
   def landmines_armed?
     server_redis.exists?(DENSITY_KEY) && server_redis.exists?(DAMAGE_KEY)
