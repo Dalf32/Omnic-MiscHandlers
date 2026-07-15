@@ -101,3 +101,10 @@ config.handlers.twitch do |twitch|
   twitch.client_secret = '' # Twitch account client secret
 end
 ```
+
+### Landmines
+Sets landmines throughout the server which have a chance to explode on any message and time out the author.
+
+Handler: `handlers/landmine_handler.rb`
+
+Config: none
