@@ -54,6 +54,7 @@ class LandmineHandler < CommandHandler
     victim.timeout = Time.now + damage
     event.message.reply("💥**BOOM!**💥 #{victim.mention} stepped on a landmine and exploded!\n*Their wounds will heal in #{ChronicDuration.output(damage)}.*")
   rescue Discordrb::Errors::NoPermission
+    audit_warning('Landmines', "Bot lacks the permissions necessary to time out #{victim.mention}")
     log.warn("Bot lacks the permissions necessary to time out user: #{format_obj(victim)} in server: #{format_obj(server)}")
   end
 
