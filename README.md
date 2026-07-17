@@ -108,3 +108,10 @@ Sets landmines throughout the server which have a chance to explode on any messa
 Handler: `handlers/landmine_handler.rb`
 
 Config: none
+
+### Pin Vote
+Allows users to vote for a message to be pinned by reacting with the pushpin emoji.
+
+Handler: `handlers/pin_vote_handler.rb`
+
+Config: none
