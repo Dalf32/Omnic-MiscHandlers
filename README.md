@@ -6,6 +6,12 @@ Tracks fake funds for each user and allows them to gamble it away through a numb
 
 Handler: `handlers/gambling_handler.rb`
 
+Dependencies:
+
+- chronic_duration
+- tabulo
+- redis-objects
+
 Plugins:
 
 - `handlers/gambling/duel_plugin.rb`
@@ -60,6 +66,14 @@ Hooks into the Games Done Quick API to set the current run as the bot's status a
 
 Handler: `handlers/gdq_handler.rb`
 
+Dependencies:
+
+- chronic_duration
+- json
+- oga
+- open-uri
+- tabulo
+
 Config:
 ```ruby
 config.handlers.gdq do |gdq|
@@ -80,6 +94,12 @@ Allows configuring RSS feeds to be checked periodically and updates posted to a 
 
 Handler: `handlers/rss_handler.rb`
 
+Dependencies:
+
+- chronic_duration
+- json
+- rss
+
 Config:
 ```ruby
 config.handlers.rss do |rss|
@@ -92,6 +112,8 @@ end
 Enables automatic go-live posts for specific users on the server.
 
 Handler: `handlers/twitch_handler.rb`
+
+Dependencies: twitch-api
 
 Config:
 ```ruby
@@ -107,11 +129,11 @@ Sets landmines throughout the server which have a chance to explode on any messa
 
 Handler: `handlers/landmine_handler.rb`
 
-Config: none
+Dependencies: chronic_duration
 
 ### Pin Vote
 Allows users to vote for a message to be pinned by reacting with the pushpin emoji.
 
 Handler: `handlers/pin_vote_handler.rb`
 
-Config: none
+Dependencies: redis-objects
