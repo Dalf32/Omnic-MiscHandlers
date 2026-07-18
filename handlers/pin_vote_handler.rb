@@ -66,8 +66,7 @@ class PinVoteHandler < CommandHandler
   end
 
   def on_message_delete(event)
-    message = event.message
-    pin_store.unpin(message.id) if pin_store.vote_pinned?(message.id)
+    pin_store.unpin(event.id) if pin_store.vote_pinned?(event.id)
   end
 
   private
